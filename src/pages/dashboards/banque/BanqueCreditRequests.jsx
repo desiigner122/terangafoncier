@@ -1,500 +1,334 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
+import {
+  FileText,
   Search,
-  Filter,
   Plus,
   Eye,
-  Edit,
   CheckCircle,
   XCircle,
   Clock,
   AlertTriangle,
   User,
   MapPin,
-  Calendar,
-  Star,
-  Download,
-  Upload,
   MessageSquare,
-  Phone,
-  Mail,
   DollarSign,
   Building,
-  Users,
-  Activity,
   Calculator,
   CreditCard,
-  Percent,
   TrendingUp,
-  TrendingDown,
   Target,
   Shield,
-  Zap,
   Globe,
   Home,
-  Briefcase,
-  Award,
-  Bell,
-  Settings,
   RefreshCw,
-  ExternalLink,
-  Bookmark,
-  Flag,
-  Hash,
-  AtSign,
   BarChart3,
   PieChart,
   ArrowUpRight,
-  ArrowDownRight,
   CheckSquare,
-  UserCheck,
-  UserX,
   PhoneCall,
-  VideoIcon,
-  Printer,
-  Share2,
-  Copy
+  Loader2,
+  Download
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
-const BanqueCreditRequests = ({ dashboardStats = {} }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+// --- Correspondances statuts réels (loans.status) ---
+const STATUS_LABELS = {
+  pending: 'En attente',
+  evaluating: 'En évaluation',
+  pre_approved: 'Pré-approuvé',
+  approved: 'Approuvé',
+  rejected: 'Rejeté',
+  disbursed: 'Décaissé'
+};
+
+const STATUS_STAGE = {
+  pending: 1,
+  evaluating: 2,
+  pre_approved: 3,
+  approved: 4,
+  disbursed: 5,
+  rejected: 0
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'approved':
+    case 'disbursed':
+      return 'bg-green-100 text-green-800';
+    case 'rejected':
+      return 'bg-red-100 text-red-800';
+    case 'evaluating':
+      return 'bg-blue-100 text-blue-800';
+    case 'pre_approved':
+      return 'bg-emerald-100 text-emerald-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+// --- Correspondances risque / priorité ---
+const RISK_LABELS = {
+  low: 'Faible',
+  medium: 'Moyen',
+  high: 'Élevé',
+  very_low: 'Très Faible'
+};
+
+const getRiskLabel = (risk) => RISK_LABELS[risk] || risk || '—';
+
+const getRiskColor = (risk) => {
+  switch (risk) {
+    case 'low':
+    case 'very_low':
+    case 'Faible':
+    case 'Très Faible':
+      return 'text-green-600';
+    case 'medium':
+    case 'Moyen':
+      return 'text-yellow-600';
+    case 'high':
+    case 'Élevé':
+      return 'text-red-600';
+    default:
+      return 'text-gray-600';
+  }
+};
+
+const getPriority = (risk) => {
+  switch (risk) {
+    case 'high':
+      return 'Haute';
+    case 'medium':
+      return 'Moyenne';
+    default:
+      return 'Normale';
+  }
+};
+
+// --- Helpers d'affichage (aucune valeur fabriquée) ---
+const fmtM = (v) => (v != null && !isNaN(v) ? `${(Number(v) / 1000000).toFixed(0)}M` : '—');
+const fmtFull = (v) => (v != null && !isNaN(v) ? Number(v).toLocaleString() : '—');
+
+// Mensualité par amortissement constant (calcul financier réel, non fabriqué)
+const computeMonthlyPayment = (principal, annualRatePct, months) => {
+  if (!principal || !months) return null;
+  const r = (Number(annualRatePct) || 0) / 100 / 12;
+  if (r === 0) return Math.round(principal / months);
+  return Math.round((principal * r) / (1 - Math.pow(1 + r, -months)));
+};
+
+const BanqueCreditRequests = () => {
+  const { user } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'table'
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
 
-  // Statistiques avancées
-  const [creditStats, setCreditStats] = useState({
-    totalRequests: 89,
-    approvedCredits: 67,
-    pendingReview: 15,
-    rejectedRequests: 7,
-    totalVolume: 3847000000, // 3.847 milliards CFA
-    averageAmount: 43191011,
-    approvalRate: 75.3,
-    averageProcessingTime: 8.5, // jours
-    platformReferrals: 34,
-    platformConversionRate: 91.2
-  });
+  const [creditRequests, setCreditRequests] = useState([]);
 
-  // Handlers pour les actions sur les demandes
-  const handleApproveCredit = (requestId) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Crédit approuvé",
-        description: `La demande de crédit ${requestId} a été approuvée`,
-        variant: "success"
+  // --- Chargement des dossiers de crédit réels (loans) filtrés par bank_id ---
+  const fetchCreditRequests = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const { data: loans, error } = await supabase
+        .from('loans')
+        .select('*')
+        .eq('bank_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const loanList = loans || [];
+
+      // Enrichissement optionnel via properties (bien financé) et bank_clients (profil emprunteur)
+      const propertyIds = [...new Set(loanList.map((l) => l.property_id).filter(Boolean))];
+      const clientIds = [...new Set(loanList.map((l) => l.client_id).filter(Boolean))];
+
+      let propMap = {};
+      let clientMap = {};
+
+      if (propertyIds.length) {
+        const { data: props } = await supabase
+          .from('properties')
+          .select('id, title, name, type, location, region, city, surface, estimated_value, market_value, blockchain_hash')
+          .in('id', propertyIds);
+        (props || []).forEach((p) => { propMap[p.id] = p; });
+      }
+
+      if (clientIds.length) {
+        const { data: clients } = await supabase
+          .from('bank_clients')
+          .select('client_id, name, email, phone, credit_score')
+          .eq('bank_id', user.id)
+          .in('client_id', clientIds);
+        (clients || []).forEach((c) => { clientMap[c.client_id] = c; });
+      }
+
+      const mapped = loanList.map((loan) => {
+        const property = propMap[loan.property_id] || null;
+        const client = clientMap[loan.client_id] || null;
+        const propertyValue = property?.estimated_value ?? property?.market_value ?? null;
+        const amount = loan.amount ?? 0;
+        const ltvRatio = propertyValue ? Math.round((amount / propertyValue) * 100) : null;
+
+        return {
+          id: loan.id,
+          applicantName: loan.client_name || client?.name || 'Client inconnu',
+          applicantPhone: client?.phone || null,
+          applicantEmail: client?.email || null,
+          creditType: loan.type || 'Crédit',
+          platformRef: loan.reference || null,
+          requestedAmount: amount,
+          propertyValue,
+          ltvRatio,
+          landLocation: property?.location || property?.city || property?.region || null,
+          landArea: property?.surface ? `${property.surface}m²` : null,
+          landTitle: property?.blockchain_hash || null,
+          zoning: property?.type || null,
+          purpose: loan.purpose || null,
+          status: loan.status || 'pending',
+          statusLabel: STATUS_LABELS[loan.status] || loan.status || '—',
+          priority: getPriority(loan.risk_level),
+          submissionDate: loan.created_at,
+          creditScore: client?.credit_score ?? null,
+          riskLevel: loan.risk_level || null,
+          advisorNotes: loan.purpose || null,
+          processingStage: STATUS_STAGE[loan.status] ?? 0,
+          interestRate: loan.interest_rate ?? null,
+          proposedTerm: loan.duration_months ?? null,
+          monthlyPayment: computeMonthlyPayment(amount, loan.interest_rate, loan.duration_months)
+        };
       });
-      setIsLoading(false);
-    }, 1500);
+
+      setCreditRequests(mapped);
+    } catch (err) {
+      console.error('Erreur chargement demandes de crédit:', err);
+      setCreditRequests([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRejectCredit = (requestId) => {
+  useEffect(() => {
+    fetchCreditRequests();
+  }, [user?.id]);
+
+  // --- Statistiques calculées sur les données réelles ---
+  const creditStats = useMemo(() => {
+    const total = creditRequests.length;
+    const approved = creditRequests.filter((r) => ['approved', 'disbursed'].includes(r.status)).length;
+    const pending = creditRequests.filter((r) => ['pending', 'evaluating', 'pre_approved'].includes(r.status)).length;
+    const rejected = creditRequests.filter((r) => r.status === 'rejected').length;
+    const totalVolume = creditRequests.reduce((sum, r) => sum + (r.requestedAmount || 0), 0);
+    const decided = approved + rejected;
+    return {
+      totalRequests: total,
+      approvedCredits: approved,
+      pendingReview: pending,
+      rejectedRequests: rejected,
+      totalVolume,
+      averageAmount: total ? Math.round(totalVolume / total) : 0,
+      approvalRate: decided ? Math.round((approved / decided) * 100) : 0
+    };
+  }, [creditRequests]);
+
+  // --- Actions réelles (mise à jour du statut dans loans) ---
+  const updateLoanStatus = async (requestId, newStatus, successTitle) => {
     setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Crédit rejeté",
-        description: `La demande de crédit ${requestId} a été rejetée`,
-        variant: "destructive"
-      });
+    try {
+      const { error } = await supabase
+        .from('loans')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', requestId)
+        .eq('bank_id', user.id);
+      if (error) throw error;
+
+      setCreditRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
+            ? { ...r, status: newStatus, statusLabel: STATUS_LABELS[newStatus] || newStatus, processingStage: STATUS_STAGE[newStatus] ?? r.processingStage }
+            : r
+        )
+      );
+      setSelectedRequest((prev) =>
+        prev && prev.id === requestId
+          ? { ...prev, status: newStatus, statusLabel: STATUS_LABELS[newStatus] || newStatus }
+          : prev
+      );
+
+      window.safeGlobalToast?.({ title: successTitle, variant: 'success' });
+    } catch (err) {
+      console.error('Erreur mise à jour statut:', err);
+      window.safeGlobalToast?.({ title: 'Erreur', description: "Impossible de mettre à jour le dossier", variant: 'destructive' });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
+
+  const handleApproveCredit = (requestId) => updateLoanStatus(requestId, 'approved', 'Crédit approuvé');
+  const handleRejectCredit = (requestId) => updateLoanStatus(requestId, 'rejected', 'Crédit rejeté');
+  const handleLandValuation = (requestId) => updateLoanStatus(requestId, 'evaluating', 'Dossier mis en évaluation');
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request);
-    window.safeGlobalToast({
-      title: "Détails de la demande",
-      description: `Affichage des détails pour ${request.applicantName}`,
-      variant: "default"
-    });
   };
 
-  const handleEditRequest = (requestId) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Mode édition",
-        description: `Ouverture du formulaire d'édition pour ${requestId}`,
-        variant: "default"
-      });
-      setIsLoading(false);
-    }, 1000);
+  const handleScheduleCall = () => {
+    // Pas d'intégration calendrier/téléphonie côté backend pour l'instant
+    window.safeGlobalToast?.({
+      title: 'Bientôt disponible',
+      description: "La programmation d'appel sera disponible prochainement",
+      variant: 'default'
+    });
   };
 
   const handleCreateNewRequest = () => {
-    setShowNewRequestDialog(true);
-    window.safeGlobalToast({
-      title: "Nouvelle demande de crédit",
-      description: "Formulaire de création ouvert",
-      variant: "default"
+    window.safeGlobalToast?.({
+      title: 'Bientôt disponible',
+      description: "La création de dossier depuis cette interface arrive bientôt",
+      variant: 'default'
     });
   };
 
-  const handleLandValuation = async (requestId) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setCreditRequests(requests => 
-        requests.map(req => 
-          req.id === requestId 
-            ? { 
-                ...req, 
-                status: 'En évaluation',
-                processingStage: 3,
-                valuationExpert: 'Mamadou Diallo - Expert Agréé',
-                valuationScheduled: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-              }
-            : req
-        )
-      );
-      
-      window.safeGlobalToast({
-        title: "Évaluation programmée 📍",
-        description: "Expert assigné - Visite terrain dans 3 jours",
-        variant: "default"
-      });
-    } catch (error) {
-      window.safeGlobalToast({
-        title: "Erreur",
-        description: "Impossible de programmer l'évaluation",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Actions supplémentaires
-  const handleRequestInfo = async (requestId) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setCreditRequests(requests => 
-        requests.map(req => 
-          req.id === requestId 
-            ? { 
-                ...req, 
-                status: 'Info demandée',
-                lastContact: new Date().toISOString().split('T')[0],
-                pendingDocuments: ['Justificatif revenus récent', 'Contrat de vente actualisé']
-              }
-            : req
-        )
-      );
-      
-      window.safeGlobalToast({
-        title: "Informations demandées 📄",
-        description: "Email et SMS envoyés au demandeur",
-        variant: "default"
-      });
-    } catch (error) {
-      window.safeGlobalToast({
-        title: "Erreur",
-        description: "Erreur lors de l'envoi de la demande",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleScheduleCall = async (requestId) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      window.safeGlobalToast({
-        title: "Appel programmé 📞",
-        description: "Rendez-vous téléphonique ajouté au calendrier",
-        variant: "default"
-      });
-    } catch (error) {
-      window.safeGlobalToast({
-        title: "Erreur",
-        description: "Impossible de programmer l'appel",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fonctions spécifiques aux crédits terrains via plateforme
-  const handleVerifyPlatformTransaction = (platformRef) => {
-    window.safeGlobalToast({
-      title: "Vérification plateforme",
-      description: `Transaction ${platformRef} vérifiée`,
-      variant: "success"
-    });
-  };
-
-  const handleCheckLandTitle = (landTitle) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Titre foncier vérifié",
-        description: `${landTitle} authentique et valide`,
-        variant: "success"
-      });
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  const handleInitiateEscrow = (requestId) => {
-    window.safeGlobalToast({
-      title: "Séquestre initié",
-      description: "Compte séquestre créé pour la transaction",
-      variant: "success"
-    });
-  };
-
-  const handleContactNotary = (requestId) => {
-    window.safeGlobalToast({
-      title: "Notaire contacté",
-      description: "Coordination avec le notaire en cours",
-      variant: "success"
-    });
-  };
-
-  // Données enrichies des demandes de crédit via plateforme Teranga Foncier
-  const creditRequests = [
-    {
-      id: 'CR-TER-2024-001',
-      applicantName: 'Mamadou FALL',
-      applicantPhone: '+221 77 123 45 67',
-      applicantEmail: 'mamadou.fall@email.com',
-      creditType: 'Crédit Terrain Résidentiel',
-      platformRef: 'TER-2024-001',
-      requestedAmount: 20000000,
-      propertyValue: 25000000,
-      ltvRatio: 80,
-      landLocation: 'Ouakam - Zone Résidentielle',
-      landArea: '500m²',
-      landTitle: 'TF-OUAKAM-457/2023',
-      zoning: 'Résidentiel R3',
-      purpose: 'Construction résidence familiale',
-      status: 'Pré-approuvé',
-      priority: 'Haute',
-      submissionDate: '2024-01-15',
-      expectedDecisionDate: '2024-02-10',
-      monthlyIncome: 850000,
-      creditScore: 785,
-      riskLevel: 'Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Titre foncier', 'Accord plateforme', 'Plan cadastral'],
-      documentsComplete: 90,
-      comments: 'Terrain bien situé, transaction via plateforme Teranga',
-      advisorNotes: 'Client solvable, bon profil investisseur',
-      processingStage: 4, // sur 5 étapes
-      estimatedApprovalProbability: 92,
-      interestRate: 8.5,
-      proposedTerm: 180, // mois
-      monthlyPayment: 165000,
-      sellerInfo: {
-        name: 'Fatou DIOP',
-        verified: true,
-        rating: 4.8
-      },
-      platformMetrics: {
-        transactionFee: 125000,
-        escrowStatus: 'Active',
-        verificationLevel: 'Gold'
-      }
-    },
-    {
-      id: 'CR-TER-2024-002',
-      applicantName: 'Société SENEGAL INVEST',
-      applicantPhone: '+221 33 821 45 67',
-      applicantEmail: 'contact@senegalinvest.com',
-      creditType: 'Crédit Terrain Commercial',
-      platformRef: 'TER-2024-002',
-      requestedAmount: 96000000,
-      propertyValue: 120000000,
-      ltvRatio: 80,
-      landLocation: 'Avenue Lamine Guèye, Plateau',
-      landArea: '800m²',
-      landTitle: 'TF-PLATEAU-123/2023',
-      zoning: 'Commercial C2',
-      purpose: 'Développement projet commercial',
-      status: 'En Attente Documents',
-      priority: 'Moyenne',
-      submissionDate: '2024-01-18',
-      expectedDecisionDate: '2024-02-15',
-      monthlyIncome: 2500000,
-      creditScore: 720,
-      riskLevel: 'Moyen',
-      documents: ['Registre commerce', 'Bilan comptable', 'Accord plateforme', 'Étude de marché'],
-      documentsComplete: 75,
-      comments: 'En attente conformité urbaine',
-      advisorNotes: 'Société établie, bon historique commercial',
-      processingStage: 2,
-      estimatedApprovalProbability: 78,
-      interestRate: 9.2,
-      proposedTerm: 240,
-      monthlyPayment: 850000,
-      sellerInfo: {
-        name: 'Ibrahima SARR',
-        verified: true,
-        rating: 4.6
-      },
-      platformMetrics: {
-        transactionFee: 600000,
-        escrowStatus: 'Pending',
-        verificationLevel: 'Silver'
-      }
-    },
-    {
-      id: 'CR-TER-2024-003',
-      applicantName: 'Fatou MBAYE',
-      applicantPhone: '+221 76 987 65 43',
-      applicantEmail: 'fatou.mbaye@email.com',
-      creditType: 'Crédit Terrain Résidentiel',
-      platformRef: 'TER-2024-003',
-      requestedAmount: 15000000,
-      propertyValue: 18750000,
-      ltvRatio: 80,
-      landLocation: 'Parcelles Assainies U15',
-      landArea: '300m²',
-      landTitle: 'TF-PA-789/2023',
-      zoning: 'Résidentiel R2',
-      purpose: 'Première acquisition immobilière',
-      status: 'Approuvé',
-      priority: 'Normale',
-      submissionDate: '2024-01-25',
-      expectedDecisionDate: '2024-02-18',
-      monthlyIncome: 550000,
-      creditScore: 745,
-      riskLevel: 'Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Titre foncier', 'Accord plateforme'],
-      documentsComplete: 100,
-      comments: 'Primo-accédant, profil stable',
-      advisorNotes: 'Excellente capacité de remboursement',
-      processingStage: 5,
-      estimatedApprovalProbability: 95,
-      interestRate: 8.2,
-      proposedTerm: 180,
-      monthlyPayment: 125000,
-      sellerInfo: {
-        name: 'Moussa THIAM',
-        verified: true,
-        rating: 4.9
-      },
-      platformMetrics: {
-        transactionFee: 93750,
-        escrowStatus: 'Completed',
-        verificationLevel: 'Gold'
-      }
-    },
-    {
-      id: 'CR-TER-2024-004',
-      applicantName: 'Dr. Awa SECK',
-      applicantPhone: '+221 78 456 32 10',
-      applicantEmail: 'awa.seck@hospital.sn',
-      creditType: 'Crédit Construction',
-      platformRef: 'TER-2024-004',
-      requestedAmount: 45000000,
-      propertyValue: 56250000,
-      ltvRatio: 80,
-      landLocation: 'Almadies - Zone 3',
-      landArea: '600m²',
-      landTitle: 'TF-ALM-345/2023',
-      zoning: 'Résidentiel R4',
-      purpose: 'Construction villa moderne',
-      status: 'En Évaluation',
-      priority: 'Haute',
-      submissionDate: '2024-01-30',
-      expectedDecisionDate: '2024-02-20',
-      monthlyIncome: 1200000,
-      creditScore: 812,
-      riskLevel: 'Très Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Permis construire', 'Plans architecte', 'Devis travaux'],
-      documentsComplete: 85,
-      comments: 'Médecin établi, projet de qualité',
-      advisorNotes: 'Profil premium, revenus stables',
-      processingStage: 3,
-      estimatedApprovalProbability: 89,
-      interestRate: 7.8,
-      proposedTerm: 240,
-      monthlyPayment: 385000,
-      sellerInfo: {
-        name: 'SARL TERANGA CONSTRUCTION',
-        verified: true,
-        rating: 4.7
-      },
-      platformMetrics: {
-        transactionFee: 281250,
-        escrowStatus: 'Active',
-        verificationLevel: 'Platinum'
-      }
-    }
-  ];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Approuvé': return 'bg-green-100 text-green-800';
-      case 'Rejeté': return 'bg-red-100 text-red-800';
-      case 'En Évaluation': return 'bg-blue-100 text-blue-800';
-      case 'En Attente': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'Faible': return 'text-green-600';
-      case 'Moyen': return 'text-yellow-600';
-      case 'Élevé': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const filteredRequests = creditRequests.filter(request => {
-    const matchesSearch = request.applicantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         request.id.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredRequests = creditRequests.filter((request) => {
+    const matchesSearch =
+      request.applicantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(request.id).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (request.platformRef || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter;
-    
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
@@ -513,7 +347,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="flex items-center space-x-3">
                 <Avatar className="w-12 h-12">
                   <AvatarFallback className="font-semibold">
-                    {request.applicantName.split(' ').map(n => n[0]).join('')}
+                    {request.applicantName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -522,20 +356,22 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   </CardTitle>
                   <CardDescription className="flex items-center space-x-2 mt-1">
                     <Badge className={getStatusColor(request.status)}>
-                      {request.status}
+                      {request.statusLabel}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {request.platformRef}
-                    </Badge>
+                    {request.platformRef && (
+                      <Badge variant="outline" className="text-xs">
+                        {request.platformRef}
+                      </Badge>
+                    )}
                   </CardDescription>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-600">
-                  {(request.requestedAmount / 1000000).toFixed(0)}M CFA
+                  {fmtM(request.requestedAmount)} CFA
                 </div>
                 <div className="text-xs text-gray-600">
-                  LTV: {request.ltvRatio}%
+                  LTV: {request.ltvRatio != null ? `${request.ltvRatio}%` : '—'}
                 </div>
               </div>
             </div>
@@ -547,7 +383,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="text-sm">
                 <div className="flex items-center space-x-2 text-gray-600 mb-1">
                   <MapPin className="h-3 w-3" />
-                  <span>{request.landLocation}</span>
+                  <span>{request.landLocation || 'Localisation non renseignée'}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600 mb-1">
                   <Building className="h-3 w-3" />
@@ -555,7 +391,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600">
                   <Home className="h-3 w-3" />
-                  <span>{request.landArea} • {request.zoning}</span>
+                  <span>{[request.landArea, request.zoning].filter(Boolean).join(' • ') || '—'}</span>
                 </div>
               </div>
 
@@ -568,48 +404,51 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 <Progress value={(request.processingStage / 5) * 100} className="h-2" />
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Étape {request.processingStage}/5</span>
-                  <span>Prob: {request.estimatedApprovalProbability}%</span>
+                  <span>Risque: {getRiskLabel(request.riskLevel)}</span>
                 </div>
               </div>
 
               {/* Métriques clés */}
               <div className="grid grid-cols-3 gap-3 text-sm">
                 <div className="text-center p-2 bg-gray-50 rounded">
-                  <div className="font-semibold text-blue-600">{request.creditScore}</div>
+                  <div className="font-semibold text-blue-600">{request.creditScore ?? '—'}</div>
                   <div className="text-xs text-gray-600">Score</div>
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <div className={`font-semibold ${getRiskColor(request.riskLevel)}`}>
-                    {request.riskLevel}
+                    {getRiskLabel(request.riskLevel)}
                   </div>
                   <div className="text-xs text-gray-600">Risque</div>
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
-                  <div className="font-semibold text-green-600">{request.interestRate}%</div>
+                  <div className="font-semibold text-green-600">
+                    {request.interestRate != null ? `${request.interestRate}%` : '—'}
+                  </div>
                   <div className="text-xs text-gray-600">Taux</div>
                 </div>
               </div>
 
               {/* Actions rapides */}
               <div className="flex space-x-2 pt-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   className="flex-1"
                   onClick={() => handleViewDetails(request)}
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   Détails
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
+                  disabled={isLoading}
                   onClick={() => handleApproveCredit(request.id)}
                 >
                   <CheckCircle className="h-3 w-3" />
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => setSelectedRequest(request)}
                 >
@@ -644,7 +483,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="mt-2">
                 <div className="flex items-center text-xs text-blue-700">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  <span>+12% ce mois</span>
+                  <span>{creditStats.pendingReview} en cours de traitement</span>
                 </div>
               </div>
             </CardContent>
@@ -683,7 +522,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 <div>
                   <p className="text-yellow-600 text-sm font-medium">Volume Total</p>
                   <p className="text-2xl font-bold text-yellow-900">
-                    {(creditStats.totalVolume / 1000000000).toFixed(1)}Md CFA
+                    {creditStats.totalVolume ? `${(creditStats.totalVolume / 1000000000).toFixed(2)}Md CFA` : '—'}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-yellow-600" />
@@ -691,7 +530,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="mt-2">
                 <div className="flex items-center text-xs text-yellow-700">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  <span>Moy: {(creditStats.averageAmount / 1000000).toFixed(0)}M CFA</span>
+                  <span>Moy: {fmtM(creditStats.averageAmount)} CFA</span>
                 </div>
               </div>
             </CardContent>
@@ -707,15 +546,15 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 text-sm font-medium">Temps de Traitement</p>
-                  <p className="text-2xl font-bold text-purple-900">{creditStats.averageProcessingTime}j</p>
+                  <p className="text-purple-600 text-sm font-medium">Dossiers Rejetés</p>
+                  <p className="text-2xl font-bold text-purple-900">{creditStats.rejectedRequests}</p>
                 </div>
-                <Clock className="h-8 w-8 text-purple-600" />
+                <XCircle className="h-8 w-8 text-purple-600" />
               </div>
               <div className="mt-2">
                 <div className="flex items-center text-xs text-purple-700">
                   <Target className="h-3 w-3 mr-1" />
-                  <span>Objectif: 7 jours</span>
+                  <span>{creditStats.approvedCredits} approuvés</span>
                 </div>
               </div>
             </CardContent>
@@ -728,16 +567,16 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Gestion Avancée des Crédits Fonciers</h2>
           <p className="text-gray-600 mt-1">
-            Interface unifiée pour les demandes via plateforme Teranga Foncier
+            Interface unifiée pour les dossiers de financement immobilier
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={fetchCreditRequests} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Actualiser
           </Button>
-          <Button 
+          <Button
             onClick={handleCreateNewRequest}
             disabled={isLoading}
           >
@@ -755,7 +594,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
             <span>Centre de Gestion des Crédits</span>
           </CardTitle>
           <CardDescription>
-            Traitement intelligent des demandes de financement immobilier
+            Traitement des dossiers de financement immobilier
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -781,18 +620,19 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                       className="pl-10"
                     />
                   </div>
-                  
+
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-full lg:w-48">
                       <SelectValue placeholder="Statut" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="En Attente">En Attente</SelectItem>
-                      <SelectItem value="En Évaluation">En Évaluation</SelectItem>
-                      <SelectItem value="Pré-approuvé">Pré-approuvé</SelectItem>
-                      <SelectItem value="Approuvé">Approuvé</SelectItem>
-                      <SelectItem value="Rejeté">Rejeté</SelectItem>
+                      <SelectItem value="pending">En attente</SelectItem>
+                      <SelectItem value="evaluating">En évaluation</SelectItem>
+                      <SelectItem value="pre_approved">Pré-approuvé</SelectItem>
+                      <SelectItem value="approved">Approuvé</SelectItem>
+                      <SelectItem value="rejected">Rejeté</SelectItem>
+                      <SelectItem value="disbursed">Décaissé</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -803,8 +643,8 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                     <SelectContent>
                       <SelectItem value="all">Toutes priorités</SelectItem>
                       <SelectItem value="Haute">Haute</SelectItem>
+                      <SelectItem value="Moyenne">Moyenne</SelectItem>
                       <SelectItem value="Normale">Normale</SelectItem>
-                      <SelectItem value="Faible">Faible</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -828,17 +668,34 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               </div>
 
               {/* Alertes prioritaires */}
-              <Alert className="border-yellow-200 bg-yellow-50">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertTitle className="text-yellow-800">Demandes Prioritaires</AlertTitle>
-                <AlertDescription className="text-yellow-700">
-                  {filteredRequests.filter(r => r.priority === 'Haute').length} demande(s) nécessitent une attention immédiate.
-                </AlertDescription>
-              </Alert>
+              {filteredRequests.filter((r) => r.priority === 'Haute').length > 0 && (
+                <Alert className="border-yellow-200 bg-yellow-50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertTitle className="text-yellow-800">Demandes Prioritaires</AlertTitle>
+                  <AlertDescription className="text-yellow-700">
+                    {filteredRequests.filter((r) => r.priority === 'Haute').length} demande(s) à risque élevé nécessitent une attention immédiate.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Affichage des demandes */}
-              {viewMode === 'grid' ? (
-                <motion.div 
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+                  <Loader2 className="h-8 w-8 animate-spin mb-3" />
+                  <p>Chargement des dossiers de crédit...</p>
+                </div>
+              ) : filteredRequests.length === 0 ? (
+                <div className="text-center py-16">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-semibold mb-1">Aucune demande de crédit</h3>
+                  <p className="text-gray-500">
+                    {creditRequests.length === 0
+                      ? "Aucun dossier de crédit n'est encore enregistré pour votre banque."
+                      : 'Aucun dossier ne correspond aux filtres sélectionnés.'}
+                  </p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   layout
                 >
@@ -869,41 +726,45 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                                 <div className="flex items-center space-x-3">
                                   <Avatar className="w-8 h-8">
                                     <AvatarFallback className="text-xs">
-                                      {request.applicantName.split(' ').map(n => n[0]).join('')}
+                                      {request.applicantName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div>
                                     <div className="font-medium">{request.applicantName}</div>
-                                    <div className="text-sm text-gray-500">{request.id}</div>
+                                    <div className="text-sm text-gray-500">{request.platformRef || request.id}</div>
                                   </div>
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div>
                                   <div className="font-medium">{request.creditType}</div>
-                                  <div className="text-sm text-gray-500">{request.landLocation}</div>
+                                  <div className="text-sm text-gray-500">{request.landLocation || '—'}</div>
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div className="font-medium text-green-600">
-                                  {(request.requestedAmount / 1000000).toFixed(0)}M CFA
+                                  {fmtM(request.requestedAmount)} CFA
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  Bien: {(request.propertyValue / 1000000).toFixed(0)}M CFA
+                                  Bien: {fmtM(request.propertyValue)} CFA
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-medium">{request.ltvRatio}%</span>
-                                  <div className={`w-2 h-2 rounded-full ${
-                                    request.ltvRatio <= 70 ? 'bg-green-500' : 
-                                    request.ltvRatio <= 80 ? 'bg-yellow-500' : 'bg-red-500'
-                                  }`} />
-                                </div>
+                                {request.ltvRatio != null ? (
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-medium">{request.ltvRatio}%</span>
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      request.ltvRatio <= 70 ? 'bg-green-500' :
+                                      request.ltvRatio <= 80 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`} />
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <Badge className={getStatusColor(request.status)}>
-                                  {request.status}
+                                  {request.statusLabel}
                                 </Badge>
                               </TableCell>
                               <TableCell>
@@ -916,22 +777,23 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center space-x-1">
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => handleViewDetails(request)}
                                   >
                                     <Eye className="h-4 w-4" />
                                   </Button>
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="sm"
+                                    disabled={isLoading}
                                     onClick={() => handleApproveCredit(request.id)}
                                   >
                                     <CheckCircle className="h-4 w-4" />
                                   </Button>
-                                  <Button 
-                                    variant="ghost" 
+                                  <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => setSelectedRequest(request)}
                                   >
@@ -954,7 +816,9 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-semibold mb-2">Vue Détaillée des Demandes</h3>
-                <p className="text-gray-600">Interface de gestion approfondie des dossiers de crédit</p>
+                <p className="text-gray-600">
+                  Ouvrez un dossier depuis l'onglet Dashboard pour consulter le détail complet.
+                </p>
               </div>
             </TabsContent>
 
@@ -969,25 +833,29 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Approuvés</span>
-                        <span className="font-semibold text-green-600">{creditStats.approvedCredits}</span>
+                    {creditStats.totalRequests === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-6">Aucune donnée disponible</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Approuvés / Décaissés</span>
+                          <span className="font-semibold text-green-600">{creditStats.approvedCredits}</span>
+                        </div>
+                        <Progress value={(creditStats.approvedCredits / creditStats.totalRequests) * 100} className="h-2" />
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">En cours</span>
+                          <span className="font-semibold text-yellow-600">{creditStats.pendingReview}</span>
+                        </div>
+                        <Progress value={(creditStats.pendingReview / creditStats.totalRequests) * 100} className="h-2" />
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Rejetés</span>
+                          <span className="font-semibold text-red-600">{creditStats.rejectedRequests}</span>
+                        </div>
+                        <Progress value={(creditStats.rejectedRequests / creditStats.totalRequests) * 100} className="h-2" />
                       </div>
-                      <Progress value={(creditStats.approvedCredits / creditStats.totalRequests) * 100} className="h-2" />
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">En attente</span>
-                        <span className="font-semibold text-yellow-600">{creditStats.pendingReview}</span>
-                      </div>
-                      <Progress value={(creditStats.pendingReview / creditStats.totalRequests) * 100} className="h-2" />
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Rejetés</span>
-                        <span className="font-semibold text-red-600">{creditStats.rejectedRequests}</span>
-                      </div>
-                      <Progress value={(creditStats.rejectedRequests / creditStats.totalRequests) * 100} className="h-2" />
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -995,26 +863,24 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Globe className="h-5 w-5 text-green-600" />
-                      <span>Performance Plateforme</span>
+                      <span>Indicateurs de Portefeuille</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Demandes via plateforme:</span>
-                        <span className="font-semibold">{creditStats.platformReferrals}</span>
+                        <span className="text-gray-600">Volume total financé:</span>
+                        <span className="font-semibold">{fmtM(creditStats.totalVolume)} CFA</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Taux de conversion:</span>
-                        <span className="font-semibold text-green-600">{creditStats.platformConversionRate}%</span>
+                        <span className="text-gray-600">Montant moyen:</span>
+                        <span className="font-semibold">{fmtM(creditStats.averageAmount)} CFA</span>
                       </div>
-                      <Progress value={creditStats.platformConversionRate} className="h-2" />
-                      <Alert>
-                        <TrendingUp className="h-4 w-4" />
-                        <AlertDescription>
-                          Excellente performance des demandes via Teranga Foncier
-                        </AlertDescription>
-                      </Alert>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Taux d'approbation:</span>
+                        <span className="font-semibold text-green-600">{creditStats.approvalRate}%</span>
+                      </div>
+                      <Progress value={creditStats.approvalRate} className="h-2" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1028,7 +894,7 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   <CardContent className="p-4 text-center">
                     <Download className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                     <h3 className="font-semibold mb-1">Rapport Mensuel</h3>
-                    <p className="text-sm text-gray-600">Synthèse des activités</p>
+                    <p className="text-sm text-gray-600">Bientôt disponible</p>
                   </CardContent>
                 </Card>
 
@@ -1036,15 +902,15 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   <CardContent className="p-4 text-center">
                     <BarChart3 className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <h3 className="font-semibold mb-1">Analyse Risques</h3>
-                    <p className="text-sm text-gray-600">Évolution du portfolio</p>
+                    <p className="text-sm text-gray-600">Bientôt disponible</p>
                   </CardContent>
                 </Card>
 
                 <Card className="cursor-pointer hover:shadow-md transition-shadow">
                   <CardContent className="p-4 text-center">
                     <FileText className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                    <h3 className="font-semibold mb-1">Rapport Plateforme</h3>
-                    <p className="text-sm text-gray-600">Performance Teranga</p>
+                    <h3 className="font-semibold mb-1">Rapport Portefeuille</h3>
+                    <p className="text-sm text-gray-600">Bientôt disponible</p>
                   </CardContent>
                 </Card>
               </div>
@@ -1052,8 +918,6 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
           </Tabs>
         </CardContent>
       </Card>
-
-
 
       {/* Modal de détails avancé */}
       {selectedRequest && (
@@ -1067,21 +931,23 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
               <div className="flex items-center space-x-4">
                 <Avatar className="w-12 h-12">
                   <AvatarFallback className="font-semibold">
-                    {selectedRequest.applicantName.split(' ').map(n => n[0]).join('')}
+                    {selectedRequest.applicantName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-2xl font-bold">{selectedRequest.applicantName}</h3>
                   <div className="flex items-center space-x-2">
                     <Badge className={getStatusColor(selectedRequest.status)}>
-                      {selectedRequest.status}
+                      {selectedRequest.statusLabel}
                     </Badge>
-                    <Badge variant="outline">{selectedRequest.platformRef}</Badge>
+                    {selectedRequest.platformRef && (
+                      <Badge variant="outline">{selectedRequest.platformRef}</Badge>
+                    )}
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedRequest(null)}
                 className="p-2"
               >
@@ -1112,7 +978,10 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   <Alert>
                     <Shield className="h-4 w-4" />
                     <AlertDescription>
-                      Probabilité d'approbation: <strong>{selectedRequest.estimatedApprovalProbability}%</strong>
+                      Statut actuel: <strong>{selectedRequest.statusLabel}</strong>
+                      {selectedRequest.riskLevel && (
+                        <> — Niveau de risque: <strong>{getRiskLabel(selectedRequest.riskLevel)}</strong></>
+                      )}
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1131,29 +1000,25 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 <CardContent className="space-y-3">
                   <div>
                     <label className="text-sm text-gray-600">Contact</label>
-                    <p className="font-medium">{selectedRequest.applicantPhone}</p>
-                    <p className="text-sm text-gray-600">{selectedRequest.applicantEmail}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">Revenus mensuels</label>
-                    <p className="font-medium text-green-600">
-                      {selectedRequest.monthlyIncome?.toLocaleString()} FCFA
-                    </p>
+                    <p className="font-medium">{selectedRequest.applicantPhone || '—'}</p>
+                    <p className="text-sm text-gray-600">{selectedRequest.applicantEmail || '—'}</p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Score de crédit</label>
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">{selectedRequest.creditScore}</span>
-                      <div className={`w-2 h-2 rounded-full ${
-                        selectedRequest.creditScore >= 750 ? 'bg-green-500' : 
-                        selectedRequest.creditScore >= 650 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`} />
+                      <span className="font-medium">{selectedRequest.creditScore ?? '—'}</span>
+                      {selectedRequest.creditScore != null && (
+                        <div className={`w-2 h-2 rounded-full ${
+                          selectedRequest.creditScore >= 750 ? 'bg-green-500' :
+                          selectedRequest.creditScore >= 650 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`} />
+                      )}
                     </div>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Niveau de risque</label>
                     <p className={`font-medium ${getRiskColor(selectedRequest.riskLevel)}`}>
-                      {selectedRequest.riskLevel}
+                      {getRiskLabel(selectedRequest.riskLevel)}
                     </p>
                   </div>
                 </CardContent>
@@ -1171,28 +1036,38 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                   <div>
                     <label className="text-sm text-gray-600">Montant demandé</label>
                     <p className="font-medium text-lg text-blue-600">
-                      {(selectedRequest.requestedAmount / 1000000).toFixed(0)}M FCFA
+                      {fmtM(selectedRequest.requestedAmount)} FCFA
                     </p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Valeur du bien</label>
                     <p className="font-medium">
-                      {(selectedRequest.propertyValue / 1000000).toFixed(0)}M FCFA
+                      {fmtM(selectedRequest.propertyValue)} FCFA
                     </p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Ratio LTV</label>
-                    <p className="font-medium">{selectedRequest.ltvRatio}%</p>
-                    <Progress value={selectedRequest.ltvRatio} className="h-2 mt-1" />
+                    <p className="font-medium">{selectedRequest.ltvRatio != null ? `${selectedRequest.ltvRatio}%` : '—'}</p>
+                    {selectedRequest.ltvRatio != null && (
+                      <Progress value={selectedRequest.ltvRatio} className="h-2 mt-1" />
+                    )}
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Taux proposé</label>
-                    <p className="font-medium text-green-600">{selectedRequest.interestRate}%</p>
+                    <p className="font-medium text-green-600">
+                      {selectedRequest.interestRate != null ? `${selectedRequest.interestRate}%` : '—'}
+                    </p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Mensualité</label>
+                    <label className="text-sm text-gray-600">Durée</label>
                     <p className="font-medium">
-                      {selectedRequest.monthlyPayment?.toLocaleString()} FCFA
+                      {selectedRequest.proposedTerm != null ? `${selectedRequest.proposedTerm} mois` : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Mensualité estimée</label>
+                    <p className="font-medium">
+                      {selectedRequest.monthlyPayment != null ? `${fmtFull(selectedRequest.monthlyPayment)} FCFA` : '—'}
                     </p>
                   </div>
                 </CardContent>
@@ -1209,28 +1084,23 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 <CardContent className="space-y-3">
                   <div>
                     <label className="text-sm text-gray-600">Localisation</label>
-                    <p className="font-medium">{selectedRequest.landLocation}</p>
+                    <p className="font-medium">{selectedRequest.landLocation || '—'}</p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Superficie</label>
-                    <p className="font-medium">{selectedRequest.landArea}</p>
+                    <p className="font-medium">{selectedRequest.landArea || '—'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Titre foncier</label>
-                    <p className="font-medium">{selectedRequest.landTitle}</p>
+                    <label className="text-sm text-gray-600">Référence blockchain</label>
+                    <p className="font-medium text-xs break-all">{selectedRequest.landTitle || '—'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Zonage</label>
-                    <p className="font-medium">{selectedRequest.zoning}</p>
+                    <label className="text-sm text-gray-600">Type de bien</label>
+                    <p className="font-medium">{selectedRequest.zoning || '—'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Vendeur</label>
-                    <div className="flex items-center space-x-2">
-                      <p className="font-medium">{selectedRequest.sellerInfo?.name}</p>
-                      {selectedRequest.sellerInfo?.verified && (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      )}
-                    </div>
+                    <label className="text-sm text-gray-600">Objet du financement</label>
+                    <p className="font-medium">{selectedRequest.purpose || '—'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1240,29 +1110,15 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <FileText className="h-5 w-5 mr-2" />
-                      Documents
-                    </span>
-                    <Badge variant="outline">
-                      {selectedRequest.documentsComplete}% complet
-                    </Badge>
+                  <CardTitle className="flex items-center">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Documents
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {selectedRequest.documents?.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <div className="flex items-center space-x-2">
-                          <CheckSquare className="h-4 w-4 text-green-600" />
-                          <span className="text-sm">{doc}</span>
-                        </div>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
+                  <div className="flex items-center space-x-2 text-sm text-gray-500 p-3 bg-gray-50 rounded">
+                    <CheckSquare className="h-4 w-4 text-gray-400" />
+                    <span>Gestion documentaire bientôt disponible</span>
                   </div>
                 </CardContent>
               </Card>
@@ -1276,42 +1132,45 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-600">Notes conseiller</label>
+                    <label className="text-sm text-gray-600">Objet / Notes</label>
                     <p className="text-sm bg-blue-50 p-3 rounded">
-                      {selectedRequest.advisorNotes}
+                      {selectedRequest.advisorNotes || 'Aucune note'}
                     </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
+                    <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
+                      disabled={isLoading}
                       onClick={() => handleApproveCredit(selectedRequest.id)}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Approuver
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
                       variant="outline"
                       className="border-red-600 text-red-600"
+                      disabled={isLoading}
                       onClick={() => handleRejectCredit(selectedRequest.id)}
                     >
                       <XCircle className="h-3 w-3 mr-1" />
                       Rejeter
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
                       variant="outline"
+                      disabled={isLoading}
                       onClick={() => handleLandValuation(selectedRequest.id)}
                     >
                       <Calculator className="h-3 w-3 mr-1" />
                       Évaluer
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleScheduleCall(selectedRequest.id)}
+                      onClick={handleScheduleCall}
                     >
                       <PhoneCall className="h-3 w-3 mr-1" />
                       Appeler

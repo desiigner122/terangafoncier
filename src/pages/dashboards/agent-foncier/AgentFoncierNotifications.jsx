@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Bell,
   Check,
-  X,
-  Filter,
-  Search,
   AlertTriangle,
   Info,
-  CheckCircle,
   MapPin,
   FileText,
   Calculator,
@@ -16,90 +12,125 @@ import {
   Settings,
   Trash2,
   MailOpen,
-  Archive
+  Users
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Icône choisie d'après le type de notification (présentation, pas une donnée fabriquée)
+const ICON_BY_TYPE = {
+  evaluation: Calculator,
+  estimation: Calculator,
+  document: FileText,
+  client: Users,
+  prospect: Users,
+  reminder: Clock,
+  rappel: Clock,
+  mission: MapPin,
+  system: Settings,
+  alert: AlertTriangle,
+  info: Info
+};
+
+const getIcon = (type) => ICON_BY_TYPE[String(type || '').toLowerCase()] || Bell;
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffSeconds = Math.round((now - date) / 1000);
+  const diffMinutes = Math.round(diffSeconds / 60);
+  const diffHours = Math.round(diffMinutes / 60);
+  const diffDays = Math.round(diffHours / 24);
+
+  if (diffSeconds < 60) return `À l'instant`;
+  if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+  if (diffHours < 24) return `Il y a ${diffHours} h`;
+  if (diffDays === 1) return `Hier`;
+  if (diffDays < 7) return `Il y a ${diffDays} jours`;
+  return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
+};
 
 const AgentFoncierNotifications = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
-
-  const notifications = [
-    {
-      id: 1,
-      type: 'evaluation',
-      title: 'Nouvelle demande d\'évaluation',
-      message: 'M. Diallo souhaite une évaluation pour son terrain aux Almadies',
-      location: 'Almadies, Dakar',
-      time: 'Il y a 15 min',
-      read: false,
-      priority: 'high',
-      icon: Calculator
-    },
-    {
-      id: 2,
-      type: 'document',
-      title: 'Document signé',
-      message: 'Le titre foncier TF-2024-001 a été validé et signé',
-      location: 'Rufisque',
-      time: 'Il y a 1h',
-      read: false,
-      priority: 'medium',
-      icon: FileText
-    },
-    {
-      id: 3,
-      type: 'client',
-      title: 'Nouveau client',
-      message: 'Société IMMOGO a créé un compte et demande vos services',
-      location: 'Parcelles Assainies',
-      time: 'Il y a 2h',
-      read: true,
-      priority: 'medium',
-      icon: AlertTriangle
-    },
-    {
-      id: 4,
-      type: 'reminder',
-      title: 'Rappel de visite',
-      message: 'Visite terrain prévue aujourd\'hui à 14h30 chez M. Fall',
-      location: 'Thiès',
-      time: 'Il y a 3h',
-      read: false,
-      priority: 'high',
-      icon: Clock
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'Mise à jour disponible',
-      message: 'Version 2.1 de l\'application disponible avec nouvelles fonctionnalités IA',
-      time: 'Il y a 1 jour',
-      read: true,
-      priority: 'low',
-      icon: Settings
+  const fetchNotifications = useCallback(async () => {
+    if (!user?.id) {
+      setNotifications([]);
+      setLoading(false);
+      return;
     }
-  ];
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id, user_id, title, message, type, read, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-  const filteredNotifications = notifications.filter(notification => {
+    if (error) {
+      console.error('Erreur chargement notifications:', error);
+      setNotifications([]);
+    } else {
+      setNotifications(data || []);
+    }
+    setLoading(false);
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkRead = async (id) => {
+    const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
+    if (!error) {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    if (!error) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase.from('notifications').delete().eq('id', id);
+    if (!error) {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }
+  };
+
+  const filteredNotifications = notifications.filter((notification) => {
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'unread') return !notification.read;
     return notification.type === selectedFilter;
   });
 
+  // Types de filtre : "Toutes" + "Non lues" + les types réellement présents dans les données
+  const presentTypes = [...new Set(notifications.map((n) => n.type).filter(Boolean))];
   const notificationTypes = [
     { key: 'all', label: 'Toutes', count: notifications.length },
-    { key: 'unread', label: 'Non lues', count: notifications.filter(n => !n.read).length },
-    { key: 'evaluation', label: 'Évaluations', count: notifications.filter(n => n.type === 'evaluation').length },
-    { key: 'document', label: 'Documents', count: notifications.filter(n => n.type === 'document').length },
-    { key: 'client', label: 'Clients', count: notifications.filter(n => n.type === 'client').length }
+    { key: 'unread', label: 'Non lues', count: notifications.filter((n) => !n.read).length },
+    ...presentTypes.map((t) => ({
+      key: t,
+      label: t.charAt(0).toUpperCase() + t.slice(1),
+      count: notifications.filter((n) => n.type === t).length
+    }))
   ];
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) {
     return (
@@ -118,11 +149,7 @@ const AgentFoncierNotifications = () => {
           <p className="text-gray-600">Centre de notifications Agent Foncier</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleMarkAllRead} disabled={unreadCount === 0}>
             <Check className="h-4 w-4 mr-2" />
             Tout marquer comme lu
           </Button>
@@ -148,74 +175,72 @@ const AgentFoncierNotifications = () => {
 
       {/* Liste des notifications */}
       <div className="space-y-4">
-        {filteredNotifications.map((notification, index) => (
-          <motion.div
-            key={notification.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-          >
-            <Card className={`hover:shadow-md transition-shadow ${
-              !notification.read ? 'border-l-4 border-l-green-500 bg-green-50' : ''
-            }`}>
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-4">
-                  <div className={`p-2 rounded-full ${
-                    notification.priority === 'high' ? 'bg-red-100' :
-                    notification.priority === 'medium' ? 'bg-yellow-100' : 'bg-gray-100'
-                  }`}>
-                    <notification.icon className={`h-5 w-5 ${
-                      notification.priority === 'high' ? 'text-red-600' :
-                      notification.priority === 'medium' ? 'text-yellow-600' : 'text-gray-600'
-                    }`} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-medium text-gray-900">{notification.title}</h4>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={
-                          notification.priority === 'high' ? 'destructive' :
-                          notification.priority === 'medium' ? 'warning' : 'secondary'
-                        } className="text-xs">
-                          {notification.priority === 'high' ? 'Urgent' :
-                           notification.priority === 'medium' ? 'Moyen' : 'Info'}
-                        </Badge>
-                        <span className="text-xs text-gray-500">{notification.time}</span>
-                      </div>
+        {filteredNotifications.map((notification, index) => {
+          const Icon = getIcon(notification.type);
+          return (
+            <motion.div
+              key={notification.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.05 }}
+            >
+              <Card className={`hover:shadow-md transition-shadow ${
+                !notification.read ? 'border-l-4 border-l-green-500 bg-green-50' : ''
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-2 rounded-full ${!notification.read ? 'bg-green-100' : 'bg-gray-100'}`}>
+                      <Icon className={`h-5 w-5 ${!notification.read ? 'text-green-600' : 'text-gray-600'}`} />
                     </div>
-                    
-                    <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                    
-                    {notification.location && (
-                      <div className="flex items-center space-x-1 mb-3">
-                        <MapPin className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">{notification.location}</span>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-medium text-gray-900">
+                          {notification.title || 'Notification'}
+                        </h4>
+                        <div className="flex items-center space-x-2">
+                          {notification.type && (
+                            <Badge variant="secondary" className="text-xs">
+                              {notification.type}
+                            </Badge>
+                          )}
+                          <span className="text-xs text-gray-500">{formatDate(notification.created_at)}</span>
+                        </div>
                       </div>
-                    )}
-                    
-                    <div className="flex items-center space-x-2">
-                      {!notification.read && (
-                        <Button size="sm" variant="outline" className="text-xs">
-                          <MailOpen className="h-3 w-3 mr-1" />
-                          Marquer comme lu
-                        </Button>
+
+                      {notification.message && (
+                        <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
                       )}
-                      <Button size="sm" variant="ghost" className="text-xs">
-                        <Archive className="h-3 w-3 mr-1" />
-                        Archiver
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs text-red-600">
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Supprimer
-                      </Button>
+
+                      <div className="flex items-center space-x-2">
+                        {!notification.read && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => handleMarkRead(notification.id)}
+                          >
+                            <MailOpen className="h-3 w-3 mr-1" />
+                            Marquer comme lu
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs text-red-600"
+                          onClick={() => handleDelete(notification.id)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Supprimer
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Message si aucune notification */}
@@ -226,7 +251,9 @@ const AgentFoncierNotifications = () => {
             Aucune notification
           </h3>
           <p className="text-gray-600">
-            Vous n'avez pas de notifications pour ce filtre
+            {notifications.length === 0
+              ? "Vous n'avez aucune notification pour le moment"
+              : "Vous n'avez pas de notifications pour ce filtre"}
           </p>
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -45,81 +45,195 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+const APPROVED_STATUSES = ['approved', 'pre_approved', 'disbursed'];
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+const RISK_META = {
+  low: { category: 'Risque Faible', risk: 'Faible', color: '#10B981' },
+  medium: { category: 'Risque Moyen', risk: 'Moyen', color: '#F59E0B' },
+  high: { category: 'Risque Élevé', risk: 'Élevé', color: '#EF4444' },
+  unknown: { category: 'Non évalué', risk: 'N/D', color: '#9CA3AF' }
+};
+
+const formatFcfa = (value) => {
+  const n = Number(value) || 0;
+  if (n >= 1000000000) return `${(n / 1000000000).toFixed(1)} Md FCFA`;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)} M FCFA`;
+  return `${n.toLocaleString('fr-FR')} FCFA`;
+};
 
 const BanqueAnalytics = () => {
+  const { user } = useAuth();
   const [timeFilter, setTimeFilter] = useState('12m');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Données analytiques spécifiques aux crédits terrains
-  const analyticsData = {
-    creditPortfolio: {
-      total: 45000000000, // 45 milliards FCFA
-      growth: 18.3,
-      landCredits: 32000000000, // 32 milliards pour terrains
-      traditionalCredits: 13000000000 // 13 milliards autres
-    },
-    performanceMetrics: [
-      {
-        metric: 'Taux Approbation Terrains',
-        value: '87%',
-        change: 5.2,
-        status: 'excellent',
-        target: '85%'
-      },
-      {
-        metric: 'Délai Moyen Traitement',
-        value: '12 jours',
-        change: -15.3,
-        status: 'bon',
-        target: '15 jours'
-      },
-      {
-        metric: 'LTV Moyen Terrains',
-        value: '76%',
-        change: 2.1,
-        status: 'stable',
-        target: '80%'
-      },
-      {
-        metric: 'Taux Défaut',
-        value: '2.3%',
-        change: -8.7,
-        status: 'excellent',
-        target: '3%'
+  // Données réelles Supabase
+  const [loans, setLoans] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [regionMap, setRegionMap] = useState({}); // property_id -> region
+
+  const fetchData = useCallback(async () => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    try {
+      const [{ data: loansData }, { data: clientsData }] = await Promise.all([
+        supabase.from('loans').select('*').eq('bank_id', user.id),
+        supabase.from('bank_clients').select('id').eq('bank_id', user.id)
+      ]);
+
+      const safeLoans = loansData || [];
+      setLoans(safeLoans);
+      setClients(clientsData || []);
+
+      // Régions via properties (loans.property_id -> properties.region)
+      const propertyIds = [...new Set(safeLoans.map((l) => l.property_id).filter(Boolean))];
+      if (propertyIds.length > 0) {
+        const { data: props } = await supabase
+          .from('properties')
+          .select('id, region')
+          .in('id', propertyIds);
+        const map = {};
+        (props || []).forEach((p) => { map[p.id] = p.region; });
+        setRegionMap(map);
+      } else {
+        setRegionMap({});
       }
-    ],
-    creditEvolution: [
-      { month: 'Jan', totalCredits: 2400000000, landCredits: 1680000000, approvalRate: 82 },
-      { month: 'Fév', totalCredits: 2850000000, landCredits: 1995000000, approvalRate: 85 },
-      { month: 'Mar', totalCredits: 3200000000, landCredits: 2240000000, approvalRate: 88 },
-      { month: 'Avr', totalCredits: 2900000000, landCredits: 2030000000, approvalRate: 84 },
-      { month: 'Mai', totalCredits: 3800000000, landCredits: 2660000000, approvalRate: 89 },
-      { month: 'Jun', totalCredits: 4200000000, landCredits: 2940000000, approvalRate: 87 }
-    ],
-    riskAnalysis: [
-      { category: 'Terrain Titré', value: 78, risk: 'Faible', color: '#10B981' },
-      { category: 'Terrain Immatriculé', value: 15, risk: 'Moyen', color: '#F59E0B' },
-      { category: 'Terrain Non-Titré', value: 7, risk: 'Élevé', color: '#EF4444' }
-    ],
-    geographicDistribution: [
-      { region: 'Dakar', credits: 145, amount: 18500000000, avgLTV: 78 },
-      { region: 'Thiès', credits: 89, amount: 8900000000, avgLTV: 75 },
-      { region: 'Saint-Louis', credits: 67, amount: 6200000000, avgLTV: 73 },
-      { region: 'Kaolack', credits: 45, amount: 4100000000, avgLTV: 76 },
-      { region: 'Ziguinchor', credits: 34, amount: 3800000000, avgLTV: 74 }
-    ]
-  };
+    } catch (err) {
+      setLoans([]);
+      setClients([]);
+      setRegionMap({});
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Fenêtre temporelle en mois selon le filtre
+  const windowMonths = useMemo(() => {
+    const map = { '3m': 3, '6m': 6, '12m': 12, '24m': 24 };
+    return map[timeFilter] || 12;
+  }, [timeFilter]);
+
+  const filteredLoans = useMemo(() => {
+    if (loans.length === 0) return [];
+    const from = new Date();
+    from.setMonth(from.getMonth() - windowMonths);
+    return loans.filter((l) => l.created_at && new Date(l.created_at) >= from);
+  }, [loans, windowMonths]);
+
+  // Métriques de performance réelles
+  const performanceMetrics = useMemo(() => {
+    const total = filteredLoans.length;
+    const approved = filteredLoans.filter((l) => APPROVED_STATUSES.includes(l.status)).length;
+    const rejected = filteredLoans.filter((l) => l.status === 'rejected').length;
+    const portfolio = filteredLoans
+      .filter((l) => ['approved', 'disbursed'].includes(l.status))
+      .reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+    const rates = filteredLoans.map((l) => Number(l.interest_rate)).filter((r) => !Number.isNaN(r) && r > 0);
+    const avgRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
+
+    return [
+      {
+        metric: 'Taux Approbation',
+        value: total ? `${Math.round((approved / total) * 100)}%` : '—',
+        detail: total ? `${approved}/${total} dossiers` : 'Aucun dossier',
+        status: total ? 'bon' : 'default'
+      },
+      {
+        metric: 'Portefeuille Décaissé',
+        value: portfolio > 0 ? formatFcfa(portfolio) : '—',
+        detail: 'Crédits approuvés / décaissés',
+        status: portfolio > 0 ? 'excellent' : 'default'
+      },
+      {
+        metric: 'Taux de Rejet',
+        value: total ? `${Math.round((rejected / total) * 100)}%` : '—',
+        detail: total ? `${rejected}/${total} dossiers` : 'Aucun dossier',
+        status: total ? 'stable' : 'default'
+      },
+      {
+        metric: 'Taux d\'Intérêt Moyen',
+        value: avgRate != null ? `${avgRate.toFixed(1)}%` : '—',
+        detail: `${clients.length} client(s) enregistré(s)`,
+        status: avgRate != null ? 'bon' : 'default'
+      }
+    ];
+  }, [filteredLoans, clients]);
+
+  // Évolution des crédits par mois (agrégat réel)
+  const creditEvolution = useMemo(() => {
+    if (filteredLoans.length === 0) return [];
+    const nbMonths = Math.min(windowMonths, 12);
+    const buckets = [];
+    const now = new Date();
+    for (let i = nbMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({
+        key: `${d.getFullYear()}-${d.getMonth()}`,
+        month: MONTH_LABELS[d.getMonth()],
+        totalCredits: 0,
+        approvedCount: 0,
+        count: 0
+      });
+    }
+    const byKey = Object.fromEntries(buckets.map((b) => [b.key, b]));
+    filteredLoans.forEach((l) => {
+      if (!l.created_at) return;
+      const d = new Date(l.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const b = byKey[key];
+      if (!b) return;
+      b.totalCredits += Number(l.amount) || 0;
+      b.count += 1;
+      if (APPROVED_STATUSES.includes(l.status)) b.approvedCount += 1;
+    });
+    return buckets.map((b) => ({
+      month: b.month,
+      totalCredits: b.totalCredits,
+      approvalRate: b.count ? Math.round((b.approvedCount / b.count) * 100) : 0
+    }));
+  }, [filteredLoans, windowMonths]);
+
+  // Analyse des risques par risk_level (agrégat réel)
+  const riskAnalysis = useMemo(() => {
+    if (filteredLoans.length === 0) return [];
+    const counts = { low: 0, medium: 0, high: 0, unknown: 0 };
+    filteredLoans.forEach((l) => {
+      const lvl = ['low', 'medium', 'high'].includes(l.risk_level) ? l.risk_level : 'unknown';
+      counts[lvl] += 1;
+    });
+    const total = filteredLoans.length;
+    return Object.entries(counts)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => ({
+        category: RISK_META[k].category,
+        value: Math.round((v / total) * 100),
+        risk: RISK_META[k].risk,
+        color: RISK_META[k].color
+      }));
+  }, [filteredLoans]);
+
+  // Distribution géographique via properties.region (agrégat réel)
+  const geographicDistribution = useMemo(() => {
+    if (filteredLoans.length === 0) return [];
+    const byRegion = {};
+    filteredLoans.forEach((l) => {
+      const region = regionMap[l.property_id] || 'Non renseigné';
+      if (!byRegion[region]) byRegion[region] = { region, credits: 0, amount: 0 };
+      byRegion[region].credits += 1;
+      byRegion[region].amount += Number(l.amount) || 0;
+    });
+    return Object.values(byRegion).sort((a, b) => b.amount - a.amount).slice(0, 8);
+  }, [filteredLoans, regionMap]);
 
   const handleRefreshData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Données actualisées",
-        description: "Analytics bancaires mises à jour",
-        variant: "success"
-      });
-      setIsLoading(false);
-    }, 2000);
+    fetchData();
   };
 
   const handleExportReport = () => {
@@ -182,14 +296,6 @@ const BanqueAnalytics = () => {
     });
   };
 
-  const getChangeColor = (change) => {
-    return change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-600';
-  };
-
-  const getChangeIcon = (change) => {
-    return change > 0 ? <ArrowUp className="h-4 w-4" /> : change < 0 ? <ArrowDown className="h-4 w-4" /> : null;
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'excellent': return 'bg-green-100 text-green-800';
@@ -244,7 +350,7 @@ const BanqueAnalytics = () => {
 
       {/* Métriques de performance crédits terrains */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {analyticsData.performanceMetrics.map((metric, index) => (
+        {performanceMetrics.map((metric, index) => (
           <motion.div
             key={metric.metric}
             initial={{ opacity: 0, y: 20 }}
@@ -299,14 +405,8 @@ const BanqueAnalytics = () => {
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
                   <div className="flex items-center justify-between">
-                    <div className={`flex items-center space-x-1 ${getChangeColor(metric.change)}`}>
-                      {getChangeIcon(metric.change)}
-                      <span className="text-sm font-medium">
-                        {Math.abs(metric.change)}%
-                      </span>
-                    </div>
                     <p className="text-xs text-gray-500">
-                      Objectif: {metric.target}
+                      {metric.detail}
                     </p>
                   </div>
                 </div>
@@ -357,33 +457,32 @@ const BanqueAnalytics = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={analyticsData.creditEvolution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value, name) => [
-                    name === 'approvalRate' ? `${value}%` : `${(value / 1000000000).toFixed(1)}Md FCFA`,
-                    name === 'approvalRate' ? 'Taux Approbation' : name === 'landCredits' ? 'Crédits Terrains' : 'Total Crédits'
-                  ]}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="totalCredits" 
-                  stroke="#3B82F6" 
-                  fill="#3B82F6" 
-                  fillOpacity={0.1}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="landCredits" 
-                  stroke="#10B981" 
-                  fill="#10B981" 
-                  fillOpacity={0.2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {creditEvolution.length === 0 ? (
+              <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+                Aucun crédit sur la période sélectionnée
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={creditEvolution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      name === 'approvalRate' ? `${value}%` : formatFcfa(value),
+                      name === 'approvalRate' ? 'Taux Approbation' : 'Volume Crédits'
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="totalCredits"
+                    stroke="#3B82F6"
+                    fill="#3B82F6"
+                    fillOpacity={0.15}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -427,26 +526,32 @@ const BanqueAnalytics = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
-                <Pie
-                  data={analyticsData.riskAnalysis}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={120}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {analyticsData.riskAnalysis.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value}%`, 'Pourcentage']} />
-              </RechartsPieChart>
-            </ResponsiveContainer>
+            {riskAnalysis.length === 0 ? (
+              <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+                Aucune donnée de risque disponible
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={riskAnalysis}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={120}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {riskAnalysis.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value}%`, 'Pourcentage']} />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            )}
             <div className="grid grid-cols-1 gap-2 mt-4">
-              {analyticsData.riskAnalysis.map((item) => (
+              {riskAnalysis.map((item) => (
                 <div key={item.category} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div 
@@ -508,21 +613,27 @@ const BanqueAnalytics = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={analyticsData.geographicDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="region" />
-              <YAxis />
-              <Tooltip 
-                formatter={(value, name) => [
-                  name === 'credits' ? value : name === 'avgLTV' ? `${value}%` : `${(value / 1000000000).toFixed(1)}Md FCFA`,
-                  name === 'credits' ? 'Nombre Crédits' : name === 'avgLTV' ? 'LTV Moyen' : 'Montant'
-                ]}
-              />
-              <Bar dataKey="credits" fill="#3B82F6" />
-              <Bar dataKey="amount" fill="#10B981" />
-            </BarChart>
-          </ResponsiveContainer>
+          {geographicDistribution.length === 0 ? (
+            <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+              Aucune répartition géographique disponible
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={geographicDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="region" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === 'credits' ? value : formatFcfa(value),
+                    name === 'credits' ? 'Nombre Crédits' : 'Montant'
+                  ]}
+                />
+                <Bar dataKey="credits" fill="#3B82F6" />
+                <Bar dataKey="amount" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 

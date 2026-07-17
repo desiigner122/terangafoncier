@@ -1,22 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Activity, 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  Award, 
-  BarChart3, 
-  PieChart, 
-  Calendar,
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  PieChart,
   Users,
-  DollarSign,
-  CreditCard,
-  Percent,
   Clock,
   Star,
-  Trophy,
-  Zap,
   Shield,
   CheckCircle,
   AlertTriangle,
@@ -24,158 +15,82 @@ import {
   ArrowDown,
   RefreshCw,
   Download,
-  Filter,
-  Eye,
-  Settings,
-  Globe,
-  Smartphone,
   Building2,
-  FileText,
-  Database,
-  Search,
-  Plus
+  CreditCard,
+  Percent
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LineChart, Line, AreaChart, Area, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+const APPROVED_STATUSES = ['approved', 'pre_approved', 'disbursed'];
+const PORTFOLIO_STATUSES = ['approved', 'disbursed'];
+const PRODUCT_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'];
+const SEGMENT_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-cyan-500'];
 
 const BanquePerformances = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [selectedMetric, setSelectedMetric] = useState('all');
-  const [performanceData, setPerformanceData] = useState([]);
-  const [kpis, setKpis] = useState({});
+  const { user } = useAuth();
+  const [selectedPeriod, setSelectedPeriod] = useState('12m');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Données de performance simulées
+  // Données réelles Supabase
+  const [loans, setLoans] = useState([]);
+  const [guarantees, setGuarantees] = useState([]);
+  const [clients, setClients] = useState([]);
+
+  const fetchData = useCallback(async () => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    try {
+      const [{ data: loansData }, { data: guaranteesData }, { data: clientsData }] = await Promise.all([
+        supabase.from('loans').select('*').eq('bank_id', user.id),
+        supabase.from('guarantees').select('*').eq('bank_id', user.id),
+        supabase.from('bank_clients').select('*').eq('bank_id', user.id)
+      ]);
+      setLoans(loansData || []);
+      setGuarantees(guaranteesData || []);
+      setClients(clientsData || []);
+    } catch (err) {
+      setLoans([]);
+      setGuarantees([]);
+      setClients([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
-    const mockPerformanceData = [
-      {
-        periode: 'Jan 2024',
-        revenus: 2500000000,
-        clients: 2890,
-        credits: 1800000000,
-        epargne: 4200000000,
-        npa: 2.3,
-        roi: 15.8,
-        satisfaction: 87,
-        conversion: 12.4
-      },
-      {
-        periode: 'Fév 2024',
-        revenus: 2750000000,
-        clients: 3120,
-        credits: 2100000000,
-        epargne: 4580000000,
-        npa: 2.1,
-        roi: 16.2,
-        satisfaction: 89,
-        conversion: 13.1
-      },
-      {
-        periode: 'Mar 2024',
-        revenus: 3200000000,
-        clients: 3450,
-        credits: 2400000000,
-        epargne: 4950000000,
-        npa: 1.9,
-        roi: 17.5,
-        satisfaction: 91,
-        conversion: 14.2
-      },
-      {
-        periode: 'Avr 2024',
-        revenus: 3100000000,
-        clients: 3680,
-        credits: 2200000000,
-        epargne: 5200000000,
-        npa: 2.0,
-        roi: 16.8,
-        satisfaction: 88,
-        conversion: 13.8
-      },
-      {
-        periode: 'Mai 2024',
-        revenus: 3450000000,
-        clients: 3920,
-        credits: 2600000000,
-        epargne: 5480000000,
-        npa: 1.8,
-        roi: 18.1,
-        satisfaction: 92,
-        conversion: 15.3
-      },
-      {
-        periode: 'Juin 2024',
-        revenus: 3680000000,
-        clients: 4180,
-        credits: 2800000000,
-        epargne: 5750000000,
-        npa: 1.7,
-        roi: 18.9,
-        satisfaction: 94,
-        conversion: 16.1
-      }
-    ];
+    fetchData();
+  }, [fetchData]);
 
-    const mockKpis = {
-      revenus: {
-        current: 3680000000,
-        previous: 3450000000,
-        target: 4000000000,
-        growth: 6.7,
-        status: 'good'
-      },
-      clients: {
-        current: 4180,
-        previous: 3920,
-        target: 4500,
-        growth: 6.6,
-        status: 'good'
-      },
-      roi: {
-        current: 18.9,
-        previous: 18.1,
-        target: 20.0,
-        growth: 4.4,
-        status: 'good'
-      },
-      npa: {
-        current: 1.7,
-        previous: 1.8,
-        target: 2.0,
-        growth: -5.6,
-        status: 'excellent'
-      },
-      satisfaction: {
-        current: 94,
-        previous: 92,
-        target: 95,
-        growth: 2.2,
-        status: 'good'
-      },
-      conversion: {
-        current: 16.1,
-        previous: 15.3,
-        target: 18.0,
-        growth: 5.2,
-        status: 'good'
-      }
-    };
+  const windowMonths = useMemo(() => {
+    const map = { '3m': 3, '6m': 6, '12m': 12, '24m': 24 };
+    return map[selectedPeriod] || 12;
+  }, [selectedPeriod]);
 
-    setPerformanceData(mockPerformanceData);
-    setKpis(mockKpis);
-  }, []);
+  const windowStart = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - windowMonths);
+    return d;
+  }, [windowMonths]);
+
+  const filteredLoans = useMemo(
+    () => loans.filter((l) => l.created_at && new Date(l.created_at) >= windowStart),
+    [loans, windowStart]
+  );
 
   const formatCurrency = (value) => {
+    const n = Number(value) || 0;
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0
-    }).format(value);
+    }).format(n);
   };
 
   const getStatusColor = (status) => {
@@ -183,9 +98,10 @@ const BanquePerformances = () => {
       excellent: 'text-green-600 bg-green-100',
       good: 'text-blue-600 bg-blue-100',
       warning: 'text-yellow-600 bg-yellow-100',
-      danger: 'text-red-600 bg-red-100'
+      danger: 'text-red-600 bg-red-100',
+      default: 'text-gray-500 bg-gray-100'
     };
-    return colors[status] || colors.good;
+    return colors[status] || colors.default;
   };
 
   const getStatusIcon = (status) => {
@@ -193,24 +109,143 @@ const BanquePerformances = () => {
       excellent: CheckCircle,
       good: TrendingUp,
       warning: AlertTriangle,
-      danger: TrendingDown
+      danger: TrendingDown,
+      default: Activity
     };
-    return icons[status] || TrendingUp;
+    return icons[status] || Activity;
   };
 
-  // Données pour les graphiques
-  const pieData = [
-    { name: 'Crédits Immobiliers', value: 45, color: '#3B82F6' },
-    { name: 'Épargne', value: 30, color: '#10B981' },
-    { name: 'Crédits Auto', value: 15, color: '#8B5CF6' },
-    { name: 'Cartes', value: 10, color: '#F59E0B' }
-  ];
+  // KPIs agrégés réels (loans / guarantees / bank_clients)
+  const kpis = useMemo(() => {
+    const total = filteredLoans.length;
+    const approved = filteredLoans.filter((l) => APPROVED_STATUSES.includes(l.status)).length;
+    const rejected = filteredLoans.filter((l) => l.status === 'rejected').length;
+    const portfolio = filteredLoans
+      .filter((l) => PORTFOLIO_STATUSES.includes(l.status))
+      .reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+    const rates = filteredLoans.map((l) => Number(l.interest_rate)).filter((r) => !Number.isNaN(r) && r > 0);
+    const avgRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
+    const guaranteesValue = guarantees.reduce((sum, g) => sum + (Number(g.value) || 0), 0);
+    const highRisk = filteredLoans.filter((l) => l.risk_level === 'high').length;
+    const scores = clients.map((c) => Number(c.credit_score)).filter((s) => !Number.isNaN(s) && s > 0);
+    const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
 
-  const clientSegmentData = [
-    { segment: 'Particuliers', clients: 2850, revenus: 1520000000 },
-    { segment: 'PME', clients: 980, revenus: 1680000000 },
-    { segment: 'Diaspora', clients: 350, revenus: 480000000 }
-  ];
+    return {
+      portfolio: {
+        label: 'Portefeuille',
+        value: portfolio > 0 ? formatCurrency(portfolio) : '—',
+        detail: 'Crédits approuvés / décaissés',
+        status: portfolio > 0 ? 'good' : 'default'
+      },
+      clients: {
+        label: 'Clients',
+        value: clients.length > 0 ? clients.length.toLocaleString('fr-FR') : '—',
+        detail: 'Clients enregistrés',
+        status: clients.length > 0 ? 'good' : 'default'
+      },
+      approval: {
+        label: 'Taux Approbation',
+        value: total ? `${Math.round((approved / total) * 100)}%` : '—',
+        detail: total ? `${approved}/${total} dossiers` : 'Aucun dossier',
+        status: total ? 'good' : 'default'
+      },
+      rejection: {
+        label: 'Taux de Rejet',
+        value: total ? `${Math.round((rejected / total) * 100)}%` : '—',
+        detail: total ? `${rejected}/${total} dossiers` : 'Aucun dossier',
+        status: total ? (rejected / total > 0.3 ? 'warning' : 'good') : 'default'
+      },
+      avgRate: {
+        label: 'Taux Intérêt Moyen',
+        value: avgRate != null ? `${avgRate.toFixed(1)}%` : '—',
+        detail: `${rates.length} crédit(s) avec taux`,
+        status: avgRate != null ? 'good' : 'default'
+      },
+      guarantees: {
+        label: 'Garanties',
+        value: guaranteesValue > 0 ? formatCurrency(guaranteesValue) : '—',
+        detail: `${guarantees.length} garantie(s)`,
+        status: guaranteesValue > 0 ? 'excellent' : 'default'
+      },
+      _extra: { highRisk, total, avgScore }
+    };
+  }, [filteredLoans, guarantees, clients]);
+
+  // Évolution mensuelle réelle du portefeuille de crédits (montant + nombre)
+  const creditEvolution = useMemo(() => {
+    const nbMonths = Math.min(windowMonths, 12);
+    const buckets = [];
+    const now = new Date();
+    for (let i = nbMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, periode: MONTH_LABELS[d.getMonth()], credits: 0, dossiers: 0 });
+    }
+    const index = {};
+    buckets.forEach((b) => { index[b.key] = b; });
+    filteredLoans.forEach((l) => {
+      if (!l.created_at) return;
+      const d = new Date(l.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (index[key]) {
+        index[key].credits += Number(l.amount) || 0;
+        index[key].dossiers += 1;
+      }
+    });
+    return buckets;
+  }, [filteredLoans, windowMonths]);
+
+  // Croissance client réelle (cumul par mois d'inscription)
+  const clientEvolution = useMemo(() => {
+    if (clients.length === 0) return [];
+    const nbMonths = Math.min(windowMonths, 12);
+    const buckets = [];
+    const now = new Date();
+    for (let i = nbMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, periode: MONTH_LABELS[d.getMonth()], nouveaux: 0, clients: 0 });
+    }
+    const index = {};
+    buckets.forEach((b) => { index[b.key] = b; });
+    // Clients inscrits avant la fenêtre = base cumulative de départ
+    let base = 0;
+    clients.forEach((c) => {
+      if (!c.created_at) return;
+      const d = new Date(c.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (index[key]) index[key].nouveaux += 1;
+      else if (new Date(c.created_at) < windowStart) base += 1;
+    });
+    let cumul = base;
+    buckets.forEach((b) => { cumul += b.nouveaux; b.clients = cumul; });
+    return buckets;
+  }, [clients, windowMonths, windowStart]);
+
+  // Répartition des crédits par type (réel)
+  const productData = useMemo(() => {
+    const map = {};
+    filteredLoans
+      .filter((l) => PORTFOLIO_STATUSES.includes(l.status))
+      .forEach((l) => {
+        const key = l.type || 'Autre';
+        map[key] = (map[key] || 0) + (Number(l.amount) || 0);
+      });
+    const entries = Object.entries(map);
+    return entries.map(([name, value], i) => ({ name, value, color: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }));
+  }, [filteredLoans]);
+
+  // Segments par type de client (réel)
+  const clientSegmentData = useMemo(() => {
+    const map = {};
+    clients.forEach((c) => {
+      const key = c.client_type || 'Non catégorisé';
+      if (!map[key]) map[key] = { segment: key, clients: 0, credits: 0 };
+      map[key].clients += 1;
+      map[key].credits += Number(c.total_credits) || 0;
+    });
+    return Object.values(map).sort((a, b) => b.clients - a.clients);
+  }, [clients]);
+
+  const hasData = loans.length > 0 || guarantees.length > 0 || clients.length > 0;
 
   return (
     <div className="space-y-6">
@@ -222,28 +257,28 @@ const BanquePerformances = () => {
             Performances & Analytics
           </h2>
           <p className="text-gray-600 mt-1">
-            Suivi détaillé des performances bancaires et KPIs stratégiques
+            Suivi des performances bancaires à partir de vos crédits, garanties et clients
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="week">Cette semaine</SelectItem>
-              <SelectItem value="month">Ce mois</SelectItem>
-              <SelectItem value="quarter">Ce trimestre</SelectItem>
-              <SelectItem value="year">Cette année</SelectItem>
+              <SelectItem value="3m">3 derniers mois</SelectItem>
+              <SelectItem value="6m">6 derniers mois</SelectItem>
+              <SelectItem value="12m">12 derniers mois</SelectItem>
+              <SelectItem value="24m">24 derniers mois</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
+          <Button variant="outline" disabled>
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
         </div>
@@ -251,11 +286,8 @@ const BanquePerformances = () => {
 
       {/* KPIs principaux */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {Object.entries(kpis).map(([key, kpi]) => {
+        {Object.entries(kpis).filter(([key]) => key !== '_extra').map(([key, kpi]) => {
           const StatusIcon = getStatusIcon(kpi.status);
-          const isPositiveMetric = key !== 'npa'; // NPA est inversé (plus bas = mieux)
-          const isGrowthPositive = isPositiveMetric ? kpi.growth > 0 : kpi.growth < 0;
-          
           return (
             <Card key={key}>
               <CardContent className="p-4">
@@ -263,33 +295,11 @@ const BanquePerformances = () => {
                   <div className={`p-1 rounded-full ${getStatusColor(kpi.status)}`}>
                     <StatusIcon className="h-4 w-4" />
                   </div>
-                  <div className={`flex items-center text-sm ${isGrowthPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {isGrowthPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                    {Math.abs(kpi.growth).toFixed(1)}%
-                  </div>
                 </div>
-                
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase font-medium">
-                    {key === 'revenus' ? 'Revenus' :
-                     key === 'clients' ? 'Clients' :
-                     key === 'roi' ? 'ROI' :
-                     key === 'npa' ? 'NPA' :
-                     key === 'satisfaction' ? 'Satisfaction' :
-                     'Conversion'}
-                  </p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {key === 'revenus' ? formatCurrency(kpi.current) :
-                     key === 'clients' ? kpi.current.toLocaleString() :
-                     `${kpi.current}%`}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Objectif: {key === 'revenus' ? formatCurrency(kpi.target) : key === 'clients' ? kpi.target.toLocaleString() : `${kpi.target}%`}</span>
-                    <Progress 
-                      value={key === 'npa' ? (kpi.target / kpi.current) * 100 : (kpi.current / kpi.target) * 100} 
-                      className="w-12 h-1" 
-                    />
-                  </div>
+                  <p className="text-xs text-gray-500 uppercase font-medium">{kpi.label}</p>
+                  <p className="text-lg font-bold text-gray-900">{kpi.value}</p>
+                  <p className="text-xs text-gray-500">{kpi.detail}</p>
                 </div>
               </CardContent>
             </Card>
@@ -299,66 +309,72 @@ const BanquePerformances = () => {
 
       {/* Graphiques principaux */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Évolution des revenus */}
+        {/* Évolution du portefeuille de crédits */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
-              Évolution des Revenus
+              Évolution du Portefeuille
             </CardTitle>
             <CardDescription>
-              Revenus mensuels et tendance sur 6 mois
+              Montant des crédits accordés par mois
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="periode" />
-                <YAxis tickFormatter={(value) => `${(value / 1000000000).toFixed(1)}B`} />
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenus" 
-                  stroke="#3B82F6" 
-                  fill="#3B82F6" 
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {filteredLoans.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                Aucun crédit sur la période
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={creditEvolution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="periode" />
+                  <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`} />
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Area type="monotone" dataKey="credits" name="Crédits" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
-        {/* Répartition par produits */}
+        {/* Répartition par type de crédit */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <PieChart className="h-5 w-5 mr-2" />
-              Répartition des Revenus
+              Répartition du Portefeuille
             </CardTitle>
             <CardDescription>
-              Par type de produit bancaire
+              Par type de crédit (montant décaissé)
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
-                <Tooltip formatter={(value) => `${value}%`} />
-                <RechartsPieChart data={pieData}>
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+            {productData.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                Aucun crédit au portefeuille
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Pie data={productData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
+                    {productData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Legend />
                 </RechartsPieChart>
-                <Legend />
-              </RechartsPieChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Détails par segment */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Évolution des clients */}
+        {/* Croissance client */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -366,29 +382,29 @@ const BanquePerformances = () => {
               Croissance Client
             </CardTitle>
             <CardDescription>
-              Évolution du nombre de clients actifs
+              Évolution cumulée du nombre de clients
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="periode" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="clients" 
-                  stroke="#10B981" 
-                  strokeWidth={3}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {clientEvolution.length === 0 ? (
+              <div className="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+                Aucun client enregistré
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={clientEvolution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="periode" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="clients" name="Clients cumulés" stroke="#10B981" strokeWidth={3} dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
-        {/* Qualité du portefeuille */}
+        {/* Qualité du portefeuille (part de crédits à risque élevé) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -396,25 +412,28 @@ const BanquePerformances = () => {
               Qualité du Portefeuille
             </CardTitle>
             <CardDescription>
-              Évolution du taux de créances douteuses (NPA)
+              Part des crédits classés à risque élevé
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="periode" />
-                <YAxis domain={[0, 3]} />
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Area 
-                  type="monotone" 
-                  dataKey="npa" 
-                  stroke="#EF4444" 
-                  fill="#EF4444" 
-                  fillOpacity={0.3}
+            {kpis._extra.total === 0 ? (
+              <div className="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+                Aucun dossier sur la période
+              </div>
+            ) : (
+              <div className="h-[250px] flex flex-col items-center justify-center space-y-4">
+                <div className="text-5xl font-bold text-gray-900">
+                  {Math.round((kpis._extra.highRisk / kpis._extra.total) * 100)}%
+                </div>
+                <p className="text-sm text-gray-500">
+                  {kpis._extra.highRisk} / {kpis._extra.total} dossiers à risque élevé
+                </p>
+                <Progress
+                  value={(kpis._extra.highRisk / kpis._extra.total) * 100}
+                  className="w-2/3 h-2"
                 />
-              </AreaChart>
-            </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -427,48 +446,47 @@ const BanquePerformances = () => {
             Performance par Segment Client
           </CardTitle>
           <CardDescription>
-            Analyse détaillée des segments de clientèle
+            Répartition par type de client (crédits cumulés)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {clientSegmentData.map((segment, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-4 h-4 rounded-full ${
-                    index === 0 ? 'bg-blue-500' : 
-                    index === 1 ? 'bg-green-500' : 'bg-purple-500'
-                  }`}></div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{segment.segment}</h4>
-                    <p className="text-sm text-gray-500">{segment.clients.toLocaleString()} clients</p>
+          {clientSegmentData.length === 0 ? (
+            <div className="py-10 text-center text-gray-400 text-sm">
+              Aucun client enregistré
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {clientSegmentData.map((segment, index) => (
+                <div key={segment.segment} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-4 h-4 rounded-full ${SEGMENT_COLORS[index % SEGMENT_COLORS.length]}`}></div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 capitalize">{segment.segment}</h4>
+                      <p className="text-sm text-gray-500">{segment.clients.toLocaleString('fr-FR')} client(s)</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900">{formatCurrency(segment.credits)}</p>
+                    <p className="text-sm text-gray-500">
+                      {formatCurrency(segment.clients ? segment.credits / segment.clients : 0)} / client
+                    </p>
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <p className="font-bold text-gray-900">{formatCurrency(segment.revenus)}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(segment.revenus / segment.clients)} / client
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Tableaux de bord temps réel */}
+      {/* Indicateurs synthétiques réels */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Taux de conversion</p>
-                <p className="text-2xl font-bold text-gray-900">16.1%</p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+5.2%</span>
-                </div>
+                <p className="text-sm text-gray-600">Taux d'approbation</p>
+                <p className="text-2xl font-bold text-gray-900">{kpis.approval.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{kpis.approval.detail}</p>
               </div>
               <Target className="h-8 w-8 text-blue-600" />
             </div>
@@ -479,12 +497,9 @@ const BanquePerformances = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Satisfaction client</p>
-                <p className="text-2xl font-bold text-gray-900">94%</p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+2.2%</span>
-                </div>
+                <p className="text-sm text-gray-600">Score crédit moyen</p>
+                <p className="text-2xl font-bold text-gray-900">{kpis._extra.avgScore != null ? kpis._extra.avgScore : '—'}</p>
+                <p className="text-xs text-gray-500 mt-1">Sur {clients.length} client(s)</p>
               </div>
               <Star className="h-8 w-8 text-yellow-500" />
             </div>
@@ -495,14 +510,11 @@ const BanquePerformances = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Temps traitement</p>
-                <p className="text-2xl font-bold text-gray-900">2.4h</p>
-                <div className="flex items-center mt-1">
-                  <ArrowDown className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">-12%</span>
-                </div>
+                <p className="text-sm text-gray-600">Taux intérêt moyen</p>
+                <p className="text-2xl font-bold text-gray-900">{kpis.avgRate.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{kpis.avgRate.detail}</p>
               </div>
-              <Clock className="h-8 w-8 text-purple-600" />
+              <Percent className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -511,18 +523,21 @@ const BanquePerformances = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Score IA</p>
-                <p className="text-2xl font-bold text-gray-900">96.8%</p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+1.8%</span>
-                </div>
+                <p className="text-sm text-gray-600">Garanties actives</p>
+                <p className="text-2xl font-bold text-gray-900">{guarantees.length.toLocaleString('fr-FR')}</p>
+                <p className="text-xs text-gray-500 mt-1">{kpis.guarantees.value}</p>
               </div>
-              <Zap className="h-8 w-8 text-orange-500" />
+              <CreditCard className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {!hasData && !isLoading && (
+        <p className="text-center text-sm text-gray-400">
+          Aucune donnée de performance disponible pour le moment.
+        </p>
+      )}
     </div>
   );
 };

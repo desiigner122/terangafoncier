@@ -26,7 +26,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+
+// Normalise les valeurs de statut réelles (FR/EN) de communal_requests
+// vers les 4 états affichés par l'interface.
+const normalizeStatus = (raw) => {
+  const s = (raw || '').toString().toLowerCase();
+  if (['acceptee', 'acceptée', 'approuve', 'approuvee', 'approuvée', 'approved', 'accepted', 'validee', 'validée', 'active'].includes(s)) return 'acceptee';
+  if (['rejetee', 'rejetée', 'rejete', 'rejeté', 'refusee', 'refusée', 'rejected', 'refused'].includes(s)) return 'rejetee';
+  if (['en_instruction', 'en_cours', 'processing', 'instruction', 'paye', 'payé'].includes(s)) return 'en_instruction';
+  return 'en_attente'; // en_attente / pending / nouvelle / null par défaut
+};
 
 const ParticulierZonesCommunales = () => {
   const outletContext = useOutletContext();
@@ -56,23 +66,24 @@ const ParticulierZonesCommunales = () => {
       setLoading(true);
       console.log('📊 Chargement des candidatures zones communales...');
 
-      const { data, error } = await supabase
-        .from('candidatures_zones_communales')
-        .select(`
-          *,
-          zone:zone_id(
-            id, nom, commune, superficie_lot, prix_unitaire, description, statut
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Table réelle : communal_requests (filtrée sur applicant_id)
+      const result = await ParticulierSupabaseService.getCommunalRequests(user.id);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
 
-      setCandidatures(data || []);
-      console.log(`✅ ${data?.length || 0} candidatures chargées`);
+      // Normalisation vers le modèle attendu par l'UI
+      const rows = (result.data || []).map((r) => ({
+        ...r,
+        statut: normalizeStatus(r.status),
+        // Référence de dossier dérivée de l'id réel (pas de colonne numero_dossier)
+        numero_dossier: `ZC-${(r.id || '').toString().slice(0, 8).toUpperCase()}`
+      }));
+
+      setCandidatures(rows);
+      console.log(`✅ ${rows.length} candidatures chargées`);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des candidatures:', error);
+      setCandidatures([]);
     } finally {
       setLoading(false);
     }
@@ -113,11 +124,14 @@ const ParticulierZonesCommunales = () => {
     return colors[statut] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
-  const filteredCandidatures = candidatures.filter(candidature =>
-    candidature.zone?.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    candidature.zone?.commune?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    candidature.numero_dossier.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCandidatures = candidatures.filter(candidature => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (candidature.zone || '').toLowerCase().includes(term) ||
+      (candidature.commune || '').toLowerCase().includes(term) ||
+      (candidature.numero_dossier || '').toLowerCase().includes(term)
+    );
+  });
 
   // Vérification du contexte
   if (!outletContext) {
@@ -300,41 +314,35 @@ const ParticulierZonesCommunales = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-lg font-semibold text-slate-900">
-                        {candidature.zone?.nom || 'Zone non spécifiée'}
+                        {candidature.zone || 'Zone non spécifiée'}
                       </h3>
                       <Badge className={`border ${getStatusColor(candidature.statut)}`}>
                         {getStatusIcon(candidature.statut)}
                         <span className="ml-1">{getStatusLabel(candidature.statut)}</span>
                       </Badge>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm text-slate-600 mb-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <span>{candidature.zone?.commune || 'N/A'}</span>
+                        <span>{candidature.commune || '—'}</span>
                       </div>
                       <div>
-                        <span className="font-medium">Superficie:</span> {candidature.superficie_demandee}m²
+                        <span className="font-medium">Superficie:</span> {candidature.surface != null ? `${candidature.surface} m²` : '—'}
                       </div>
                       <div>
-                        <span className="font-medium">Budget:</span> {(candidature.budget_disponible / 1000000).toFixed(1)}M FCFA
+                        <span className="font-medium">Type:</span> {candidature.type || '—'}
                       </div>
                       <div>
                         <span className="font-medium">N° Dossier:</span> {candidature.numero_dossier}
                       </div>
                       <div>
-                        <span className="font-medium">Date:</span> {new Date(candidature.date_candidature || candidature.created_at).toLocaleDateString('fr-FR')}
+                        <span className="font-medium">Date:</span> {candidature.created_at ? new Date(candidature.created_at).toLocaleDateString('fr-FR') : '—'}
                       </div>
                       <div>
-                        <span className="font-medium">Financement:</span> {candidature.type_financement?.replace('_', ' ') || 'N/A'}
+                        <span className="font-medium">Priorité:</span> {candidature.priority || '—'}
                       </div>
                     </div>
-
-                    {candidature.projet_description && (
-                      <div className="text-sm text-slate-600 mb-3">
-                        <span className="font-medium">Projet:</span> {candidature.projet_description}
-                      </div>
-                    )}
                   </div>
                   
                   <div className="ml-4 flex flex-col gap-2">
@@ -398,11 +406,11 @@ const ParticulierZonesCommunales = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-slate-700">Zone</Label>
-                  <p className="text-slate-900">{selectedCandidature.zone?.nom}</p>
+                  <p className="text-slate-900">{selectedCandidature.zone || '—'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-slate-700">Commune</Label>
-                  <p className="text-slate-900">{selectedCandidature.zone?.commune}</p>
+                  <p className="text-slate-900">{selectedCandidature.commune || '—'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-slate-700">N° de dossier</Label>
@@ -420,28 +428,25 @@ const ParticulierZonesCommunales = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-slate-700">Superficie demandée</Label>
-                  <p className="text-slate-900">{selectedCandidature.superficie_demandee}m²</p>
+                  <p className="text-slate-900">{selectedCandidature.surface != null ? `${selectedCandidature.surface} m²` : '—'}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-slate-700">Budget disponible</Label>
-                  <p className="text-slate-900">{(selectedCandidature.budget_disponible / 1000000).toFixed(1)}M FCFA</p>
+                  <Label className="text-sm font-medium text-slate-700">Type</Label>
+                  <p className="text-slate-900">{selectedCandidature.type || '—'}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-slate-700">Type de financement</Label>
-                  <p className="text-slate-900">{selectedCandidature.type_financement?.replace('_', ' ')}</p>
+                  <Label className="text-sm font-medium text-slate-700">Priorité</Label>
+                  <p className="text-slate-900">{selectedCandidature.priority || '—'}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-slate-700">Délai de construction</Label>
-                  <p className="text-slate-900">{selectedCandidature.delai_construction}</p>
+                  <Label className="text-sm font-medium text-slate-700">Score d'analyse</Label>
+                  <p className="text-slate-900">{selectedCandidature.ai_score != null ? `${selectedCandidature.ai_score}/100` : '—'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-slate-700">Date de candidature</Label>
+                  <p className="text-slate-900">{selectedCandidature.created_at ? new Date(selectedCandidature.created_at).toLocaleDateString('fr-FR') : '—'}</p>
                 </div>
               </div>
-
-              {selectedCandidature.projet_description && (
-                <div>
-                  <Label className="text-sm font-medium text-slate-700">Description du projet</Label>
-                  <p className="text-slate-900 mt-1">{selectedCandidature.projet_description}</p>
-                </div>
-              )}
             </div>
           )}
         </DialogContent>

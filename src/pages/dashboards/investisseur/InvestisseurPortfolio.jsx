@@ -1,144 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Building, 
-  MapPin, 
-  DollarSign, 
-  TrendingUp, 
-  Calendar, 
-  Users, 
-  Eye, 
-  Download, 
-  Filter,
+import {
+  Building,
+  MapPin,
+  DollarSign,
+  TrendingUp,
+  Eye,
+  Download,
   Search,
   Plus,
   BarChart3,
-  PieChart,
   Target,
   AlertCircle,
   CheckCircle,
   Clock,
-  Briefcase
+  Briefcase,
+  Loader2
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
+// Libellés lisibles pour les types réels ('terrain'|'immobilier'|'projet')
+const TYPE_LABELS = {
+  terrain: 'Terrain',
+  immobilier: 'Immobilier',
+  projet: 'Projet'
+};
+
+// Libellés lisibles pour les statuts réels ('active'|'sold'|'pending')
+const STATUS_LABELS = {
+  active: 'Actif',
+  sold: 'Vendu',
+  pending: 'En attente'
+};
+
+// Couleurs de répartition par type réel
+const TYPE_COLORS = {
+  terrain: 'bg-purple-500',
+  immobilier: 'bg-blue-500',
+  projet: 'bg-green-500'
+};
+
 const InvestisseurPortfolio = () => {
+  const { user } = useAuth();
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [investments, setInvestments] = useState([]);
 
-  // Portfolio complet
-  const portfolioSummary = {
-    totalValue: 2850000,
-    totalInvested: 2400000,
-    totalGains: 450000,
-    averageRoi: 18.75,
-    activeInvestments: 12,
-    completedInvestments: 8
-  };
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        // Portefeuille réel : investments filtré par investor_id, enrichi de la propriété jointe
+        const { data, error } = await supabase
+          .from('investments')
+          .select(`
+            id, investor_id, property_id, title, type, amount, current_value, roi, status, invested_at, created_at,
+            property:properties!investments_property_id_fkey ( id, title, name, location, region, city )
+          `)
+          .eq('investor_id', user.id)
+          .order('invested_at', { ascending: false });
 
-  // Répartition par type
-  const allocationData = [
-    { type: 'Résidentiel', value: 1200000, percentage: 42.1, color: 'bg-blue-500' },
-    { type: 'Commercial', value: 850000, percentage: 29.8, color: 'bg-green-500' },
-    { type: 'Foncier', value: 520000, percentage: 18.2, color: 'bg-purple-500' },
-    { type: 'Industriel', value: 280000, percentage: 9.9, color: 'bg-orange-500' }
-  ];
+        if (error) throw error;
+        setInvestments(data || []);
+      } catch (err) {
+        console.error('Erreur chargement portefeuille:', err);
+        // Repli sans jointure si la contrainte FK nommée diffère
+        try {
+          const { data } = await supabase
+            .from('investments')
+            .select('id, investor_id, property_id, title, type, amount, current_value, roi, status, invested_at, created_at')
+            .eq('investor_id', user.id)
+            .order('invested_at', { ascending: false });
+          setInvestments(data || []);
+        } catch (e2) {
+          console.error('Erreur repli portefeuille:', e2);
+          setInvestments([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Tous les investissements
-  const allInvestments = [
-    {
-      id: 1,
-      title: 'Résidence Les Almadies',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En construction',
-      dateInvestment: '2024-01-15',
-      invested: 450000,
-      currentValue: 485000,
-      roi: 7.8,
-      expectedRoi: 18.5,
-      completion: 65,
-      nextMilestone: 'Fin de gros œuvre - Mars 2025',
-      riskLevel: 'Modéré',
-      duration: '24 mois'
-    },
-    {
-      id: 2,
-      title: 'Centre Commercial Liberté 6',
-      location: 'Liberté 6, Dakar',
-      type: 'Commercial',
-      status: 'Opérationnel',
-      dateInvestment: '2023-08-10',
-      invested: 800000,
-      currentValue: 920000,
-      roi: 15.0,
-      expectedRoi: 22.0,
-      completion: 100,
-      monthlyRevenue: 45000,
-      occupancyRate: 95,
-      riskLevel: 'Faible',
-      duration: '36 mois'
-    },
-    {
-      id: 3,
-      title: 'Lotissement Diamaguène',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      status: 'Disponible',
-      dateInvestment: '2023-12-05',
-      invested: 320000,
-      currentValue: 385000,
-      roi: 20.3,
-      expectedRoi: 25.0,
-      completion: 100,
-      lotsTotal: 15,
-      lotsSold: 8,
-      riskLevel: 'Modéré',
-      duration: '18 mois'
-    },
-    {
-      id: 4,
-      title: 'Entrepôt Rufisque',
-      location: 'Rufisque',
-      type: 'Industriel',
-      status: 'En construction',
-      dateInvestment: '2024-03-01',
-      invested: 280000,
-      currentValue: 295000,
-      roi: 5.4,
-      expectedRoi: 19.2,
-      completion: 40,
-      nextMilestone: 'Installation équipements - Avril 2025',
-      riskLevel: 'Élevé',
-      duration: '30 mois'
-    },
-    {
-      id: 5,
-      title: 'Villa Duplex VDN',
-      location: 'VDN, Dakar',
-      type: 'Résidentiel',
-      status: 'Vendu',
-      dateInvestment: '2023-05-20',
-      dateSale: '2024-11-15',
-      invested: 650000,
-      salePrice: 780000,
-      roi: 20.0,
-      riskLevel: 'Faible',
-      duration: '18 mois'
-    }
-  ];
+    loadPortfolio();
+  }, [user?.id]);
 
-  const filteredInvestments = allInvestments.filter(investment => {
-    const matchesType = filterType === 'all' || investment.type.toLowerCase() === filterType.toLowerCase();
-    const matchesSearch = investment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         investment.location.toLowerCase().includes(searchTerm.toLowerCase());
+  // ---- Agrégats réels du portefeuille ----
+  const totalInvested = investments.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+  const totalValue = investments.reduce(
+    (sum, inv) => sum + (Number(inv.current_value) ?? Number(inv.amount) ?? 0),
+    0
+  );
+  const totalGains = totalValue - totalInvested;
+  const averageRoi = totalInvested > 0 ? (totalGains / totalInvested) * 100 : 0;
+  const activeInvestments = investments.filter((inv) => inv.status === 'active').length;
+  const completedInvestments = investments.filter((inv) => inv.status === 'sold').length;
+
+  // ---- Répartition par type (agrégats réels) ----
+  const allocationData = (() => {
+    const byType = {};
+    investments.forEach((inv) => {
+      const t = inv.type || 'autre';
+      const val = Number(inv.current_value) ?? Number(inv.amount) ?? 0;
+      byType[t] = (byType[t] || 0) + val;
+    });
+    const total = Object.values(byType).reduce((a, b) => a + b, 0);
+    return Object.entries(byType).map(([type, value]) => ({
+      type: TYPE_LABELS[type] || type,
+      rawType: type,
+      value,
+      percentage: total > 0 ? Math.round((value / total) * 1000) / 10 : 0,
+      color: TYPE_COLORS[type] || 'bg-gray-400'
+    }));
+  })();
+
+  const getLocation = (inv) =>
+    inv.property?.location || inv.property?.city || inv.property?.region || '—';
+
+  const filteredInvestments = investments.filter((investment) => {
+    const matchesType = filterType === 'all' || investment.type === filterType;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      (investment.title || '').toLowerCase().includes(term) ||
+      getLocation(investment).toLowerCase().includes(term);
     return matchesType && matchesSearch;
   });
 
@@ -148,37 +143,51 @@ const InvestisseurPortfolio = () => {
       currency: 'XOF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(Number(amount) || 0);
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '—';
+    try {
+      return new Date(value).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return '—';
+    }
+  };
+
+  const formatRoi = (roi) => {
+    const n = Number(roi) || 0;
+    return `${n > 0 ? '+' : ''}${n}%`;
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'En construction': return 'bg-blue-100 text-blue-800';
-      case 'Opérationnel': return 'bg-green-100 text-green-800';
-      case 'Disponible': return 'bg-purple-100 text-purple-800';
-      case 'Vendu': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'Faible': return 'bg-green-100 text-green-800';
-      case 'Modéré': return 'bg-yellow-100 text-yellow-800';
-      case 'Élevé': return 'bg-red-100 text-red-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'sold': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'En construction': return <Clock className="w-4 h-4" />;
-      case 'Opérationnel': return <CheckCircle className="w-4 h-4" />;
-      case 'Disponible': return <Building className="w-4 h-4" />;
-      case 'Vendu': return <Target className="w-4 h-4" />;
+      case 'active': return <CheckCircle className="w-4 h-4" />;
+      case 'pending': return <Clock className="w-4 h-4" />;
+      case 'sold': return <Target className="w-4 h-4" />;
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-white p-6 flex items-center justify-center min-h-[60vh]">
+        <div className="flex items-center text-gray-500">
+          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+          Chargement de votre portefeuille...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-white p-6">
@@ -191,7 +200,7 @@ const InvestisseurPortfolio = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Valeur Totale</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(portfolioSummary.totalValue)}
+                    {formatCurrency(totalValue)}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -200,9 +209,9 @@ const InvestisseurPortfolio = () => {
               </div>
               <div className="mt-4">
                 <div className="flex items-center">
-                  <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-600 font-medium">
-                    +{formatCurrency(portfolioSummary.totalGains)}
+                  <TrendingUp className={`w-4 h-4 mr-1 ${totalGains >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={`text-sm font-medium ${totalGains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {totalGains >= 0 ? '+' : ''}{formatCurrency(totalGains)}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">Plus-value totale</p>
@@ -215,15 +224,17 @@ const InvestisseurPortfolio = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">ROI Moyen</p>
-                  <p className="text-2xl font-bold text-gray-900">{portfolioSummary.averageRoi}%</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {investments.length > 0 ? `${Math.round(averageRoi * 10) / 10}%` : '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={portfolioSummary.averageRoi * 4} className="h-2" />
-                <p className="text-xs text-gray-500 mt-1">Performance excellent</p>
+                <Progress value={Math.min(Math.max(averageRoi * 4, 0), 100)} className="h-2" />
+                <p className="text-xs text-gray-500 mt-1">Rendement global du portefeuille</p>
               </div>
             </CardContent>
           </Card>
@@ -233,7 +244,7 @@ const InvestisseurPortfolio = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Investissements Actifs</p>
-                  <p className="text-2xl font-bold text-gray-900">{portfolioSummary.activeInvestments}</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeInvestments}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Building className="w-6 h-6 text-purple-600" />
@@ -241,7 +252,7 @@ const InvestisseurPortfolio = () => {
               </div>
               <div className="mt-4">
                 <p className="text-sm text-gray-600">
-                  {portfolioSummary.completedInvestments} investissements terminés
+                  {completedInvestments} investissement{completedInvestments > 1 ? 's' : ''} terminé{completedInvestments > 1 ? 's' : ''}
                 </p>
               </div>
             </CardContent>
@@ -253,7 +264,7 @@ const InvestisseurPortfolio = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Capital Investi</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(portfolioSummary.totalInvested)}
+                    {formatCurrency(totalInvested)}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -261,7 +272,9 @@ const InvestisseurPortfolio = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <p className="text-sm text-gray-600">Rendement global positif</p>
+                <p className="text-sm text-gray-600">
+                  {investments.length} ligne{investments.length > 1 ? 's' : ''} de portefeuille
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -310,141 +323,109 @@ const InvestisseurPortfolio = () => {
                       Tous
                     </Button>
                     <Button
-                      variant={filterType === 'résidentiel' ? 'default' : 'outline'}
+                      variant={filterType === 'terrain' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFilterType('résidentiel')}
+                      onClick={() => setFilterType('terrain')}
                     >
-                      Résidentiel
+                      Terrain
                     </Button>
                     <Button
-                      variant={filterType === 'commercial' ? 'default' : 'outline'}
+                      variant={filterType === 'immobilier' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFilterType('commercial')}
+                      onClick={() => setFilterType('immobilier')}
                     >
-                      Commercial
+                      Immobilier
                     </Button>
                     <Button
-                      variant={filterType === 'foncier' ? 'default' : 'outline'}
+                      variant={filterType === 'projet' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFilterType('foncier')}
+                      onClick={() => setFilterType('projet')}
                     >
-                      Foncier
+                      Projet
                     </Button>
                   </div>
                 </div>
 
                 {/* Liste des investissements */}
-                <div className="space-y-4">
-                  {filteredInvestments.map((investment) => (
-                    <motion.div
-                      key={investment.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            {getStatusIcon(investment.status)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{investment.title}</h3>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <MapPin className="w-4 h-4 mr-1" />
-                              {investment.location}
+                {filteredInvestments.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Briefcase className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Aucun investissement</p>
+                    <p className="text-sm">
+                      {investments.length === 0
+                        ? "Vous n'avez pas encore d'investissement dans votre portefeuille."
+                        : 'Aucun investissement ne correspond à votre recherche.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredInvestments.map((investment) => (
+                      <motion.div
+                        key={investment.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              {getStatusIcon(investment.status)}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">
+                                {investment.title || investment.property?.title || investment.property?.name || 'Investissement'}
+                              </h3>
+                              <div className="flex items-center text-sm text-gray-600">
+                                <MapPin className="w-4 h-4 mr-1" />
+                                {getLocation(investment)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(investment.status)}>
-                            {investment.status}
-                          </Badge>
-                          <p className="text-sm text-gray-500 mt-1">{investment.type}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Investi</p>
-                          <p className="font-semibold">{formatCurrency(investment.invested)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">
-                            {investment.status === 'Vendu' ? 'Prix de vente' : 'Valeur actuelle'}
-                          </p>
-                          <p className="font-semibold">
-                            {formatCurrency(investment.salePrice || investment.currentValue)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">ROI</p>
-                          <p className="font-semibold text-green-600">+{investment.roi}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Durée</p>
-                          <p className="font-semibold">{investment.duration}</p>
-                        </div>
-                      </div>
-
-                      {/* Informations spécifiques selon le statut */}
-                      {investment.status === 'En construction' && (
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-gray-600">Progression</span>
-                            <span className="font-medium">{investment.completion}%</span>
+                          <div className="text-right">
+                            <Badge className={getStatusColor(investment.status)}>
+                              {STATUS_LABELS[investment.status] || investment.status || '—'}
+                            </Badge>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {TYPE_LABELS[investment.type] || investment.type || '—'}
+                            </p>
                           </div>
-                          <Progress value={investment.completion} className="h-2 mb-2" />
-                          <p className="text-xs text-blue-600">{investment.nextMilestone}</p>
                         </div>
-                      )}
 
-                      {investment.status === 'Opérationnel' && (
-                        <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
-                            <p className="text-xs text-gray-500">Revenus mensuels</p>
-                            <p className="font-semibold text-green-600">
-                              {formatCurrency(investment.monthlyRevenue)}
+                            <p className="text-xs text-gray-500">Investi</p>
+                            <p className="font-semibold">{formatCurrency(investment.amount)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              {investment.status === 'sold' ? 'Valeur finale' : 'Valeur actuelle'}
+                            </p>
+                            <p className="font-semibold">
+                              {formatCurrency(investment.current_value ?? investment.amount)}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Taux d'occupation</p>
-                            <p className="font-semibold">{investment.occupancyRate}%</p>
+                            <p className="text-xs text-gray-500">ROI</p>
+                            <p className={`font-semibold ${(Number(investment.roi) || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatRoi(investment.roi)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Investi le</p>
+                            <p className="font-semibold">{formatDate(investment.invested_at)}</p>
                           </div>
                         </div>
-                      )}
 
-                      {investment.status === 'Disponible' && investment.lotsTotal && (
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Lots vendus</span>
-                            <span className="font-medium">{investment.lotsSold}/{investment.lotsTotal}</span>
-                          </div>
-                          <Progress 
-                            value={(investment.lotsSold / investment.lotsTotal) * 100} 
-                            className="h-2 mt-1" 
-                          />
+                        <div className="flex items-center justify-end mt-4">
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Détails
+                          </Button>
                         </div>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Badge className={`${getRiskColor(investment.riskLevel)} text-xs`}>
-                            Risque {investment.riskLevel}
-                          </Badge>
-                          {investment.expectedRoi && (
-                            <span className="text-xs text-gray-500">
-                              ROI attendu: {investment.expectedRoi}%
-                            </span>
-                          )}
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Détails
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -459,22 +440,26 @@ const InvestisseurPortfolio = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {allocationData.map((item) => (
-                    <div key={item.type}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{item.type}</span>
-                        <span className="text-sm text-gray-600">{item.percentage}%</span>
+                {allocationData.length === 0 ? (
+                  <p className="text-sm text-gray-500">Aucune donnée de répartition.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {allocationData.map((item) => (
+                      <div key={item.rawType}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">{item.type}</span>
+                          <span className="text-sm text-gray-600">{item.percentage}%</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Progress value={item.percentage} className="flex-1 h-2" />
+                          <span className="text-sm font-medium min-w-0">
+                            {formatCurrency(item.value)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Progress value={item.percentage} className="flex-1 h-2" />
-                        <span className="text-sm font-medium min-w-0">
-                          {formatCurrency(item.value)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

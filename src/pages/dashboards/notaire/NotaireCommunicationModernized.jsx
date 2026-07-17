@@ -51,7 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
 
 const NotaireCommunicationModernized = () => {
   const { dashboardStats } = useOutletContext();
@@ -93,21 +93,161 @@ const NotaireCommunicationModernized = () => {
     }
   }, [user]);
 
+  const buildName = (prof) => {
+    if (!prof) return null;
+    return (
+      prof.full_name ||
+      `${prof.first_name || ''} ${prof.last_name || ''}`.trim() ||
+      prof.email ||
+      null
+    );
+  };
+
+  // Chargement des conversations réelles (schéma réel :
+  // conversation_participants + conversations + messages + profiles).
   const loadCommunications = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getTripartiteCommunications(user.id);
-      if (result.success) {
-        const communications = result.data || {};
-        setConversations(communications.conversations || []);
-        setMessages(communications.messages || {});
-        setCommunicationStats(communications.stats || communicationStats);
-        
-        // Sélectionner la première conversation si elle existe
-        if (communications.conversations && communications.conversations.length > 0 && !selectedConversation) {
-          setSelectedConversation(communications.conversations[0]);
-        }
+      // 1) Conversations auxquelles le notaire participe
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      if (partError) throw partError;
+
+      const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
+      if (conversationIds.length === 0) {
+        setConversations([]);
+        setMessages({});
+        setCommunicationStats({
+          totalConversations: 0,
+          unreadMessages: 0,
+          activeThreads: 0,
+          pendingResponses: 0
+        });
+        return;
       }
+
+      // 2) Conversations + tous leurs participants
+      const { data: convData, error: convError } = await supabase
+        .from('conversations')
+        .select('*, participants:conversation_participants(user_id)')
+        .in('id', conversationIds)
+        .order('updated_at', { ascending: false });
+      if (convError) throw convError;
+
+      // 3) Profils des participants, biens liés et messages en parallèle
+      const participantIds = [...new Set(
+        (convData || []).flatMap(c => (c.participants || []).map(p => p.user_id)).filter(Boolean)
+      )];
+      const propertyIds = [...new Set((convData || []).map(c => c.property_id).filter(Boolean))];
+
+      const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
+        participantIds.length > 0
+          ? supabase.from('profiles')
+              .select('id, first_name, last_name, full_name, email, role, avatar_url')
+              .in('id', participantIds)
+          : Promise.resolve({ data: [] }),
+        propertyIds.length > 0
+          ? supabase.from('properties').select('id, title, name').in('id', propertyIds)
+          : Promise.resolve({ data: [] }),
+        supabase.from('messages')
+          .select('id, conversation_id, sender_id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      const propertiesById = new Map((propertiesRes.data || []).map(p => [p.id, p]));
+      const allMessages = messagesRes.data || [];
+
+      // Grouper les messages par conversation
+      const messagesByConversation = new Map();
+      allMessages.forEach(msg => {
+        if (!messagesByConversation.has(msg.conversation_id)) {
+          messagesByConversation.set(msg.conversation_id, []);
+        }
+        messagesByConversation.get(msg.conversation_id).push(msg);
+      });
+
+      // 4) Mise en forme des conversations pour l'UI
+      const formattedConversations = (convData || []).map(conv => {
+        const participants = (conv.participants || []).map(p => {
+          const prof = profilesById.get(p.user_id);
+          return {
+            id: p.user_id,
+            name: buildName(prof) || 'Participant',
+            role: prof?.role || (p.user_id === user.id ? 'notaire' : 'client'),
+            avatar: prof?.avatar_url
+          };
+        });
+        const convMessages = messagesByConversation.get(conv.id) || [];
+        const lastMessage = convMessages[convMessages.length - 1];
+        const unread = convMessages.filter(m => !m.read && m.sender_id !== user.id).length;
+        const property = conv.property_id ? propertiesById.get(conv.property_id) : null;
+
+        return {
+          id: conv.id,
+          subject: conv.subject || property?.title || property?.name || 'Conversation',
+          property_id: conv.property_id,
+          participants,
+          lastMessage: lastMessage?.content || '',
+          timestamp: lastMessage?.created_at || conv.updated_at || conv.created_at,
+          lastSenderId: lastMessage?.sender_id || null,
+          hasMessages: convMessages.length > 0,
+          unread
+          // Pas de colonne 'type'/'priority' dans le schéma réel conversations
+          // (id, subject, property_id, created_at, updated_at) : non affichées.
+        };
+      });
+
+      // 5) Messages formatés par conversation pour la zone de chat
+      const messagesMap = {};
+      formattedConversations.forEach(conv => {
+        const convMessages = messagesByConversation.get(conv.id) || [];
+        messagesMap[conv.id] = convMessages.map(m => {
+          const prof = profilesById.get(m.sender_id);
+          return {
+            id: m.id,
+            sender: buildName(prof) || 'Participant',
+            role: prof?.role || (m.sender_id === user.id ? 'notaire' : 'client'),
+            text: m.content,
+            timestamp: formatTime(m.created_at),
+            isNotaire: m.sender_id === user.id,
+            read: m.read,
+            // La table 'messages' ne stocke pas de pièces jointes (colonne 'content'
+            // uniquement) : liste vide honnête plutôt qu'un mock.
+            attachments: []
+          };
+        });
+      });
+
+      setConversations(formattedConversations);
+      setMessages(messagesMap);
+
+      // 6) Statistiques dérivées de vraies données
+      const now = Date.now();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      setCommunicationStats({
+        totalConversations: formattedConversations.length,
+        unreadMessages: formattedConversations.reduce((s, c) => s + c.unread, 0),
+        // Fils actifs = au moins un message dans les 7 derniers jours
+        activeThreads: formattedConversations.filter(
+          c => c.timestamp && (now - new Date(c.timestamp).getTime()) <= sevenDays
+        ).length,
+        // En attente = dernier message pas envoyé par le notaire (à traiter)
+        pendingResponses: formattedConversations.filter(
+          c => c.hasMessages && c.lastSenderId && c.lastSenderId !== user.id
+        ).length
+      });
+
+      // Sélection : garder la conversation courante (rafraîchie) ou la première
+      setSelectedConversation(prev => {
+        if (prev) {
+          return formattedConversations.find(c => c.id === prev.id) || prev;
+        }
+        return formattedConversations[0] || null;
+      });
     } catch (error) {
       console.error('Erreur chargement communications:', error);
       window.safeGlobalToast({
@@ -121,28 +261,35 @@ const NotaireCommunicationModernized = () => {
   };
 
   const sendMessage = async () => {
-    if ((!messageText.trim() && attachments.length === 0) || !selectedConversation) return;
+    if (!messageText.trim() || !selectedConversation) return;
 
     try {
-      const result = await NotaireSupabaseService.sendTripartiteMessage(user.id, {
-        case_id: selectedConversation.case_id,
-        content: messageText,
-        message_type: 'message',
-        attachments: attachments,
-        recipients: selectedConversation.participants?.filter(p => p.id !== user.id) || []
-      });
-
-      if (result.success) {
-        setMessageText('');
-        setAttachments([]);
-        // Recharger les messages
-        await loadCommunications();
-        window.safeGlobalToast({
-          title: "Message envoyé",
-          description: "Votre message a été envoyé avec succès",
-          variant: "success"
+      // Insertion dans la table réelle 'messages'
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedConversation.id,
+          sender_id: user.id,
+          content: messageText.trim(),
+          read: false
         });
-      }
+      if (error) throw error;
+
+      // Remonter la conversation en haut de la liste (updated_at réel)
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', selectedConversation.id);
+
+      setMessageText('');
+      setAttachments([]);
+      // Recharger les messages
+      await loadCommunications();
+      window.safeGlobalToast({
+        title: "Message envoyé",
+        description: "Votre message a été envoyé avec succès",
+        variant: "success"
+      });
     } catch (error) {
       console.error('Erreur envoi message:', error);
       window.safeGlobalToast({
@@ -256,7 +403,12 @@ const NotaireCommunicationModernized = () => {
   const filteredConversations = conversations.filter(conv => {
     const matchesSearch = conv.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conv.participants?.some(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter = filterType === 'all' || conv.type?.toLowerCase() === filterType;
+    // Le schéma réel de 'conversations' n'a pas de colonne 'type'/catégorie :
+    // seul le filtre "non lus" est adossé à une vraie donnée (compteur unread).
+    const matchesFilter =
+      filterType === 'all' ? true :
+      filterType === 'unread' ? conv.unread > 0 :
+      true;
     return matchesSearch && matchesFilter;
   });
 

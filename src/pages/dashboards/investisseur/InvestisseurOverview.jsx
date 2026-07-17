@@ -1,141 +1,108 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Building, 
-  BarChart3, 
-  PieChart,
+import {
+  TrendingUp,
+  DollarSign,
+  Building,
+  BarChart3,
   Target,
   Calendar,
   MapPin,
-  Users,
   ArrowUpRight,
   ArrowDownRight,
   Eye,
   Plus,
   Filter,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurOverview = () => {
-  const [timeframe, setTimeframe] = useState('30d');
+  const { user } = useAuth();
 
-  // Données du portefeuille
-  const portfolioStats = {
-    totalValue: 2850000,
-    monthlyGrowth: 8.5,
-    totalInvestments: 12,
-    activeProjects: 8,
-    monthlyReturn: 125000,
-    yearlyReturn: 15.2
-  };
+  const [loading, setLoading] = useState(true);
+  const [investments, setInvestments] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [activities, setActivities] = useState([]);
 
-  // Investissements actifs
-  const activeInvestments = [
-    {
-      id: 1,
-      title: 'Résidence Les Almadies',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      invested: 450000,
-      currentValue: 485000,
-      roi: 7.8,
-      status: 'En construction',
-      completion: 65,
-      expectedReturn: 18.5,
-      timeframe: '24 mois'
-    },
-    {
-      id: 2,
-      title: 'Centre Commercial Liberté 6',
-      location: 'Liberté 6, Dakar',
-      type: 'Commercial',
-      invested: 800000,
-      currentValue: 920000,
-      roi: 15.0,
-      status: 'Opérationnel',
-      completion: 100,
-      expectedReturn: 22.0,
-      timeframe: '36 mois'
-    },
-    {
-      id: 3,
-      title: 'Lotissement Diamaguène',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      invested: 320000,
-      currentValue: 385000,
-      roi: 20.3,
-      status: 'Disponible',
-      completion: 100,
-      expectedReturn: 25.0,
-      timeframe: '18 mois'
-    }
-  ];
+  useEffect(() => {
+    let cancelled = false;
 
-  // Opportunités récentes
-  const recentOpportunities = [
-    {
-      id: 1,
-      title: 'Villa Moderne VDN',
-      location: 'VDN, Dakar',
-      type: 'Résidentiel',
-      minInvestment: 200000,
-      expectedRoi: 16.5,
-      duration: '30 mois',
-      riskLevel: 'Modéré',
-      status: 'Nouveau'
-    },
-    {
-      id: 2,
-      title: 'Entrepôt Industriel Rufisque',
-      location: 'Rufisque',
-      type: 'Industriel',
-      minInvestment: 500000,
-      expectedRoi: 19.2,
-      duration: '42 mois',
-      riskLevel: 'Élevé',
-      status: 'En cours'
-    }
-  ];
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Investissements de l'investisseur (filtré par investor_id = user.id)
+        // Enrichis avec la localisation réelle via la table properties
+        let investmentsData = [];
+        if (user?.id) {
+          const { data, error } = await supabase
+            .from('investments')
+            .select('id, property_id, title, type, amount, current_value, roi, status, invested_at, properties(location, city, region)')
+            .eq('investor_id', user.id)
+            .order('invested_at', { ascending: false });
+          if (!error && data) investmentsData = data;
+        }
 
-  // Activités récentes
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'investment',
-      title: 'Nouvel investissement',
-      description: 'Résidence Les Almadies - 450K XOF',
-      time: '2 heures',
-      amount: 450000,
-      positive: false
-    },
-    {
-      id: 2,
-      type: 'return',
-      title: 'Retour sur investissement',
-      description: 'Centre Commercial Liberté 6 - Dividendes Q4',
-      time: '1 jour',
-      amount: 85000,
-      positive: true
-    },
-    {
-      id: 3,
-      type: 'sale',
-      title: 'Vente réalisée',
-      description: 'Terrain Yoff - Plus-value',
-      time: '3 jours',
-      amount: 150000,
-      positive: true
-    }
-  ];
+        // Opportunités ouvertes (catalogue public — lecture publique)
+        const { data: oppData } = await supabase
+          .from('investment_opportunities')
+          .select('id, title, location, region, type, expected_roi, min_investment, risk_level, status, created_at')
+          .eq('status', 'open')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        // Activités récentes réelles (financial_transactions filtré par user_id)
+        let activitiesData = [];
+        if (user?.id) {
+          const { data: txData } = await supabase
+            .from('financial_transactions')
+            .select('id, type, transaction_type, amount, description, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          if (txData) activitiesData = txData;
+        }
+
+        if (!cancelled) {
+          setInvestments(investmentsData);
+          setOpportunities(oppData || []);
+          setActivities(activitiesData);
+        }
+      } catch (e) {
+        console.error('Erreur chargement overview investisseur:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // --- Agrégats réels (aucun chiffre fabriqué) ---
+  const activeInvestments = investments.filter((i) => i.status === 'active');
+  const totalValue = activeInvestments.reduce((s, i) => s + (Number(i.current_value) || 0), 0);
+  const totalInvested = activeInvestments.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const totalCount = investments.length;
+  const activeCount = activeInvestments.length;
+  const gainAbs = totalValue - totalInvested;
+  const gainPct = totalInvested > 0 ? (gainAbs / totalInvested) * 100 : null;
+
+  const roiValues = investments
+    .map((i) => Number(i.roi))
+    .filter((v) => !Number.isNaN(v));
+  const roiMoyen = roiValues.length
+    ? roiValues.reduce((a, b) => a + b, 0) / roiValues.length
+    : null;
+
+  const openOpportunitiesCount = opportunities.length;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -143,26 +110,86 @@ const InvestisseurOverview = () => {
       currency: 'XOF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
+
+  const formatPct = (v) => (v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'En construction': return 'bg-blue-100 text-blue-800';
-      case 'Opérationnel': return 'bg-green-100 text-green-800';
-      case 'Disponible': return 'bg-purple-100 text-purple-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'sold': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'active': return 'Actif';
+      case 'pending': return 'En attente';
+      case 'sold': return 'Vendu';
+      default: return status || '—';
+    }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case 'terrain': return 'Terrain';
+      case 'immobilier': return 'Immobilier';
+      case 'projet': return 'Projet';
+      default: return type || '—';
     }
   };
 
   const getRiskColor = (risk) => {
     switch (risk) {
-      case 'Faible': return 'bg-green-100 text-green-800';
-      case 'Modéré': return 'bg-yellow-100 text-yellow-800';
-      case 'Élevé': return 'bg-red-100 text-red-800';
+      case 'faible': return 'bg-green-100 text-green-800';
+      case 'moyen': return 'bg-yellow-100 text-yellow-800';
+      case 'eleve': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getRiskLabel = (risk) => {
+    switch (risk) {
+      case 'faible': return 'Faible';
+      case 'moyen': return 'Modéré';
+      case 'eleve': return 'Élevé';
+      default: return risk || '—';
+    }
+  };
+
+  const getLocation = (inv) => {
+    const p = inv.properties;
+    if (!p) return null;
+    return p.location || p.city || p.region || null;
+  };
+
+  const relativeTime = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${Math.max(mins, 1)} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} h`;
+    const days = Math.floor(hrs / 24);
+    return `${days} j`;
+  };
+
+  // Heuristique d'affichage (entrée/sortie) — le montant reste la donnée réelle
+  const isPositiveActivity = (a) => {
+    const t = `${a.type || ''} ${a.transaction_type || ''}`.toLowerCase();
+    return /(return|dividend|dividende|sale|vente|gain|revenu|income|credit|remboursement)/.test(t);
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-white p-6 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-white p-6">
@@ -175,7 +202,7 @@ const InvestisseurOverview = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Portefeuille Total</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(portfolioStats.totalValue)}
+                    {totalValue > 0 ? formatCurrency(totalValue) : '—'}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -183,11 +210,17 @@ const InvestisseurOverview = () => {
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600 font-medium">
-                  +{portfolioStats.monthlyGrowth}%
-                </span>
-                <span className="text-sm text-gray-500 ml-1">ce mois</span>
+                {gainPct == null ? (
+                  <span className="text-sm text-gray-500">Valeur des investissements actifs</span>
+                ) : (
+                  <>
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <span className={`text-sm font-medium ${gainPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatPct(gainPct)}
+                    </span>
+                    <span className="text-sm text-gray-500 ml-1">plus-value</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -197,7 +230,7 @@ const InvestisseurOverview = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Investissements</p>
-                  <p className="text-2xl font-bold text-gray-900">{portfolioStats.totalInvestments}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Building className="w-6 h-6 text-green-600" />
@@ -205,7 +238,7 @@ const InvestisseurOverview = () => {
               </div>
               <div className="mt-4">
                 <span className="text-sm text-gray-600">
-                  {portfolioStats.activeProjects} projets actifs
+                  {activeCount} actif{activeCount > 1 ? 's' : ''}
                 </span>
               </div>
             </CardContent>
@@ -215,9 +248,9 @@ const InvestisseurOverview = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Rendement Mensuel</p>
+                  <p className="text-sm font-medium text-gray-600">Plus-value</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(portfolioStats.monthlyReturn)}
+                    {totalInvested > 0 ? formatCurrency(gainAbs) : '—'}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -225,11 +258,17 @@ const InvestisseurOverview = () => {
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600 font-medium">
-                  +{portfolioStats.yearlyReturn}%
-                </span>
-                <span className="text-sm text-gray-500 ml-1">annuel</span>
+                {gainPct == null ? (
+                  <span className="text-sm text-gray-500">Aucun investissement actif</span>
+                ) : (
+                  <>
+                    <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                    <span className={`text-sm font-medium ${gainPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatPct(gainPct)}
+                    </span>
+                    <span className="text-sm text-gray-500 ml-1">sur investi</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -238,15 +277,17 @@ const InvestisseurOverview = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Performance</p>
-                  <p className="text-2xl font-bold text-gray-900">{portfolioStats.yearlyReturn}%</p>
+                  <p className="text-sm font-medium text-gray-600">ROI Moyen</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {roiMoyen == null ? '—' : `${roiMoyen.toFixed(1)}%`}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={portfolioStats.yearlyReturn * 5} className="h-2" />
+                <Progress value={roiMoyen == null ? 0 : Math.min(Math.max((roiMoyen / 18) * 100, 0), 100)} className="h-2" />
                 <span className="text-sm text-gray-600 mt-1">Objectif: 18%</span>
               </div>
             </CardContent>
@@ -278,117 +319,120 @@ const InvestisseurOverview = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {activeInvestments.map((investment) => (
-                    <motion.div
-                      key={investment.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{investment.title}</h3>
-                          <div className="flex items-center text-sm text-gray-600 mt-1">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            {investment.location}
+                {activeInvestments.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500 text-sm">
+                    Aucun investissement actif pour le moment.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeInvestments.map((investment) => {
+                      const roi = Number(investment.roi);
+                      const location = getLocation(investment);
+                      return (
+                        <motion.div
+                          key={investment.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{investment.title || 'Investissement'}</h3>
+                              <div className="flex items-center text-sm text-gray-600 mt-1">
+                                <MapPin className="w-4 h-4 mr-1" />
+                                {location || '—'}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge className={getStatusColor(investment.status)}>
+                                {getStatusLabel(investment.status)}
+                              </Badge>
+                              <p className="text-sm text-gray-500 mt-1">{getTypeLabel(investment.type)}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(investment.status)}>
-                            {investment.status}
-                          </Badge>
-                          <p className="text-sm text-gray-500 mt-1">{investment.type}</p>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                        <div>
-                          <p className="text-xs text-gray-500">Investi</p>
-                          <p className="font-semibold">{formatCurrency(investment.invested)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Valeur actuelle</p>
-                          <p className="font-semibold">{formatCurrency(investment.currentValue)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">ROI actuel</p>
-                          <p className="font-semibold text-green-600">+{investment.roi}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">ROI attendu</p>
-                          <p className="font-semibold">{investment.expectedReturn}%</p>
-                        </div>
-                      </div>
-
-                      {investment.status === 'En construction' && (
-                        <div>
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-gray-600">Progression</span>
-                            <span className="font-medium">{investment.completion}%</span>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                              <p className="text-xs text-gray-500">Investi</p>
+                              <p className="font-semibold">{formatCurrency(investment.amount)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Valeur actuelle</p>
+                              <p className="font-semibold">{formatCurrency(investment.current_value)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">ROI actuel</p>
+                              <p className={`font-semibold ${!Number.isNaN(roi) && roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {Number.isNaN(roi) ? '—' : formatPct(roi)}
+                              </p>
+                            </div>
                           </div>
-                          <Progress value={investment.completion} className="h-2" />
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Panneau latéral */}
           <div className="space-y-6">
-            {/* Opportunités récentes */}
+            {/* Opportunités ouvertes */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Nouvelles Opportunités
-                  <Badge variant="secondary">2 nouvelles</Badge>
+                  Opportunités Ouvertes
+                  {openOpportunitiesCount > 0 && (
+                    <Badge variant="secondary">{openOpportunitiesCount}</Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentOpportunities.map((opportunity) => (
-                    <div key={opportunity.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-sm">{opportunity.title}</h4>
-                        {opportunity.status === 'Nouveau' && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                            Nouveau
-                          </Badge>
-                        )}
+                {opportunities.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    Aucune opportunité ouverte actuellement.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {opportunities.map((opportunity) => (
+                      <div key={opportunity.id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-sm">{opportunity.title}</h4>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {opportunity.location || opportunity.region || '—'}
+                        </p>
+
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Min. investissement:</span>
+                            <span className="font-medium">
+                              {opportunity.min_investment != null ? formatCurrency(opportunity.min_investment) : '—'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">ROI attendu:</span>
+                            <span className="font-medium text-green-600">
+                              {opportunity.expected_roi != null ? `${opportunity.expected_roi}%` : '—'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Risque:</span>
+                            <Badge className={`${getRiskColor(opportunity.risk_level)} text-xs`}>
+                              {getRiskLabel(opportunity.risk_level)}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <Button size="sm" className="w-full mt-3">
+                          <Plus className="w-3 h-3 mr-1" />
+                          Investir
+                        </Button>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">{opportunity.location}</p>
-                      
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Min. investissement:</span>
-                          <span className="font-medium">{formatCurrency(opportunity.minInvestment)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">ROI attendu:</span>
-                          <span className="font-medium text-green-600">{opportunity.expectedRoi}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Durée:</span>
-                          <span className="font-medium">{opportunity.duration}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Risque:</span>
-                          <Badge className={`${getRiskColor(opportunity.riskLevel)} text-xs`}>
-                            {opportunity.riskLevel}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <Button size="sm" className="w-full mt-3">
-                        <Plus className="w-3 h-3 mr-1" />
-                        Investir
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -398,33 +442,44 @@ const InvestisseurOverview = () => {
                 <CardTitle>Activités Récentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.positive ? 'bg-green-100' : 'bg-blue-100'
-                      }`}>
-                        {activity.positive ? (
-                          <ArrowUpRight className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <ArrowDownRight className="w-4 h-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{activity.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-medium ${
-                          activity.positive ? 'text-green-600' : 'text-blue-600'
-                        }`}>
-                          {activity.positive ? '+' : '-'}{formatCurrency(activity.amount)}
-                        </p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {activities.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    Aucune activité récente.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activities.map((activity) => {
+                      const positive = isPositiveActivity(activity);
+                      return (
+                        <div key={activity.id} className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            positive ? 'bg-green-100' : 'bg-blue-100'
+                          }`}>
+                            {positive ? (
+                              <ArrowUpRight className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <ArrowDownRight className="w-4 h-4 text-blue-600" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">
+                              {activity.type || activity.transaction_type || 'Transaction'}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{activity.description || '—'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm font-medium ${
+                              positive ? 'text-green-600' : 'text-blue-600'
+                            }`}>
+                              {positive ? '+' : '-'}{formatCurrency(activity.amount)}
+                            </p>
+                            <p className="text-xs text-gray-500">{relativeTime(activity.created_at)}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

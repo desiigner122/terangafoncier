@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Shield,
   Lock,
   Key,
@@ -26,100 +26,168 @@ import {
   Fingerprint,
   Server,
   CreditCard,
-  Hash
+  Hash,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierBlockchain = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [certificates, setCertificates] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [ownedProperties, setOwnedProperties] = useState([]);
 
-  // Certificats blockchain
-  const certificates = [
-    {
-      id: 1,
-      title: "Certificat de propriété",
-      property: "Appartement - Dakar Plateau",
-      hash: "0x7d4c...f8a2",
-      status: "verified",
-      date: "2024-03-15",
-      type: "ownership"
-    },
-    {
-      id: 2,
-      title: "Contrat de vente",
-      property: "Villa - Almadies",
-      hash: "0x9a1b...c3d4",
-      status: "pending",
-      date: "2024-03-20",
-      type: "contract"
-    },
-    {
-      id: 3,
-      title: "Attestation d'évaluation",
-      property: "Terrain - Saly",
-      hash: "0x2e5f...b7c8",
-      status: "verified",
-      date: "2024-03-18",
-      type: "evaluation"
+  useEffect(() => {
+    if (user?.id) {
+      loadBlockchainData();
     }
-  ];
+  }, [user?.id]);
 
-  // Transactions blockchain
-  const transactions = [
-    {
-      id: 1,
-      type: "Achat",
-      property: "Appartement 3P - Plateau",
-      amount: "45,000,000 FCFA",
-      hash: "0x1a2b3c4d5e6f...",
-      status: "confirmed",
-      confirmations: 12,
-      timestamp: "2024-03-20 14:30"
-    },
-    {
-      id: 2,
-      type: "Certification",
-      property: "Villa - Almadies",
-      amount: "-",
-      hash: "0x9f8e7d6c5b4a...",
-      status: "pending",
-      confirmations: 3,
-      timestamp: "2024-03-20 16:45"
+  const loadBlockchainData = async () => {
+    setLoading(true);
+    try {
+      // Propriétés possédées par l'utilisateur (owner_id)
+      const { data: props } = await supabase
+        .from('properties')
+        .select('id, title, name, location, price')
+        .eq('owner_id', user.id);
+      const properties = props || [];
+      setOwnedProperties(properties);
+      const propertyIds = properties.map((p) => p.id);
+      const propMap = Object.fromEntries(
+        properties.map((p) => [p.id, p.title || p.name || p.location || 'Bien immobilier'])
+      );
+
+      // Transactions blockchain de l'utilisateur (user_id)
+      const { data: txs } = await supabase
+        .from('blockchain_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setTransactions(
+        (txs || []).map((t) => ({
+          ...t,
+          propertyLabel: propMap[t.property_id] || '—'
+        }))
+      );
+
+      // Certificats blockchain liés aux biens possédés (via property_id)
+      if (propertyIds.length > 0) {
+        const { data: certs } = await supabase
+          .from('blockchain_certificates')
+          .select('*')
+          .in('property_id', propertyIds)
+          .order('created_at', { ascending: false });
+        setCertificates(
+          (certs || []).map((c) => ({
+            ...c,
+            propertyLabel: propMap[c.property_id] || '—'
+          }))
+        );
+      } else {
+        setCertificates([]);
+      }
+    } catch (error) {
+      console.error('Erreur chargement blockchain:', error);
+      setCertificates([]);
+      setTransactions([]);
+      setOwnedProperties([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  // Portfolio blockchain
+  // Statistiques réelles calculées à partir des données Supabase
+  const portfolioValue = ownedProperties.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
   const portfolioStats = {
-    totalValue: "125,000,000",
-    properties: 3,
-    certificates: 8,
-    transactions: 15,
-    securityScore: 98
+    totalValue: portfolioValue,
+    properties: ownedProperties.length,
+    certificates: certificates.length,
+    transactions: transactions.length
+  };
+
+  // Activité récente construite à partir des vraies transactions / certificats
+  const recentActivity = [
+    ...transactions.map((t) => ({
+      kind: 'transaction',
+      title: t.status === 'confirmed' || t.status === 'completed' ? 'Transaction confirmée' : 'Transaction enregistrée',
+      subtitle: t.propertyLabel,
+      date: t.created_at
+    })),
+    ...certificates.map((c) => ({
+      kind: 'certificate',
+      title: c.status === 'verified' || c.status === 'active' ? 'Certificat vérifié' : 'Certificat enregistré',
+      subtitle: c.propertyLabel,
+      date: c.created_at
+    }))
+  ]
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+    .slice(0, 5);
+
+  const formatFcfa = (value) =>
+    value > 0 ? `${Number(value).toLocaleString('fr-FR')} FCFA` : '—';
+
+  const formatDate = (date) => {
+    if (!date) return '—';
+    try {
+      return new Date(date).toLocaleDateString('fr-FR');
+    } catch {
+      return '—';
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'verified': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'verified':
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed':
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'verified': return CheckCircle;
-      case 'pending': return Clock;
-      case 'confirmed': return Shield;
-      default: return AlertTriangle;
+      case 'verified':
+      case 'active':
+        return CheckCircle;
+      case 'pending':
+        return Clock;
+      case 'confirmed':
+      case 'completed':
+        return Shield;
+      default:
+        return AlertTriangle;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'verified': return 'Vérifié';
+      case 'active': return 'Actif';
+      case 'pending': return 'En attente';
+      case 'confirmed': return 'Confirmé';
+      case 'completed': return 'Complété';
+      default: return status || 'Inconnu';
     }
   };
 
   const truncateHash = (hash) => {
+    if (!hash) return '—';
+    if (hash.length <= 20) return hash;
     return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
   };
 
@@ -136,10 +204,6 @@ const ParticulierBlockchain = () => {
             <Shield className="w-3 h-3 mr-1" />
             Sécurisé
           </Badge>
-          <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-            <Award className="w-4 h-4 mr-2" />
-            Nouveau certificat
-          </Button>
         </div>
       </div>
 
@@ -150,7 +214,7 @@ const ParticulierBlockchain = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Valeur Portfolio</p>
-                <p className="text-2xl font-bold text-blue-900">{portfolioStats.totalValue} FCFA</p>
+                <p className="text-2xl font-bold text-blue-900">{formatFcfa(portfolioStats.totalValue)}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full">
                 <Wallet className="w-6 h-6 text-blue-600" />
@@ -191,17 +255,23 @@ const ParticulierBlockchain = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-600">Score Sécurité</p>
-                <p className="text-2xl font-bold text-orange-900">{portfolioStats.securityScore}%</p>
+                <p className="text-sm font-medium text-orange-600">Transactions</p>
+                <p className="text-2xl font-bold text-orange-900">{portfolioStats.transactions}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-full">
-                <Shield className="w-6 h-6 text-orange-600" />
+                <Activity className="w-6 h-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-slate-500">
+          <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+          Chargement des données blockchain...
+        </div>
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
@@ -233,32 +303,32 @@ const ParticulierBlockchain = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Certificat vérifié</p>
-                    <p className="text-xs text-slate-600">Appartement - Dakar Plateau</p>
+                {recentActivity.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    <Activity className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm">Aucune activité blockchain pour le moment</p>
                   </div>
-                  <span className="text-xs text-slate-500">Il y a 2h</span>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Database className="w-5 h-5 text-blue-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Transaction confirmée</p>
-                    <p className="text-xs text-slate-600">45M FCFA - Achat propriété</p>
-                  </div>
-                  <span className="text-xs text-slate-500">Il y a 1j</span>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                  <Key className="w-5 h-5 text-purple-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Clé privée générée</p>
-                    <p className="text-xs text-slate-600">Nouveau portefeuille créé</p>
-                  </div>
-                  <span className="text-xs text-slate-500">Il y a 3j</span>
-                </div>
+                ) : (
+                  recentActivity.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${
+                        item.kind === 'certificate' ? 'bg-green-50' : 'bg-blue-50'
+                      }`}
+                    >
+                      {item.kind === 'certificate' ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Database className="w-5 h-5 text-blue-600" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.title}</p>
+                        <p className="text-xs text-slate-600">{item.subtitle}</p>
+                      </div>
+                      <span className="text-xs text-slate-500">{formatDate(item.date)}</span>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 
@@ -270,36 +340,11 @@ const ParticulierBlockchain = () => {
                   Sécurité du Portefeuille
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Authentification 2FA</span>
-                    <Badge className="bg-green-100 text-green-800">Activée</Badge>
-                  </div>
-                  <Progress value={100} className="h-2" />
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Sauvegarde des clés</span>
-                    <Badge className="bg-green-100 text-green-800">Sécurisée</Badge>
-                  </div>
-                  <Progress value={100} className="h-2" />
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Chiffrement avancé</span>
-                    <Badge className="bg-green-100 text-green-800">AES-256</Badge>
-                  </div>
-                  <Progress value={100} className="h-2" />
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Score Global</span>
-                    <span className="text-2xl font-bold text-green-600">{portfolioStats.securityScore}%</span>
-                  </div>
+              <CardContent>
+                <div className="text-center py-8 text-slate-500">
+                  <Lock className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <p className="text-sm font-medium">Tableau de bord de sécurité</p>
+                  <p className="text-xs mt-1">Bientôt disponible</p>
                 </div>
               </CardContent>
             </Card>
@@ -308,216 +353,143 @@ const ParticulierBlockchain = () => {
 
         <TabsContent value="certificates" className="space-y-6">
           <div className="space-y-4">
-            {certificates.map((cert) => {
-              const StatusIcon = getStatusIcon(cert.status);
-              return (
-                <Card key={cert.id} className="hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-blue-50 rounded-xl">
-                          <Award className="w-6 h-6 text-blue-600" />
+            {certificates.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center text-slate-500">
+                  <Award className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="font-medium">Aucun certificat blockchain</p>
+                  <p className="text-sm mt-1">Vos certificats de propriété apparaîtront ici une fois vos biens certifiés.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              certificates.map((cert) => {
+                const StatusIcon = getStatusIcon(cert.status);
+                return (
+                  <Card key={cert.id} className="hover:shadow-md transition-shadow duration-200">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-blue-50 rounded-xl">
+                            <Award className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">Certificat de propriété</h3>
+                              <Badge className={getStatusColor(cert.status)}>
+                                <StatusIcon className="w-3 h-3 mr-1" />
+                                {getStatusLabel(cert.status)}
+                              </Badge>
+                            </div>
+                            <p className="text-slate-600 mb-2">{cert.propertyLabel}</p>
+                            <div className="flex items-center gap-4 text-sm text-slate-500">
+                              <span>Hash: {truncateHash(cert.certificate_hash)}</span>
+                              <span>Date: {formatDate(cert.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{cert.title}</h3>
-                            <Badge className={getStatusColor(cert.status)}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {cert.status === 'verified' ? 'Vérifié' : 
-                               cert.status === 'pending' ? 'En attente' : 'Confirmé'}
-                            </Badge>
-                          </div>
-                          <p className="text-slate-600 mb-2">{cert.property}</p>
-                          <div className="flex items-center gap-4 text-sm text-slate-500">
-                            <span>Hash: {truncateHash(cert.hash)}</span>
-                            <span>Date: {cert.date}</span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4 mr-1" />
+                            Voir
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Download className="w-4 h-4 mr-1" />
+                            Télécharger
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4 mr-1" />
-                          Voir
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-1" />
-                          Télécharger
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-6">
           <div className="space-y-4">
-            {transactions.map((tx) => {
-              const StatusIcon = getStatusIcon(tx.status);
-              return (
-                <Card key={tx.id} className="hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-green-50 rounded-xl">
-                          <Coins className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{tx.type}</h3>
-                            <Badge className={getStatusColor(tx.status)}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {tx.status === 'confirmed' ? 'Confirmé' : 'En attente'}
-                            </Badge>
+            {transactions.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center text-slate-500">
+                  <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="font-medium">Aucune transaction blockchain</p>
+                  <p className="text-sm mt-1">Vos transactions enregistrées sur la blockchain apparaîtront ici.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              transactions.map((tx) => {
+                const StatusIcon = getStatusIcon(tx.status);
+                const isConfirmed = tx.status === 'confirmed' || tx.status === 'completed';
+                return (
+                  <Card key={tx.id} className="hover:shadow-md transition-shadow duration-200">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-green-50 rounded-xl">
+                            <Coins className="w-6 h-6 text-green-600" />
                           </div>
-                          <p className="text-slate-600 mb-2">{tx.property}</p>
-                          <div className="flex items-center gap-4 text-sm text-slate-500">
-                            <span>Hash: {truncateHash(tx.hash)}</span>
-                            <span>Confirmations: {tx.confirmations}/12</span>
-                            <span>{tx.timestamp}</span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">Transaction</h3>
+                              <Badge className={getStatusColor(tx.status)}>
+                                <StatusIcon className="w-3 h-3 mr-1" />
+                                {getStatusLabel(tx.status)}
+                              </Badge>
+                            </div>
+                            <p className="text-slate-600 mb-2">{tx.propertyLabel}</p>
+                            <div className="flex items-center gap-4 text-sm text-slate-500">
+                              <span>Hash: {truncateHash(tx.transaction_hash)}</span>
+                              {tx.block_number != null && <span>Bloc: {tx.block_number}</span>}
+                              <span>{formatDate(tx.created_at)}</span>
+                            </div>
+                            {Number(tx.amount) > 0 && (
+                              <p className="font-semibold text-green-600 mt-2">{formatFcfa(tx.amount)}</p>
+                            )}
                           </div>
-                          {tx.amount !== '-' && (
-                            <p className="font-semibold text-green-600 mt-2">{tx.amount}</p>
-                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm">
+                            <Hash className="w-4 h-4 mr-1" />
+                            Explorer
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Copy className="w-4 h-4 mr-1" />
+                            Copier
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Hash className="w-4 h-4 mr-1" />
-                          Explorer
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Copy className="w-4 h-4 mr-1" />
-                          Copier
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {tx.status === 'pending' && (
-                      <div className="mt-4 pt-4 border-t">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-slate-600">Progression</span>
-                          <span className="text-sm font-medium">{tx.confirmations}/12</span>
-                        </div>
-                        <Progress value={(tx.confirmations / 12) * 100} className="h-2" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Paramètres de sécurité */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-red-600" />
-                  Paramètres de Sécurité
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Fingerprint className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="font-medium">Authentification biométrique</p>
-                      <p className="text-sm text-slate-600">Empreinte digitale</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">Activée</Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Key className="w-5 h-5 text-purple-600" />
-                    <div>
-                      <p className="font-medium">Clés de récupération</p>
-                      <p className="text-sm text-slate-600">12 mots de passe</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">Sauvegardée</Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Server className="w-5 h-5 text-orange-600" />
-                    <div>
-                      <p className="font-medium">Stockage décentralisé</p>
-                      <p className="text-sm text-slate-600">IPFS + Blockchain</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                </div>
-                
-                <Button className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Audit de sécurité
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Portefeuille */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-green-600" />
-                  Mon Portefeuille
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl">
-                  <div className="text-center">
-                    <p className="text-sm text-blue-600 mb-1">Adresse du portefeuille</p>
-                    <p className="font-mono text-sm font-semibold mb-3">0x742d35Cc6634C0532925a3b8D1E...</p>
-                    <div className="flex justify-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <QrCode className="w-4 h-4 mr-1" />
-                        QR Code
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copier
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Solde TERA</span>
-                    <span className="font-semibold">1,250 TERA</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Valeur USD</span>
-                    <span className="font-semibold text-green-600">$2,500</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Récompenses</span>
-                    <span className="font-semibold text-blue-600">+15 TERA</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 pt-4">
-                  <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600">
-                    <Upload className="w-4 h-4 mr-1" />
-                    Recevoir
-                  </Button>
-                  <Button size="sm" className="bg-gradient-to-r from-blue-600 to-cyan-600">
-                    <Download className="w-4 h-4 mr-1" />
-                    Envoyer
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-red-600" />
+                Paramètres de Sécurité
+              </CardTitle>
+              <CardDescription>
+                Portefeuille crypto, clés de récupération et stockage décentralisé
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-slate-500">
+                <Wallet className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-medium">Portefeuille blockchain</p>
+                <p className="text-sm mt-1">
+                  L'intégration du portefeuille crypto et des paramètres de sécurité avancés sera bientôt disponible.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 };

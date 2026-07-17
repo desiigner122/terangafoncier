@@ -1,29 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Filter,
+import {
+  Users,
+  Plus,
+  Search,
   Phone,
   Mail,
-  MapPin,
   Building,
   Star,
   Eye,
   Edit,
   MessageSquare,
-  FileText,
-  Calendar,
-  Clock,
-  TrendingUp,
   DollarSign,
-  Award,
   User,
   UserCheck,
-  UserX,
-  Briefcase,
-  History
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,208 +22,180 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+const formatXOF = (value) => {
+  const num = Number(value) || 0;
+  return `${num.toLocaleString('fr-FR')} XOF`;
+};
 
 const GeometreClients = () => {
+  const { user } = useAuth();
+  const geometreId = user?.id;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
+  const [loading, setLoading] = useState(true);
+  const [clients, setClients] = useState([]);
 
-  // Données des clients
-  const clients = [
-    {
-      id: 1,
-      name: 'Société IMMOGO',
-      type: 'entreprise',
-      contact: 'M. Ibrahima Fall',
-      email: 'contact@immogo.sn',
-      phone: '+221 77 123 45 67',
-      address: 'Route de la Corniche, Almadies, Dakar',
-      status: 'actif',
-      rating: 4.8,
-      totalMissions: 12,
-      totalRevenue: '8,500,000 XOF',
-      lastMission: '2024-09-25',
-      avatar: null,
-      sector: 'Immobilier',
-      description: 'Promoteur immobilier spécialisé dans le résidentiel haut de gamme',
-      projects: [
-        { name: 'Résidence Almadies Bay', status: 'en_cours', value: '2,500,000 XOF' },
-        { name: 'Villa Les Palmiers', status: 'termine', value: '1,200,000 XOF' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'M. Amadou Diallo',
-      type: 'particulier',
-      contact: 'Amadou Diallo',
-      email: 'amadou.diallo@gmail.com',
-      phone: '+221 76 987 65 43',
-      address: 'Cité Keur Gorgui, Rufisque',
-      status: 'actif',
-      rating: 4.5,
-      totalMissions: 3,
-      totalRevenue: '950,000 XOF',
-      lastMission: '2024-09-15',
-      avatar: null,
-      sector: 'Particulier',
-      description: 'Propriétaire terrain résidentiel',
-      projects: [
-        { name: 'Bornage terrain résidentiel', status: 'en_cours', value: '320,000 XOF' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Ministère de l\'Industrie',
-      type: 'administration',
-      contact: 'Direction de l\'Aménagement',
-      email: 'amenagement@industrie.gouv.sn',
-      phone: '+221 33 824 56 78',
-      address: 'Building Administratif, Plateau, Dakar',
-      status: 'actif',
-      rating: 4.9,
-      totalMissions: 8,
-      totalRevenue: '15,200,000 XOF',
-      lastMission: '2024-09-30',
-      avatar: null,
-      sector: 'Administration',
-      description: 'Institution gouvernementale - projets d\'infrastructure',
-      projects: [
-        { name: 'Zone industrielle Bargny', status: 'en_cours', value: '3,500,000 XOF' },
-        { name: 'Cartographie Thiès', status: 'termine', value: '2,100,000 XOF' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'Coopérative Agricole Thiès',
-      type: 'cooperative',
-      contact: 'M. Ousmane Sarr',
-      email: 'coop.thies@agriculture.sn',
-      phone: '+221 77 456 78 90',
-      address: 'Centre ville, Thiès',
-      status: 'actif',
-      rating: 4.2,
-      totalMissions: 5,
-      totalRevenue: '1,850,000 XOF',
-      lastMission: '2024-08-20',
-      avatar: null,
-      sector: 'Agriculture',
-      description: 'Coopérative agricole - délimitation parcelles',
-      projects: [
-        { name: 'Parcelles rizicoles Kaolack', status: 'planifie', value: '450,000 XOF' }
-      ]
-    },
-    {
-      id: 5,
-      name: 'Architecte Mbaye & Associates',
-      type: 'entreprise',
-      contact: 'Arch. Fatou Mbaye',
-      email: 'f.mbaye@archimbaye.sn',
-      phone: '+221 77 234 56 78',
-      address: 'Point E, Dakar',
-      status: 'actif',
-      rating: 4.7,
-      totalMissions: 7,
-      totalRevenue: '3,200,000 XOF',
-      lastMission: '2024-09-20',
-      avatar: null,     
-      sector: 'Architecture',
-      description: 'Cabinet d\'architecture - relevés de bâtiments',
-      projects: [
-        { name: 'Villa Sacré-Cœur', status: 'en_cours', value: '680,000 XOF' }
-      ]
-    },
-    {
-      id: 6,
-      name: 'Mme Aïssatou Ndiaye',
-      type: 'particulier',
-      contact: 'Aïssatou Ndiaye',
-      email: 'aissatou.ndiaye@yahoo.fr',
-      phone: '+221 76 345 67 89',
-      address: 'Liberté 6, Dakar',
-      status: 'inactif',
-      rating: 4.0,
-      totalMissions: 2,
-      totalRevenue: '480,000 XOF',
-      lastMission: '2024-06-15',
-      avatar: null,
-      sector: 'Particulier',
-      description: 'Propriétaire foncier',
-      projects: [
-        { name: 'Délimitation héritage familial', status: 'termine', value: '280,000 XOF' }
-      ]
-    }
-  ];
+  useEffect(() => {
+    if (!geometreId) return;
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [contactsRes, missionsRes] = await Promise.all([
+          supabase
+            .from('crm_contacts')
+            .select('id, name, email, phone, company, status, temperature, score, created_at')
+            .eq('owner_id', geometreId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('survey_missions')
+            .select('id, client_id, client_name, title, status, price, scheduled_date, created_at')
+            .eq('geometre_id', geometreId)
+        ]);
+
+        if (!active) return;
+
+        const contacts = contactsRes.data || [];
+        const missions = missionsRes.data || [];
+
+        const mapped = contacts.map((c) => {
+          // Missions liées : par client_id (crm_contacts.id) ou, à défaut, par nom.
+          const clientMissions = missions.filter(
+            (m) =>
+              (m.client_id && m.client_id === c.id) ||
+              (m.client_name && c.name && m.client_name.toLowerCase() === c.name.toLowerCase())
+          );
+          const totalRevenue = clientMissions.reduce((sum, m) => sum + (Number(m.price) || 0), 0);
+          const lastMission = clientMissions
+            .map((m) => m.scheduled_date || m.created_at)
+            .filter(Boolean)
+            .sort()
+            .reverse()[0] || null;
+
+          return {
+            id: c.id,
+            name: c.name || 'Client sans nom',
+            // Pas de colonne 'type' dans crm_contacts : dérivé honnêtement de la présence d'une société.
+            type: c.company ? 'entreprise' : 'particulier',
+            email: c.email || '—',
+            phone: c.phone || '—',
+            company: c.company || null,
+            status: c.status || 'prospect',
+            score: c.score,
+            totalMissions: clientMissions.length,
+            totalRevenue,
+            lastMission,
+            avatar: null,
+            projects: clientMissions.map((m) => ({
+              name: m.title || 'Mission',
+              status: m.status,
+              value: formatXOF(m.price)
+            }))
+          };
+        });
+
+        setClients(mapped);
+      } catch (e) {
+        if (active) setClients([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [geometreId]);
 
   const getClientTypeIcon = (type) => {
     switch (type) {
       case 'entreprise': return Building;
       case 'particulier': return User;
-      case 'administration': return Award;
-      case 'cooperative': return Users;
       default: return User;
     }
   };
 
+  const isActiveStatus = (status) => {
+    const s = (status || '').toLowerCase();
+    return s === 'actif' || s === 'active' || s === 'client';
+  };
+
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'actif': return 'bg-green-100 text-green-800';
-      case 'inactif': return 'bg-red-100 text-red-800';
-      case 'prospect': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    const s = (status || '').toLowerCase();
+    if (isActiveStatus(status)) return 'bg-green-100 text-green-800';
+    if (s === 'inactif' || s === 'inactive' || s === 'perdu' || s === 'lost') return 'bg-red-100 text-red-800';
+    if (s === 'prospect' || s === 'lead') return 'bg-yellow-100 text-yellow-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const getProjectStatusColor = (status) => {
     switch (status) {
-      case 'en_cours': return 'bg-blue-100 text-blue-800';
-      case 'termine': return 'bg-green-100 text-green-800';
-      case 'planifie': return 'bg-yellow-100 text-yellow-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.sector.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      client.name.toLowerCase().includes(term) ||
+      (client.company || '').toLowerCase().includes(term) ||
+      (client.email || '').toLowerCase().includes(term);
     const matchesType = filterType === 'tous' || client.type === filterType;
-    
     return matchesSearch && matchesType;
   });
 
-  // Statistiques clients
-  const stats = [
-    {
-      title: 'Total Clients',
-      value: clients.length,
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: 'Clients Actifs',
-      value: clients.filter(c => c.status === 'actif').length,
-      icon: UserCheck,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: 'Revenus Total',
-      value: '29.18M XOF',
-      icon: DollarSign,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      title: 'Note Moyenne',
-      value: '4.5/5',
-      icon: Star,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100'  
-    }
-  ];
+  // Statistiques clients — calculées sur la vraie donnée.
+  const stats = useMemo(() => {
+    const totalRevenue = clients.reduce((sum, c) => sum + (c.totalRevenue || 0), 0);
+    const scores = clients.map((c) => c.score).filter((s) => typeof s === 'number' && !Number.isNaN(s));
+    const avgScore = scores.length
+      ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+      : null;
+
+    return [
+      {
+        title: 'Total Clients',
+        value: clients.length,
+        icon: Users,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      },
+      {
+        title: 'Clients Actifs',
+        value: clients.filter((c) => isActiveStatus(c.status)).length,
+        icon: UserCheck,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100'
+      },
+      {
+        title: 'Revenus Total',
+        value: clients.length ? formatXOF(totalRevenue) : '—',
+        icon: DollarSign,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
+      },
+      {
+        title: 'Score Moyen',
+        value: avgScore !== null ? avgScore : '—',
+        icon: Star,
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-100'
+      }
+    ];
+  }, [clients]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -287,7 +250,7 @@ const GeometreClients = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Rechercher par nom, contact ou secteur..."
+                  placeholder="Rechercher par nom, société ou email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -295,7 +258,7 @@ const GeometreClients = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              {['tous', 'entreprise', 'particulier', 'administration', 'cooperative'].map((type) => (
+              {['tous', 'entreprise', 'particulier'].map((type) => (
                 <Button
                   key={type}
                   variant={filterType === type ? 'default' : 'outline'}
@@ -310,7 +273,24 @@ const GeometreClients = () => {
         </CardContent>
       </Card>
 
-      {/* Clients Tabs */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <Loader2 className="h-8 w-8 animate-spin mb-3" />
+          <p>Chargement des clients...</p>
+        </div>
+      ) : clients.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <Users className="h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900">Aucun client</h3>
+            <p className="text-gray-600 mt-1 max-w-md">
+              Vous n'avez pas encore de client enregistré. Ajoutez votre premier contact pour
+              commencer à constituer votre portefeuille.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+      /* Clients Tabs */
       <Tabs defaultValue="grille" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="grille">Vue Grille</TabsTrigger>
@@ -327,7 +307,7 @@ const GeometreClients = () => {
                   key={client.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
                   <Card className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
@@ -342,7 +322,7 @@ const GeometreClients = () => {
                           </Avatar>
                           <div>
                             <h3 className="font-semibold text-gray-900">{client.name}</h3>
-                            <p className="text-sm text-gray-600">{client.sector}</p>
+                            <p className="text-sm text-gray-600">{client.company || (client.type === 'entreprise' ? 'Entreprise' : 'Particulier')}</p>
                           </div>
                         </div>
                         <Badge className={getStatusColor(client.status)}>
@@ -353,10 +333,6 @@ const GeometreClients = () => {
                       {/* Contact Info */}
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User className="h-3 w-3" />
-                          {client.contact}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Mail className="h-3 w-3" />
                           {client.email}
                         </div>
@@ -364,10 +340,12 @@ const GeometreClients = () => {
                           <Phone className="h-3 w-3" />
                           {client.phone}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <MapPin className="h-3 w-3" />
-                          {client.address}
-                        </div>
+                        {client.company && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Building className="h-3 w-3" />
+                            {client.company}
+                          </div>
+                        )}
                       </div>
 
                       {/* Stats */}
@@ -377,8 +355,10 @@ const GeometreClients = () => {
                           <div className="text-xs text-gray-600">Missions</div>
                         </div>
                         <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <div className="text-lg font-bold text-gray-900">{client.rating}</div>
-                          <div className="text-xs text-gray-600">Rating</div>
+                          <div className="text-lg font-bold text-gray-900">
+                            {typeof client.score === 'number' ? client.score : '—'}
+                          </div>
+                          <div className="text-xs text-gray-600">Score</div>
                         </div>
                       </div>
 
@@ -386,23 +366,27 @@ const GeometreClients = () => {
                       <div className="mb-4">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Revenus total</span>
-                          <span className="font-semibold text-gray-900">{client.totalRevenue}</span>
+                          <span className="font-semibold text-gray-900">{formatXOF(client.totalRevenue)}</span>
                         </div>
                       </div>
 
                       {/* Current Projects */}
                       <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Projets actifs</h4>
-                        <div className="space-y-2">
-                          {client.projects.slice(0, 2).map((project, idx) => (
-                            <div key={idx} className="flex items-center justify-between text-xs">
-                              <span className="text-gray-600 truncate flex-1">{project.name}</span>
-                              <Badge variant="outline" className={`ml-2 ${getProjectStatusColor(project.status)}`}>
-                                {project.status}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Missions</h4>
+                        {client.projects.length === 0 ? (
+                          <p className="text-xs text-gray-400">Aucune mission liée</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {client.projects.slice(0, 2).map((project, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600 truncate flex-1">{project.name}</span>
+                                <Badge variant="outline" className={`ml-2 ${getProjectStatusColor(project.status)}`}>
+                                  {project.status}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions */}
@@ -456,7 +440,7 @@ const GeometreClients = () => {
                               </Avatar>
                               <div>
                                 <div className="font-medium text-gray-900">{client.name}</div>
-                                <div className="text-sm text-gray-600">{client.sector}</div>
+                                <div className="text-sm text-gray-600">{client.company || '—'}</div>
                               </div>
                             </div>
                           </td>
@@ -467,7 +451,7 @@ const GeometreClients = () => {
                           </td>
                           <td className="p-4">
                             <div className="text-sm">
-                              <div className="text-gray-900">{client.contact}</div>
+                              <div className="text-gray-900">{client.email}</div>
                               <div className="text-gray-600">{client.phone}</div>
                             </div>
                           </td>
@@ -475,7 +459,7 @@ const GeometreClients = () => {
                             {client.totalMissions}
                           </td>
                           <td className="p-4 font-medium">
-                            {client.totalRevenue}
+                            {formatXOF(client.totalRevenue)}
                           </td>
                           <td className="p-4">
                             <Badge className={getStatusColor(client.status)}>
@@ -513,16 +497,16 @@ const GeometreClients = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {['entreprise', 'particulier', 'administration', 'cooperative'].map((type) => {
+                  {['entreprise', 'particulier'].map((type) => {
                     const count = clients.filter(c => c.type === type).length;
-                    const percentage = (count / clients.length * 100).toFixed(1);
+                    const percentage = clients.length ? (count / clients.length * 100).toFixed(1) : '0.0';
                     return (
                       <div key={type} className="flex items-center justify-between">
                         <span className="text-sm capitalize">{type}</span>
                         <div className="flex items-center gap-2">
                           <div className="w-24 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full" 
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
                               style={{ width: `${percentage}%` }}
                             ></div>
                           </div>
@@ -540,25 +524,30 @@ const GeometreClients = () => {
                 <CardTitle>Top Clients par Revenus</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {clients
-                    .sort((a, b) => parseInt(b.totalRevenue.replace(/[^0-9]/g, '')) - parseInt(a.totalRevenue.replace(/[^0-9]/g, '')))
-                    .slice(0, 5)
-                    .map((client, index) => (
-                      <div key={client.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm font-medium text-gray-600">#{index + 1}</div>
-                          <div className="text-sm text-gray-900">{client.name}</div>
+                {clients.every((c) => c.totalRevenue === 0) ? (
+                  <p className="text-sm text-gray-400">Aucun revenu de mission à afficher.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {[...clients]
+                      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+                      .slice(0, 5)
+                      .map((client, index) => (
+                        <div key={client.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-medium text-gray-600">#{index + 1}</div>
+                            <div className="text-sm text-gray-900">{client.name}</div>
+                          </div>
+                          <div className="text-sm font-medium">{formatXOF(client.totalRevenue)}</div>
                         </div>
-                        <div className="text-sm font-medium">{client.totalRevenue}</div>
-                      </div>
-                    ))}
-                </div>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
+      )}
     </motion.div>
   );
 };

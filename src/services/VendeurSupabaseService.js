@@ -1,14 +1,19 @@
 /**
  * VENDEUR SUPABASE SERVICE
- * Service dédié pour le Dashboard Vendeur
- * Connexion directe aux tables Supabase
- * 
- * Tables principales:
- * - blockchain_transactions
- * - terrain_photos
- * - terrains (listings)
- * - vendeur_analytics
- * - vendeur_offers
+ * Service dédié pour le Dashboard Vendeur.
+ *
+ * ⚠️ Ce fichier interrogeait auparavant des tables inexistantes
+ * ('terrains', 'terrain_photos', 'offres', 'vendeur_analytics') — chaque
+ * appel échouait silencieusement. Réécrit pour utiliser le schéma réel :
+ * - properties (annonces / terrains du vendeur, via owner_id)
+ * - property_photos (photos, GPS, score qualité)
+ * - financial_transactions (offres d'achat / demandes de financement reçues)
+ * - crm_contacts / crm_deals / crm_activities / crm_tasks (CRM)
+ * - documents (documents liés à une propriété)
+ * - disputes (anti-fraude / litiges)
+ * - blockchain_transactions / blockchain_certificates
+ * - conversations / conversation_participants / messages (messagerie)
+ * - support_tickets / support_ticket_messages
  */
 
 import { supabase } from './supabaseClient';
@@ -16,380 +21,234 @@ import { supabase } from './supabaseClient';
 class VendeurSupabaseService {
   /**
    * ========================================
-   * TRANSACTIONS BLOCKCHAIN
+   * ANNONCES (properties)
    * ========================================
    */
 
-  /**
-   * Récupérer les transactions blockchain du vendeur
-   * @param {string} userId - ID du vendeur
-   * @param {Object} options - Options de filtrage
-   * @returns {Promise<Object>}
-   */
-  async getBlockchainTransactions(userId, options = {}) {
+  async getVendeurListings(userId, options = {}) {
     try {
-      const {
-        status = null,
-        type = null,
-        limit = 50,
-        offset = 0
-      } = options;
+      const { status = null, limit = 50, offset = 0 } = options;
 
       let query = supabase
-        .from('blockchain_transactions')
-        .select('*')
-        .eq('user_id', userId)
+        .from('properties')
+        .select(`
+          *,
+          photos:property_photos ( id, url, is_primary, gps_latitude, gps_longitude, quality_score )
+        `)
+        .eq('owner_id', userId)
         .order('created_at', { ascending: false });
 
-      // Filtres
-      if (status) {
-        query = query.eq('status', status);
-      }
-      if (type) {
-        query = query.eq('transaction_type', type);
-      }
-
-      // Pagination
+      if (status) query = query.eq('status', status);
       query = query.range(offset, offset + limit - 1);
 
       const { data, error } = await query;
-
       if (error) throw error;
 
-      return {
-        success: true,
-        data: data || [],
-        message: `${data?.length || 0} transactions chargées`
-      };
+      return { success: true, data: data || [], message: `${data?.length || 0} annonces chargées` };
     } catch (error) {
-      console.error('Erreur getBlockchainTransactions:', error);
-      return {
-        success: false,
-        data: [],
-        error: error.message
-      };
+      console.error('Erreur getVendeurListings:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async createListing(listingData) {
+    try {
+      const { data, error } = await supabase.from('properties').insert(listingData).select().single();
+      if (error) throw error;
+      return { success: true, data, message: 'Annonce créée avec succès' };
+    } catch (error) {
+      console.error('Erreur createListing:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async updateListing(listingId, updates) {
+    try {
+      const { data, error } = await supabase.from('properties').update(updates).eq('id', listingId).select().single();
+      if (error) throw error;
+      return { success: true, data, message: 'Annonce mise à jour' };
+    } catch (error) {
+      console.error('Erreur updateListing:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async deleteListing(listingId) {
+    try {
+      const { error } = await supabase.from('properties').delete().eq('id', listingId);
+      if (error) throw error;
+      return { success: true, message: 'Annonce supprimée' };
+    } catch (error) {
+      console.error('Erreur deleteListing:', error);
+      return { success: false, error: error.message };
     }
   }
 
   /**
    * ========================================
-   * PHOTOS DE TERRAINS
+   * PHOTOS (property_photos)
    * ========================================
    */
 
-  /**
-   * Récupérer les photos des terrains du vendeur
-   * @param {string} userId - ID du vendeur
-   * @returns {Promise<Object>}
-   */
   async getUserPhotos(userId) {
     try {
-      // Récupérer les terrains du vendeur
-      const { data: terrains, error: terrainsError } = await supabase
-        .from('terrains')
-        .select('id')
-        .eq('vendeur_id', userId);
+      const { data: properties, error: propsError } = await supabase
+        .from('properties')
+        .select('id, title, name, location, surface')
+        .eq('owner_id', userId);
+      if (propsError) throw propsError;
 
-      if (terrainsError) throw terrainsError;
-
-      const terrainIds = terrains?.map(t => t.id) || [];
-
-      if (terrainIds.length === 0) {
-        return {
-          success: true,
-          data: [],
-          message: 'Aucun terrain trouvé'
-        };
+      const propertyIds = properties?.map(p => p.id) || [];
+      if (propertyIds.length === 0) {
+        return { success: true, data: [], message: 'Aucun terrain trouvé' };
       }
 
-      // Récupérer toutes les photos
       const { data: photos, error: photosError } = await supabase
-        .from('terrain_photos')
-        .select(`
-          *,
-          terrain:terrains (
-            id,
-            titre,
-            localisation,
-            superficie
-          )
-        `)
-        .in('terrain_id', terrainIds)
+        .from('property_photos')
+        .select('*')
+        .in('property_id', propertyIds)
         .order('created_at', { ascending: false });
-
       if (photosError) throw photosError;
 
-      return {
-        success: true,
-        data: photos || [],
-        message: `${photos?.length || 0} photos chargées`
-      };
+      const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
+      const enriched = (photos || []).map(photo => ({ ...photo, property: propertyMap[photo.property_id] }));
+
+      return { success: true, data: enriched, message: `${enriched.length} photos chargées` };
     } catch (error) {
       console.error('Erreur getUserPhotos:', error);
-      return {
-        success: false,
-        data: [],
-        error: error.message
-      };
+      return { success: false, data: [], error: error.message };
     }
   }
 
-  /**
-   * Upload une photo de terrain
-   * @param {string} terrainId - ID du terrain
-   * @param {File} file - Fichier image
-   * @param {Object} metadata - Métadonnées
-   * @returns {Promise<Object>}
-   */
-  async uploadTerrainPhoto(terrainId, file, metadata = {}) {
+  async uploadPropertyPhoto(propertyId, file, metadata = {}) {
     try {
-      // 1. Upload vers Storage
-      const fileName = `${terrainId}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('terrain-photos')
-        .upload(fileName, file);
-
+      const fileName = `${propertyId}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('property-photos').upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      // 2. Récupérer l'URL publique
-      const { data: urlData } = supabase
-        .storage
-        .from('terrain-photos')
-        .getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from('property-photos').getPublicUrl(fileName);
 
-      const photoUrl = urlData.publicUrl;
-
-      // 3. Enregistrer dans la table
       const { data: photoRecord, error: recordError } = await supabase
-        .from('terrain_photos')
+        .from('property_photos')
         .insert({
-          terrain_id: terrainId,
-          url: photoUrl,
-          type: metadata.type || 'standard',
-          description: metadata.description || '',
-          is_primary: metadata.is_primary || false
+          property_id: propertyId,
+          url: urlData.publicUrl,
+          is_primary: metadata.is_primary || false,
+          gps_latitude: metadata.gps_latitude || null,
+          gps_longitude: metadata.gps_longitude || null,
+          quality_score: metadata.quality_score || null
         })
         .select()
         .single();
-
       if (recordError) throw recordError;
 
-      return {
-        success: true,
-        data: photoRecord,
-        message: 'Photo uploadée avec succès'
-      };
+      return { success: true, data: photoRecord, message: 'Photo uploadée avec succès' };
     } catch (error) {
-      console.error('Erreur uploadTerrainPhoto:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Erreur uploadPropertyPhoto:', error);
+      return { success: false, error: error.message };
     }
   }
 
-  /**
-   * Supprimer une photo
-   * @param {string} photoId - ID de la photo
-   * @returns {Promise<Object>}
-   */
   async deletePhoto(photoId) {
     try {
-      // 1. Récupérer l'URL pour supprimer du Storage
       const { data: photo, error: fetchError } = await supabase
-        .from('terrain_photos')
+        .from('property_photos')
         .select('url')
         .eq('id', photoId)
         .single();
-
       if (fetchError) throw fetchError;
 
-      // 2. Extraire le path du Storage depuis l'URL
-      const url = new URL(photo.url);
-      const pathParts = url.pathname.split('/');
-      const filePath = pathParts.slice(pathParts.indexOf('terrain-photos') + 1).join('/');
-
-      // 3. Supprimer du Storage
-      const { error: storageError } = await supabase
-        .storage
-        .from('terrain-photos')
-        .remove([filePath]);
-
-      if (storageError) console.warn('Erreur suppression Storage:', storageError);
-
-      // 4. Supprimer de la DB
-      const { error: deleteError } = await supabase
-        .from('terrain_photos')
-        .delete()
-        .eq('id', photoId);
-
-      if (deleteError) throw deleteError;
-
-      return {
-        success: true,
-        message: 'Photo supprimée'
-      };
-    } catch (error) {
-      console.error('Erreur deletePhoto:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  /**
-   * ========================================
-   * LISTINGS (ANNONCES)
-   * ========================================
-   */
-
-  /**
-   * Récupérer les annonces du vendeur
-   * @param {string} userId - ID du vendeur
-   * @param {Object} options - Options
-   * @returns {Promise<Object>}
-   */
-  async getVendeurListings(userId, options = {}) {
-    try {
-      const {
-        status = null,
-        limit = 50,
-        offset = 0
-      } = options;
-
-      let query = supabase
-        .from('terrains')
-        .select(`
-          *,
-          photos:terrain_photos (
-            id,
-            url,
-            type,
-            is_primary
-          ),
-          offers:offres (
-            id,
-            montant,
-            statut,
-            created_at
-          )
-        `)
-        .eq('vendeur_id', userId)
-        .order('created_at', { ascending: false });
-
-      // Filtre par statut
-      if (status) {
-        query = query.eq('statut', status);
+      if (photo?.url) {
+        try {
+          const url = new URL(photo.url);
+          const pathParts = url.pathname.split('/');
+          const idx = pathParts.indexOf('property-photos');
+          if (idx >= 0) {
+            const filePath = pathParts.slice(idx + 1).join('/');
+            await supabase.storage.from('property-photos').remove([filePath]);
+          }
+        } catch (storageErr) {
+          console.warn('Erreur suppression Storage:', storageErr);
+        }
       }
 
-      // Pagination
-      query = query.range(offset, offset + limit - 1);
+      const { error: deleteError } = await supabase.from('property_photos').delete().eq('id', photoId);
+      if (deleteError) throw deleteError;
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: data || [],
-        message: `${data?.length || 0} annonces chargées`
-      };
+      return { success: true, message: 'Photo supprimée' };
     } catch (error) {
-      console.error('Erreur getVendeurListings:', error);
-      return {
-        success: false,
-        data: [],
-        error: error.message
-      };
+      console.error('Erreur deletePhoto:', error);
+      return { success: false, error: error.message };
     }
   }
 
   /**
-   * Créer une nouvelle annonce
-   * @param {Object} listingData - Données de l'annonce
-   * @returns {Promise<Object>}
+   * ========================================
+   * OFFRES D'ACHAT (financial_transactions)
+   * ========================================
+   * Une offre d'achat reçue est modélisée comme une financial_transactions
+   * liée à une propriété du vendeur, en status 'pending'.
    */
-  async createListing(listingData) {
+
+  async getVendeurOffers(userId) {
+    try {
+      const { data: properties, error: propsError } = await supabase
+        .from('properties')
+        .select('id, title, name, price, location')
+        .eq('owner_id', userId);
+      if (propsError) throw propsError;
+
+      const propertyIds = properties?.map(p => p.id) || [];
+      if (propertyIds.length === 0) {
+        return { success: true, data: [], message: 'Aucune offre' };
+      }
+
+      const { data: offers, error: offersError } = await supabase
+        .from('financial_transactions')
+        .select('*')
+        .in('property_id', propertyIds)
+        .order('created_at', { ascending: false });
+      if (offersError) throw offersError;
+
+      const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
+      const enriched = (offers || []).map(offer => ({ ...offer, property: propertyMap[offer.property_id] }));
+
+      return { success: true, data: enriched, message: `${enriched.length} offres chargées` };
+    } catch (error) {
+      console.error('Erreur getVendeurOffers:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async acceptOffer(offerId) {
     try {
       const { data, error } = await supabase
-        .from('terrains')
-        .insert(listingData)
+        .from('financial_transactions')
+        .update({ status: 'accepted' })
+        .eq('id', offerId)
         .select()
         .single();
-
       if (error) throw error;
-
-      return {
-        success: true,
-        data: data,
-        message: 'Annonce créée avec succès'
-      };
+      return { success: true, data, message: 'Offre acceptée' };
     } catch (error) {
-      console.error('Erreur createListing:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Erreur acceptOffer:', error);
+      return { success: false, error: error.message };
     }
   }
 
-  /**
-   * Mettre à jour une annonce
-   * @param {string} listingId - ID de l'annonce
-   * @param {Object} updates - Mises à jour
-   * @returns {Promise<Object>}
-   */
-  async updateListing(listingId, updates) {
+  async rejectOffer(offerId, reason = '') {
     try {
       const { data, error } = await supabase
-        .from('terrains')
-        .update(updates)
-        .eq('id', listingId)
+        .from('financial_transactions')
+        .update({ status: 'rejected', description: reason || undefined })
+        .eq('id', offerId)
         .select()
         .single();
-
       if (error) throw error;
-
-      return {
-        success: true,
-        data: data,
-        message: 'Annonce mise à jour'
-      };
+      return { success: true, data, message: 'Offre refusée' };
     } catch (error) {
-      console.error('Erreur updateListing:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  /**
-   * Supprimer une annonce
-   * @param {string} listingId - ID de l'annonce
-   * @returns {Promise<Object>}
-   */
-  async deleteListing(listingId) {
-    try {
-      const { error } = await supabase
-        .from('terrains')
-        .delete()
-        .eq('id', listingId);
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        message: 'Annonce supprimée'
-      };
-    } catch (error) {
-      console.error('Erreur deleteListing:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Erreur rejectOffer:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -399,199 +258,321 @@ class VendeurSupabaseService {
    * ========================================
    */
 
-  /**
-   * Récupérer les statistiques du vendeur
-   * @param {string} userId - ID du vendeur
-   * @returns {Promise<Object>}
-   */
   async getVendeurAnalytics(userId) {
     try {
-      // Statistiques sur les terrains
-      const { data: terrains, error: terrainsError } = await supabase
-        .from('terrains')
-        .select('id, statut, prix, superficie, vues')
-        .eq('vendeur_id', userId);
+      const { data: properties, error: propsError } = await supabase
+        .from('properties')
+        .select('id, status, price, surface, views_count')
+        .eq('owner_id', userId);
+      if (propsError) throw propsError;
 
-      if (terrainsError) throw terrainsError;
-
-      // Statistiques sur les offres
-      const terrainIds = terrains?.map(t => t.id) || [];
+      const propertyIds = properties?.map(p => p.id) || [];
       let offers = [];
-      
-      if (terrainIds.length > 0) {
+      if (propertyIds.length > 0) {
         const { data: offersData, error: offersError } = await supabase
-          .from('offres')
-          .select('*')
-          .in('terrain_id', terrainIds);
-
+          .from('financial_transactions')
+          .select('id, status, amount')
+          .in('property_id', propertyIds);
         if (offersError) throw offersError;
         offers = offersData || [];
       }
 
-      // Calculer les KPIs
       const stats = {
-        totalListings: terrains?.length || 0,
-        activeListings: terrains?.filter(t => t.statut === 'disponible').length || 0,
-        soldListings: terrains?.filter(t => t.statut === 'vendu').length || 0,
-        pendingListings: terrains?.filter(t => t.statut === 'en_attente').length || 0,
-        totalValue: terrains?.reduce((sum, t) => sum + (t.prix || 0), 0) || 0,
-        totalSurface: terrains?.reduce((sum, t) => sum + (t.superficie || 0), 0) || 0,
-        totalViews: terrains?.reduce((sum, t) => sum + (t.vues || 0), 0) || 0,
+        totalListings: properties?.length || 0,
+        activeListings: properties?.filter(p => p.status === 'active').length || 0,
+        soldListings: properties?.filter(p => p.status === 'sold').length || 0,
+        pendingListings: properties?.filter(p => p.status === 'pending').length || 0,
+        totalValue: properties?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0,
+        totalSurface: properties?.reduce((sum, p) => sum + (Number(p.surface) || 0), 0) || 0,
+        totalViews: properties?.reduce((sum, p) => sum + (Number(p.views_count) || 0), 0) || 0,
         totalOffers: offers.length,
-        pendingOffers: offers.filter(o => o.statut === 'en_attente').length,
-        acceptedOffers: offers.filter(o => o.statut === 'acceptee').length,
-        rejectedOffers: offers.filter(o => o.statut === 'refusee').length
+        pendingOffers: offers.filter(o => o.status === 'pending').length,
+        acceptedOffers: offers.filter(o => o.status === 'accepted').length,
+        rejectedOffers: offers.filter(o => o.status === 'rejected').length
       };
 
-      return {
-        success: true,
-        data: stats,
-        message: 'Analytics chargées'
-      };
+      return { success: true, data: stats, message: 'Analytics chargées' };
     } catch (error) {
       console.error('Erreur getVendeurAnalytics:', error);
-      return {
-        success: false,
-        data: null,
-        error: error.message
-      };
+      return { success: false, data: null, error: error.message };
     }
   }
 
   /**
    * ========================================
-   * OFFRES
+   * CRM (crm_contacts / crm_deals / crm_activities / crm_tasks)
    * ========================================
    */
 
-  /**
-   * Récupérer les offres reçues par le vendeur
-   * @param {string} userId - ID du vendeur
-   * @returns {Promise<Object>}
-   */
-  async getVendeurOffers(userId) {
+  async getCrmContacts(userId) {
     try {
-      // 1. Récupérer les terrains du vendeur
-      const { data: terrains, error: terrainsError } = await supabase
-        .from('terrains')
-        .select('id')
-        .eq('vendeur_id', userId);
+      const { data, error } = await supabase
+        .from('crm_contacts')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getCrmContacts:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
 
-      if (terrainsError) throw terrainsError;
+  async createCrmContact(contactData) {
+    try {
+      const { data, error } = await supabase.from('crm_contacts').insert(contactData).select().single();
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Erreur createCrmContact:', error);
+      return { success: false, error: error.message };
+    }
+  }
 
-      const terrainIds = terrains?.map(t => t.id) || [];
+  async getCrmDeals(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('crm_deals')
+        .select('*, contact:crm_contacts(id, name, email)')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getCrmDeals:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
 
-      if (terrainIds.length === 0) {
-        return {
-          success: true,
-          data: [],
-          message: 'Aucune offre'
-        };
+  async getCrmActivities(userId, limit = 20) {
+    try {
+      const { data, error } = await supabase
+        .from('crm_activities')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getCrmActivities:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async getCrmTasks(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('crm_tasks')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('due_date', { ascending: true });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getCrmTasks:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  /**
+   * ========================================
+   * DOCUMENTS
+   * ========================================
+   */
+
+  async getDocuments(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getDocuments:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  /**
+   * ========================================
+   * ANTI-FRAUDE / LITIGES (disputes)
+   * ========================================
+   */
+
+  async getDisputes(userId) {
+    try {
+      const { data: properties, error: propsError } = await supabase
+        .from('properties')
+        .select('id, title, name')
+        .eq('owner_id', userId);
+      if (propsError) throw propsError;
+
+      const propertyIds = properties?.map(p => p.id) || [];
+      if (propertyIds.length === 0) {
+        return { success: true, data: [] };
       }
 
-      // 2. Récupérer les offres
-      const { data: offers, error: offersError } = await supabase
-        .from('offres')
-        .select(`
-          *,
-          terrain:terrains (
-            id,
-            titre,
-            prix,
-            localisation
-          ),
-          acheteur:profiles (
-            id,
-            nom,
-            prenom,
-            email
-          )
-        `)
-        .in('terrain_id', terrainIds)
+      const { data, error } = await supabase
+        .from('disputes')
+        .select('*')
+        .in('property_id', propertyIds)
         .order('created_at', { ascending: false });
+      if (error) throw error;
 
-      if (offersError) throw offersError;
+      const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
+      const enriched = (data || []).map(d => ({ ...d, property: propertyMap[d.property_id] }));
 
-      return {
-        success: true,
-        data: offers || [],
-        message: `${offers?.length || 0} offres chargées`
-      };
+      return { success: true, data: enriched };
     } catch (error) {
-      console.error('Erreur getVendeurOffers:', error);
-      return {
-        success: false,
-        data: [],
-        error: error.message
-      };
+      console.error('Erreur getDisputes:', error);
+      return { success: false, data: [], error: error.message };
     }
   }
 
   /**
-   * Accepter une offre
-   * @param {string} offerId - ID de l'offre
-   * @returns {Promise<Object>}
+   * ========================================
+   * BLOCKCHAIN
+   * ========================================
    */
-  async acceptOffer(offerId) {
+
+  async getBlockchainTransactions(userId, options = {}) {
     try {
+      const { limit = 50, offset = 0 } = options;
       const { data, error } = await supabase
-        .from('offres')
-        .update({ 
-          statut: 'acceptee',
-          accepted_at: new Date().toISOString()
-        })
-        .eq('id', offerId)
-        .select()
-        .single();
-
+        .from('blockchain_transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
       if (error) throw error;
-
-      return {
-        success: true,
-        data: data,
-        message: 'Offre acceptée'
-      };
+      return { success: true, data: data || [], message: `${data?.length || 0} transactions chargées` };
     } catch (error) {
-      console.error('Erreur acceptOffer:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Erreur getBlockchainTransactions:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async getBlockchainCertificates(userId) {
+    try {
+      const { data: properties, error: propsError } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('owner_id', userId);
+      if (propsError) throw propsError;
+
+      const propertyIds = properties?.map(p => p.id) || [];
+      if (propertyIds.length === 0) {
+        return { success: true, data: [] };
+      }
+
+      const { data, error } = await supabase
+        .from('blockchain_certificates')
+        .select('*')
+        .in('property_id', propertyIds)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getBlockchainCertificates:', error);
+      return { success: false, data: [], error: error.message };
     }
   }
 
   /**
-   * Refuser une offre
-   * @param {string} offerId - ID de l'offre
-   * @param {string} reason - Raison du refus
-   * @returns {Promise<Object>}
+   * ========================================
+   * MESSAGERIE (conversations / messages)
+   * ========================================
    */
-  async rejectOffer(offerId, reason = '') {
+
+  async getConversations(userId) {
+    try {
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', userId);
+      if (partError) throw partError;
+
+      const conversationIds = participations?.map(p => p.conversation_id) || [];
+      if (conversationIds.length === 0) {
+        return { success: true, data: [] };
+      }
+
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*, participants:conversation_participants(user_id)')
+        .in('id', conversationIds)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getConversations:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async getMessages(conversationId) {
     try {
       const { data, error } = await supabase
-        .from('offres')
-        .update({ 
-          statut: 'refusee',
-          rejected_at: new Date().toISOString(),
-          rejection_reason: reason
-        })
-        .eq('id', offerId)
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getMessages:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async sendMessage(conversationId, senderId, content) {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({ conversation_id: conversationId, sender_id: senderId, content, read: false })
         .select()
         .single();
-
       if (error) throw error;
-
-      return {
-        success: true,
-        data: data,
-        message: 'Offre refusée'
-      };
+      return { success: true, data };
     } catch (error) {
-      console.error('Erreur rejectOffer:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('Erreur sendMessage:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * ========================================
+   * SUPPORT
+   * ========================================
+   */
+
+  async getSupportTickets(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error('Erreur getSupportTickets:', error);
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  async createSupportTicket(ticketData) {
+    try {
+      const { data, error } = await supabase.from('support_tickets').insert(ticketData).select().single();
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Erreur createSupportTicket:', error);
+      return { success: false, error: error.message };
     }
   }
 }

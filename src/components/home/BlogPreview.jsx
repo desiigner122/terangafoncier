@@ -1,15 +1,27 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   Calendar
 } from 'lucide-react';
-import { sampleBlogPosts } from '@/data'; // Using sampleBlogPosts from data/index.js
+import BlogService from '@/services/admin/BlogService';
+
+const FALLBACK_BLOG_IMAGE = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop';
 
 const BlogPreview = () => {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    BlogService.getPosts({ status: 'published', limit: 3 }).then((result) => {
+      if (active && result.success) setPosts(result.posts || []);
+    });
+    return () => { active = false; };
+  }, []);
+
   const sectionVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -19,6 +31,11 @@ const BlogPreview = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
+
+  // Masquer la section tant qu'aucun article publié n'est disponible
+  if (posts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-12 md:py-16 bg-muted/30">
@@ -43,17 +60,17 @@ const BlogPreview = () => {
           viewport={{ once: true, amount: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
         >
-          {sampleBlogPosts.slice(0, 3).map((post, index) => (
+          {posts.slice(0, 3).map((post) => (
             <motion.div key={post.id} variants={itemVariants}>
               <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 border rounded-xl">
                 <div className="aspect-video bg-muted relative">
-                   <img  className="w-full h-full object-cover" alt={post.title} src={`https://source.unsplash.com/random/400x300/?${post.category},senegal,${index}`} />
+                   <img className="w-full h-full object-cover" alt={post.title} src={post.cover_image || FALLBACK_BLOG_IMAGE} />
                    <div className="absolute inset-0 bg-black/10"></div>
                 </div>
                 <CardHeader>
                   <CardTitle className="text-lg leading-snug">{post.title}</CardTitle>
                   <p className="text-xs text-muted-foreground pt-1 flex items-center">
-                     <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                     <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </CardHeader>
                 <CardContent className="flex-grow">

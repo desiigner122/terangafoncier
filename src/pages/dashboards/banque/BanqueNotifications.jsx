@@ -26,18 +26,56 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Dérive une priorité d'affichage à partir du type réel de la notification.
+// La table 'notifications' ne stocke pas de colonne priorité : mapping déterministe, aucune valeur fabriquée.
+const derivePriority = (type) => {
+  const t = (type || '').toLowerCase();
+  if (['error', 'critical', 'fraud', 'alert', 'danger'].some(k => t.includes(k))) return 'critical';
+  if (['warning', 'compliance', 'kyc', 'security'].some(k => t.includes(k))) return 'high';
+  if (['success', 'payment', 'credit', 'info'].some(k => t.includes(k))) return 'medium';
+  return 'low';
+};
 
 const BanqueNotifications = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Simulation des notifications bancaires
+  // Chargement des notifications réelles depuis Supabase, filtrées par user_id (= bank_id).
   useEffect(() => {
-    // Les notifications réelles viennent de Supabase via loadNotifications()
-    // Commencer avec un tableau vide pour laisser charger les données réelles
-    setNotifications([]);
-  }, []);
+    const loadNotifications = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erreur chargement notifications:', error);
+        setNotifications([]);
+      } else {
+        setNotifications((data || []).map((n) => ({
+          ...n,
+          read: n.read ?? false,
+          timestamp: n.created_at ? new Date(n.created_at) : new Date(),
+          priority: derivePriority(n.type),
+        })));
+      }
+      setLoading(false);
+    };
+
+    loadNotifications();
+  }, [user?.id]);
 
   const getNotificationIcon = (type) => {
     const icons = {
@@ -73,28 +111,54 @@ const BanqueNotifications = () => {
     return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
   };
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(notif => 
+  const markAsRead = async (id) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+    if (error) {
+      console.error('Erreur mise à jour notification:', error);
+      return;
+    }
+    setNotifications(prev => prev.map(notif =>
       notif.id === id ? { ...notif, read: true } : notif
     ));
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
-    window.safeGlobalToast({
+  const markAllAsRead = async () => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    if (error) {
+      console.error('Erreur mise à jour notifications:', error);
+      return;
+    }
+    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+    window.safeGlobalToast?.({
       title: "Notifications marquées comme lues",
       description: "Toutes les notifications ont été marquées comme lues",
       variant: "success"
     });
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(notif => notif.id !== id));
+  const deleteNotification = async (id) => {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error('Erreur suppression notification:', error);
+      return;
+    }
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
   };
 
   const filteredNotifications = notifications.filter(notif => {
-    const matchesSearch = notif.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          notif.message.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (notif.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (notif.message || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filter === 'all') return matchesSearch;
     if (filter === 'unread') return !notif.read && matchesSearch;
@@ -228,7 +292,14 @@ const BanqueNotifications = () => {
 
       {/* Liste des notifications */}
       <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
+              <p className="text-gray-600">Chargement des notifications...</p>
+            </CardContent>
+          </Card>
+        ) : filteredNotifications.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -292,7 +363,9 @@ const BanqueNotifications = () => {
                                 <Clock className="h-3 w-3 mr-1" />
                                 {formatTimestamp(notification.timestamp)}
                               </span>
-                              <span>De: {notification.sender}</span>
+                              {notification.sender && (
+                                <span>De: {notification.sender}</span>
+                              )}
                               {notification.client && (
                                 <span>Client: {notification.client}</span>
                               )}

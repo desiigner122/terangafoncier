@@ -69,6 +69,7 @@ import {
   User
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'react-hot-toast';
 import { 
   getBankStatusBadge, 
@@ -119,140 +120,50 @@ const ParticulierFinancement = () => {
   const loadFinancementData = async () => {
     try {
       setLoading(true);
-      
-      // Charger les demandes de financement bancaire réelles depuis Supabase
+
+      // Charger les demandes de financement réelles depuis Supabase (table demandes_financement)
       if (user?.id) {
-        const { data: bankRequests, error } = await supabase
-          .from('requests')
-          .select(`
-            id,
-            user_id,
-            parcel_id,
-            payment_type,
-            installment_plan,
-            bank_details,
-            bank_status,
-            monthly_income,
-            status,
-            offered_price,
-            created_at,
-            updated_at,
-            parcels:parcel_id (
-              id,
-              title,
-              price,
-              surface,
-              location
-            )
-          `)
-          .eq('user_id', user.id)
-          .eq('payment_type', 'bank_financing')
-          .order('created_at', { ascending: false });
+        const result = await ParticulierSupabaseService.getFinancingRequests(user.id);
 
-        if (error) {
-          console.error('❌ Erreur chargement demandes financement:', error);
+        if (!result.success) {
+          console.error('❌ Erreur chargement demandes financement:', result.error);
           toast.error('Erreur lors du chargement de vos demandes');
-        } else if (bankRequests && bankRequests.length > 0) {
-          console.log('✅ Chargé', bankRequests.length, 'demande(s) de financement réelles');
-          
-          // Transformer les données Supabase en format demandes
-          const realDemandes = bankRequests.map(req => {
-            const bankDetails = req.bank_details || {};
-            const parcel = req.parcels;
-            
-            // Calculer les infos de prêt
-            const loanAmount = bankDetails.loan_amount || (req.offered_price || parcel?.price || 0);
-            const loanDuration = bankDetails.loan_duration || bankDetails.loan_duration_years || 20;
-            const interestRate = bankDetails.interest_rate || bankDetails.estimated_rate || 7.5;
-            
-            // Calculer mensualité si pas fournie
-            let monthlyPayment = bankDetails.monthly_payment || bankDetails.estimated_monthly_payment;
-            if (!monthlyPayment && loanAmount > 0) {
-              const monthlyRate = (interestRate / 100) / 12;
-              const numberOfPayments = loanDuration * 12;
-              monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
-                              (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
-            }
-            
-            return {
-              id: req.id,
-              montant: loanAmount,
-              duree: loanDuration,
-              type: 'bank_financing',
-              
-              // Statuts double suivi
-              bank_status: req.bank_status || bankDetails.bank_status || 'pending',
-              vendor_status: req.status || 'pending',
-              
-              partenaire: bankDetails.preferred_bank || bankDetails.bank_name || 'À définir',
-              taux: interestRate,
-              mensualite: Math.round(monthlyPayment || 0),
-              created_at: req.created_at,
-              updated_at: req.updated_at,
-              objet: `Financement bancaire - ${parcel?.title || 'Parcelle'}`,
-              
-              // Informations supplémentaires
-              monthly_income: req.monthly_income || 0,
-              loan_amount: loanAmount,
-              down_payment: bankDetails.down_payment || 0,
-              employment_type: bankDetails.employment_type,
-              
-              // Documents
-              documents_requis: 8,
-              documents_fournis: bankDetails.uploaded_documents ? 
-                Object.keys(bankDetails.uploaded_documents).filter(k => bankDetails.uploaded_documents[k]).length : 
-                3, // Par défaut 3 si non spécifié
-              
-              // Données parcelle
-              parcel_info: parcel,
-              parcel_title: parcel?.title,
-              parcel_location: parcel?.location,
-              parcel_price: parcel?.price,
-              parcel_surface: parcel?.surface
-            };
-          });
-          
-          setDemandes(realDemandes);
-          return; // Utiliser les vraies données
+          setDemandes([]);
         } else {
-          console.log('ℹ️ Aucune demande de financement trouvée');
-        }
-      }
-      
-      // Données démo si pas de vraies demandes (pour preview)
-      setDemandes([
-        {
-          id: 'demo-1',
-          montant: 45000000,
-          duree: 20,
-          type: 'credit_immobilier',
-          bank_status: 'en_cours_etude',
-          vendor_status: 'pending',
-          partenaire: 'CBAO Groupe Attijariwafa Bank',
-          taux: 7.5,
-          mensualite: 362500,
-          created_at: new Date().toISOString(),
-          objet: 'Acquisition terrain + construction maison individuelle',
-          documents_requis: 8,
-          documents_fournis: 5
-        },
-        {
-          id: 'demo-2',
-          montant: 25000000,
-          duree: 15,
-          type: 'credit_terrain',
-          bank_status: 'pre_approuve',
-          vendor_status: 'accepted',
-          partenaire: 'Banque de l\'Habitat du Sénégal',
-          taux: 6.8,
-          mensualite: 228400,
-          created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          objet: 'Acquisition terrain communal Parcelles Assainies',
-          documents_requis: 6,
-          documents_fournis: 6
-        }
-      ]);
+          // Mapper les colonnes réelles de demandes_financement vers le format d'affichage.
+          // Colonnes réelles : amount, status, notaire, property_title, documents_count,
+          // rejection_reason, created_at. Les champs taux/durée/mensualité n'existent pas
+          // dans le schéma → on ne fabrique aucune valeur (0/null → masqués dans le JSX).
+          const realDemandes = (result.data || []).map(req => ({
+            id: req.id,
+            montant: req.amount || 0,
+            duree: null,              // pas de source réelle
+            taux: 0,                  // pas de source réelle
+            mensualite: 0,            // pas de source réelle
+            status: req.status || 'pending',
+            // Suivi côté banque = statut réel de la demande de financement
+            bank_status: req.status || 'pending',
+            // Le statut vendeur n'est pas suivi dans demandes_financement → non affiché
+            vendor_status: null,
+            partenaire: req.notaire || 'À définir',
+            created_at: req.created_at,
+            updated_at: req.updated_at,
+            objet: req.property_title || 'Demande de financement',
+            property_title: req.property_title,
+            rejection_reason: req.rejection_reason,
+            documents_requis: 8,
+            documents_fournis: req.documents_count || 0
+          }));
 
+          setDemandes(realDemandes);
+        }
+      } else {
+        setDemandes([]);
+      }
+
+      // Répertoire indicatif des partenaires bancaires (contenu de référence : banques
+      // réelles + fourchettes de taux indicatives). Aucune table dédiée n'existe pour les
+      // partenaires ; ces données servent de catalogue informatif et de sélecteur de banque.
       setPartenaires([
         {
           id: 'cbao',
@@ -326,7 +237,9 @@ const ParticulierFinancement = () => {
     const coutTotal = mensualite * nombreMensualites;
     const interetsTotal = coutTotal - montantEmprunte;
     
-    const tauxEndettement = (mensualite / (profile?.revenus_mensuels || 500000)) * 100;
+    // Revenus réels du profil (colonne monthly_income) ; à défaut, valeur de référence
+    // par défaut du simulateur (hypothèse de calcul, non issue des données utilisateur).
+    const tauxEndettement = (mensualite / (profile?.monthly_income || 500000)) * 100;
     
     setResultatSimulation({
       montantEmprunte,
@@ -345,25 +258,37 @@ const ParticulierFinancement = () => {
         return;
       }
 
-      // Mode démo
-      const nouvelleDem = {
-        id: `fin-${Date.now()}`,
-        montant: parseFloat(nouvelleDemande.montant),
-        duree: parseInt(nouvelleDemande.duree),
-        type: nouvelleDemande.typeFinancement,
-        status: 'nouveau',
-        partenaire: nouvelleDemande.partenaire,
-        taux: 0,
-        mensualite: 0,
-        created_at: new Date().toISOString(),
-        objet: nouvelleDemande.objetFinancement,
-        documents_requis: 8,
-        documents_fournis: 0
-      };
-      
-      setDemandes(prev => [nouvelleDem, ...prev]);
+      if (!user?.id) {
+        toast.error('Vous devez être connecté pour soumettre une demande');
+        return;
+      }
+
+      // Insertion réelle dans demandes_financement (colonnes du schéma uniquement).
+      // Les champs durée / type / revenus / charges / apport n'ont pas de colonne dédiée
+      // dans le schéma actuel et ne sont donc pas persistés côté serveur.
+      const { error } = await supabase
+        .from('demandes_financement')
+        .insert({
+          user_id: user.id,
+          amount: parseFloat(nouvelleDemande.montant) || 0,
+          status: 'pending',
+          property_title: nouvelleDemande.objetFinancement || null,
+          client_name: profile?.full_name || null,
+          notaire: nouvelleDemande.partenaire || null,
+          documents_count: 0
+        });
+
+      if (error) {
+        console.error('Erreur insertion demande financement:', error);
+        toast.error('Erreur lors de la soumission de la demande');
+        return;
+      }
+
       toast.success('Demande de financement soumise avec succès');
-      
+
+      // Recharger depuis la source réelle
+      await loadFinancementData();
+
       setNouvelleDemande({
         montant: '',
         duree: '',
@@ -399,35 +324,60 @@ const ParticulierFinancement = () => {
   // Badge pour statut banque
   const getBankStatusBadge = (bankStatus) => {
     const statusConfig = {
-      en_attente: { 
-        color: 'bg-blue-100 text-blue-800 border-blue-300', 
+      pending: {
+        color: 'bg-blue-100 text-blue-800 border-blue-300',
         label: 'En attente banque',
-        icon: Clock 
+        icon: Clock
       },
-      en_cours_etude: { 
-        color: 'bg-purple-100 text-purple-800 border-purple-300', 
+      en_attente: {
+        color: 'bg-blue-100 text-blue-800 border-blue-300',
+        label: 'En attente banque',
+        icon: Clock
+      },
+      under_review: {
+        color: 'bg-purple-100 text-purple-800 border-purple-300',
         label: 'En cours d\'étude',
-        icon: FileText 
+        icon: FileText
       },
-      pre_approuve: { 
-        color: 'bg-cyan-100 text-cyan-800 border-cyan-300', 
+      en_cours_etude: {
+        color: 'bg-purple-100 text-purple-800 border-purple-300',
+        label: 'En cours d\'étude',
+        icon: FileText
+      },
+      conditional: {
+        color: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+        label: 'Accord conditionnel',
+        icon: Shield
+      },
+      pre_approuve: {
+        color: 'bg-cyan-100 text-cyan-800 border-cyan-300',
         label: 'Pré-approuvé',
-        icon: CheckCircle2 
+        icon: CheckCircle2
       },
-      approuve: { 
-        color: 'bg-green-100 text-green-800 border-green-300', 
+      approved: {
+        color: 'bg-green-100 text-green-800 border-green-300',
         label: 'Approuvé',
-        icon: CheckCircle2 
+        icon: CheckCircle2
       },
-      refuse: { 
-        color: 'bg-red-100 text-red-800 border-red-300', 
+      approuve: {
+        color: 'bg-green-100 text-green-800 border-green-300',
+        label: 'Approuvé',
+        icon: CheckCircle2
+      },
+      rejected: {
+        color: 'bg-red-100 text-red-800 border-red-300',
         label: 'Refusé',
-        icon: XCircle 
+        icon: XCircle
       },
-      documents_manquants: { 
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-300', 
+      refuse: {
+        color: 'bg-red-100 text-red-800 border-red-300',
+        label: 'Refusé',
+        icon: XCircle
+      },
+      documents_manquants: {
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
         label: 'Documents requis',
-        icon: AlertCircle 
+        icon: AlertCircle
       }
     };
     
@@ -667,7 +617,7 @@ const ParticulierFinancement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Demandes Actives</p>
-                <p className="text-3xl font-bold text-slate-900">{demandes.filter(d => ['nouveau', 'en_cours'].includes(d.status)).length}</p>
+                <p className="text-3xl font-bold text-slate-900">{demandes.filter(d => ['pending', 'en_attente', 'under_review', 'en_cours_etude', 'conditional', 'pre_approuve'].includes(d.status)).length}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <FileText className="h-6 w-6 text-green-600" />
@@ -696,15 +646,13 @@ const ParticulierFinancement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Taux Moyen Obtenu</p>
+                <p className="text-sm font-medium text-slate-600">Demandes Approuvées</p>
                 <p className="text-3xl font-bold text-slate-900">
-                  {demandes.filter(d => d.taux > 0).length > 0 
-                    ? (demandes.filter(d => d.taux > 0).reduce((sum, d) => sum + d.taux, 0) / demandes.filter(d => d.taux > 0).length).toFixed(1)
-                    : '0'}%
+                  {demandes.filter(d => ['approved', 'approuve'].includes(d.status)).length}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
-                <Percent className="h-6 w-6 text-purple-600" />
+                <CheckCircle2 className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -894,7 +842,7 @@ const ParticulierFinancement = () => {
                             </div>
                             <div>
                               <h3 className="font-semibold text-slate-900">
-                                {getTypeFinancementLabel(demande.type)}
+                                Financement bancaire
                               </h3>
                               <p className="text-sm text-slate-500">
                                 {demande.partenaire}
@@ -922,18 +870,20 @@ const ParticulierFinancement = () => {
                             </div>
                           </div>
 
-                          {/* Statut Vendeur */}
-                          <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                            <div className="flex-shrink-0">
-                              <Users className="w-5 h-5 text-amber-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs text-amber-600 font-medium mb-1">
-                                CÔTÉ VENDEUR
+                          {/* Statut Vendeur : affiché uniquement si réellement suivi */}
+                          {demande.vendor_status && (
+                            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                              <div className="flex-shrink-0">
+                                <Users className="w-5 h-5 text-amber-600" />
                               </div>
-                              {VendorStatusBadge}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-amber-600 font-medium mb-1">
+                                  CÔTÉ VENDEUR
+                                </div>
+                                {VendorStatusBadge}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Détails financiers */}
@@ -942,10 +892,12 @@ const ParticulierFinancement = () => {
                             <p className="text-xs text-slate-500 mb-1">Montant</p>
                             <p className="font-semibold text-slate-900">{formatMontant(demande.montant)}</p>
                           </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Durée</p>
-                            <p className="font-semibold text-slate-900">{demande.duree} ans</p>
-                          </div>
+                          {demande.duree && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Durée</p>
+                              <p className="font-semibold text-slate-900">{demande.duree} ans</p>
+                            </div>
+                          )}
                           {demande.taux > 0 && (
                             <div>
                               <p className="text-xs text-slate-500 mb-1">Taux</p>

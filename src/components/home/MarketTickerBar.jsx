@@ -1,76 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, BarChart3, Coins } from 'lucide-react';
+import { TrendingUp, BarChart3, Coins } from 'lucide-react';
+import StatsService from '../../services/StatsService';
+
+const formatFCFA = (n) => {
+  if (!n) return '—';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M FCFA`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}k FCFA`;
+  return `${n} FCFA`;
+};
 
 const MarketTickerBar = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const marketData = [
-    { 
-      location: "Dakar Plateau", 
-      price: "75M CFA/500m²", 
-      change: "+5.2%", 
-      trend: "up",
-      type: "Résidentiel Premium"
-    },
-    { 
-      location: "Almadies", 
-      price: "120M CFA/600m²", 
-      change: "+8.7%", 
-      trend: "up",
-      type: "Front de mer"
-    },
-    { 
-      location: "Thiès Centre", 
-      price: "48M CFA/800m²", 
-      change: "+3.1%", 
-      trend: "up",
-      type: "Commercial"
-    },
-    { 
-      location: "Saint-Louis", 
-      price: "25M CFA/1000m²", 
-      change: "-1.2%", 
-      trend: "down",
-      type: "Agricole"
-    },
-    { 
-      location: "Kaolack", 
-      price: "32M CFA/700m²", 
-      change: "+2.4%", 
-      trend: "up",
-      type: "Résidentiel"
-    },
-    { 
-      location: "Ziguinchor", 
-      price: "18M CFA/600m²", 
-      change: "+6.8%", 
-      trend: "up",
-      type: "Terrain Communal"
-    },
-    { 
-      location: "Touba", 
-      price: "22M CFA/500m²", 
-      change: "+4.3%", 
-      trend: "up",
-      type: "Résidentiel"
-    },
-    { 
-      location: "Mbour", 
-      price: "55M CFA/400m²", 
-      change: "+7.9%", 
-      trend: "up",
-      type: "Touristique"
-    }
-  ];
+  const [marketData, setMarketData] = useState([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % marketData.length);
-    }, 3000);
+    let active = true;
+    StatsService.getRegionMarket().then((regions) => {
+      if (!active) return;
+      setMarketData(regions.map(r => ({
+        location: r.region,
+        price: `${formatFCFA(r.avgPricePerM2)}/m²`,
+        type: `${r.count} bien${r.count > 1 ? 's' : ''}`
+      })));
+    });
+    return () => { active = false; };
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [marketData.length]);
+  // Ne rien afficher tant qu'aucune donnée marché réelle n'est disponible
+  if (marketData.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 text-white border-b border-blue-800 overflow-hidden relative">
@@ -122,14 +81,8 @@ const MarketTickerBar = () => {
                         <span className="text-xs opacity-75">({item.type})</span>
                       </div>
                       <span className="text-sm font-bold text-blue-200">{item.price}</span>
-                      <div className={`flex items-center gap-1 ${
-                        item.trend === 'up' ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {item.trend === 'up' ? 
-                          <TrendingUp className="w-3 h-3" /> : 
-                          <TrendingDown className="w-3 h-3" />
-                        }
-                        <span className="text-xs font-medium">{item.change}</span>
+                      <div className="flex items-center gap-1 text-green-400">
+                        <TrendingUp className="w-3 h-3" />
                       </div>
                     </div>
                   </div>
@@ -144,14 +97,8 @@ const MarketTickerBar = () => {
                         <span className="text-xs opacity-75">({item.type})</span>
                       </div>
                       <span className="text-sm font-bold text-blue-200">{item.price}</span>
-                      <div className={`flex items-center gap-1 ${
-                        item.trend === 'up' ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {item.trend === 'up' ? 
-                          <TrendingUp className="w-3 h-3" /> : 
-                          <TrendingDown className="w-3 h-3" />
-                        }
-                        <span className="text-xs font-medium">{item.change}</span>
+                      <div className="flex items-center gap-1 text-green-400">
+                        <TrendingUp className="w-3 h-3" />
                       </div>
                     </div>
                   </div>

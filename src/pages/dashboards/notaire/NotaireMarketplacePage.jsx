@@ -9,7 +9,6 @@ const NotaireMarketplacePage = () => {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [products, setProducts] = useState([]);
-  const [userPurchases, setUserPurchases] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -19,21 +18,18 @@ const NotaireMarketplacePage = () => {
   const loadMarketplaceData = async () => {
     setIsLoading(true);
     try {
-      // Load available products
+      // Charge les produits disponibles s'ils existent en base.
+      // Aucune table marketplace dédiée n'est encore provisionnée :
+      // le service renvoie une liste vide et l'UI affiche un état honnête.
       const productsResult = await NotaireSupabaseService.getMarketplaceProducts();
       if (productsResult.success) {
         setProducts(productsResult.data || []);
-      }
-
-      // Load user's purchases
-      const purchasesResult = await NotaireSupabaseService.getUserPurchases(user.id);
-      if (purchasesResult.success) {
-        setUserPurchases(purchasesResult.data || []);
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       console.error('Erreur chargement Marketplace:', error);
       setProducts([]);
-      setUserPurchases([]);
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +76,21 @@ const NotaireMarketplacePage = () => {
       </motion.div>
 
       {/* Produits */}
+      {isLoading ? (
+        <div className="text-center py-20">
+          <ShoppingBag size={48} className="text-slate-300 mx-auto mb-4 animate-pulse" />
+          <p className="text-slate-500">Chargement du catalogue...</p>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-lg border border-slate-200 text-center py-20 px-6">
+          <ShoppingBag size={56} className="text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-700 mb-1">Bientôt disponible</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Le catalogue de templates, plugins et services professionnels sera
+            proposé ici prochainement.
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product, index) => (
           <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
@@ -108,6 +119,7 @@ const NotaireMarketplacePage = () => {
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* Modal Panier */}
       {showCart && (

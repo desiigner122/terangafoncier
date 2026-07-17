@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { sampleParcels } from '@/data';
+import PropertyService from '@/services/PropertyService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -105,18 +105,27 @@ const MairiePage = () => {
   const plugin = React.useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
     const mairieInfo = mairieDataSim[mairieSlug];
-    if (mairieInfo) {
+
+    const loadParcels = async () => {
+      if (!mairieInfo) {
+        if (active) setLoading(false);
+        return;
+      }
       setMairie(mairieInfo);
-      const zoneName = mairieInfo.name.split("Mairie de ")[1];
-      const mairieParcels = sampleParcels.filter(p => 
-        p.zone.toLowerCase() === zoneName.toLowerCase() && (p.status === 'Disponible' || p.status === 'Attribution sur demande')
-      ).slice(0, 6);
-      setParcels(mairieParcels);
-    }
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
+      const zoneName = mairieInfo.name.split('Mairie de ')[1] || mairieInfo.name;
+      // Terrains réels de la commune depuis Supabase
+      const result = await PropertyService.getPropertiesByZone(zoneName, { limit: 6 });
+      if (!active) return;
+      const cards = (result.properties || []).map(p => PropertyService.normalizeForCard(p));
+      setParcels(cards);
+      setLoading(false);
+    };
+
+    loadParcels();
+    return () => { active = false; };
   }, [mairieSlug]);
 
   if (loading) return <div className="container mx-auto py-20 text-center"><LoadingSpinner size="large"/></div>;

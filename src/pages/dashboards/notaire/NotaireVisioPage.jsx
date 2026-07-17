@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Video, 
-  Plus, 
+import {
+  Video,
+  Plus,
   Calendar,
   Users,
   Mic,
@@ -11,74 +11,27 @@ import {
   PhoneOff,
   Monitor,
   Settings,
-  Clock,
-  BarChart
+  Clock
 } from 'lucide-react';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const NotaireVisioPage = () => {
-  const { user } = useAuth();
   const [isInMeeting, setIsInMeeting] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
-  const [scheduledMeetings, setScheduledMeetings] = useState([]);
-  const [meetingHistory, setMeetingHistory] = useState([]);
-  const [stats, setStats] = useState({
-    totalMeetings: 0,
-    totalHours: 0,
-    avgParticipants: 0,
-    recordings: 0
-  });
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) loadVisioData();
-  }, [user]);
-
-  const loadVisioData = async () => {
-    setIsLoading(true);
-    try {
-      const result = await NotaireSupabaseService.getVideoMeetings(user.id);
-      if (result.success) {
-        const meetings = result.data || [];
-        
-        // Separate scheduled and past meetings
-        const now = new Date();
-        const scheduled = meetings.filter(m => new Date(m.date) >= now);
-        const history = meetings.filter(m => new Date(m.date) < now);
-        
-        setScheduledMeetings(scheduled);
-        setMeetingHistory(history);
-        
-        // Calculate stats
-        const totalMeetings = history.length;
-        const totalMinutes = history.reduce((sum, m) => sum + (m.duration || 0), 0);
-        const totalParticipants = history.reduce((sum, m) => sum + (m.participants_count || 0), 0);
-        const recordings = history.filter(m => m.has_recording).length;
-        
-        setStats({
-          totalMeetings: totalMeetings,
-          totalHours: Math.round(totalMinutes / 60),
-          avgParticipants: totalMeetings > 0 ? (totalParticipants / totalMeetings).toFixed(1) : 0,
-          recordings: recordings
-        });
-      }
-    } catch (error) {
-      console.error('Erreur chargement Visio:', error);
-      setScheduledMeetings([]);
-      setMeetingHistory([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Aucune table dédiée à la visioconférence dans le schéma Supabase réel :
+  // pas de persistance des réunions planifiées / historique / statistiques.
+  // On garde l'outil de visio (réunion instantanée + contrôles) et on affiche
+  // des états vides honnêtes plutôt que des compteurs fabriqués.
+  const scheduledMeetings = [];
+  const meetingHistory = [];
 
   const statsDisplay = [
-    { label: 'Réunions ce mois', value: stats.totalMeetings, icon: Calendar, color: 'blue' },
-    { label: 'Heures totales', value: stats.totalHours, icon: Clock, color: 'green' },
-    { label: 'Participants moyens', value: stats.avgParticipants, icon: Users, color: 'purple' },
-    { label: 'Enregistrements', value: stats.recordings, icon: Video, color: 'red' }
+    { label: 'Réunions ce mois', value: '—', icon: Calendar, color: 'blue' },
+    { label: 'Heures totales', value: '—', icon: Clock, color: 'green' },
+    { label: 'Participants moyens', value: '—', icon: Users, color: 'purple' },
+    { label: 'Enregistrements', value: '—', icon: Video, color: 'red' }
   ];
 
   const startInstantMeeting = () => {
@@ -255,35 +208,45 @@ const NotaireVisioPage = () => {
         </div>
         
         <div className="space-y-3">
-          {scheduledMeetings.map((meeting) => (
-            <div
-              key={meeting.id}
-              className="border-2 border-slate-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-800 mb-2">{meeting.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={16} />
-                      {new Date(meeting.date).toLocaleDateString('fr-FR')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={16} />
-                      {meeting.time} ({meeting.duration} min)
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users size={16} />
-                      {meeting.participants.length} participants
-                    </span>
-                  </div>
-                </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                  Rejoindre
-                </button>
-              </div>
+          {scheduledMeetings.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <Calendar size={40} className="mx-auto mb-3 text-slate-300" />
+              <p className="font-medium">Aucune réunion planifiée</p>
+              <p className="text-sm text-slate-400 mt-1">
+                La planification de réunions sera bientôt disponible.
+              </p>
             </div>
-          ))}
+          ) : (
+            scheduledMeetings.map((meeting) => (
+              <div
+                key={meeting.id}
+                className="border-2 border-slate-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-800 mb-2">{meeting.title}</h3>
+                    <div className="flex items-center gap-4 text-sm text-slate-600">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        {new Date(meeting.date).toLocaleDateString('fr-FR')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={16} />
+                        {meeting.time} ({meeting.duration} min)
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users size={16} />
+                        {meeting.participants.length} participants
+                      </span>
+                    </div>
+                  </div>
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                    Rejoindre
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </motion.div>
 
@@ -300,34 +263,44 @@ const NotaireVisioPage = () => {
         </h2>
         
         <div className="space-y-3">
-          {meetingHistory.map((meeting) => (
-            <div
-              key={meeting.id}
-              className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-slate-800">{meeting.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                    <span>{new Date(meeting.date).toLocaleDateString('fr-FR')}</span>
-                    <span>{meeting.duration} min</span>
-                    <span>{meeting.participants} participants</span>
-                    {meeting.recording && (
-                      <span className="text-red-600 flex items-center gap-1">
-                        <Video size={14} />
-                        Enregistré
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {meeting.recording && (
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    Voir l'enregistrement
-                  </button>
-                )}
-              </div>
+          {meetingHistory.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <Clock size={40} className="mx-auto mb-3 text-slate-300" />
+              <p className="font-medium">Aucune réunion dans l'historique</p>
+              <p className="text-sm text-slate-400 mt-1">
+                L'historique des réunions sera bientôt disponible.
+              </p>
             </div>
-          ))}
+          ) : (
+            meetingHistory.map((meeting) => (
+              <div
+                key={meeting.id}
+                className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-slate-800">{meeting.title}</h3>
+                    <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
+                      <span>{new Date(meeting.date).toLocaleDateString('fr-FR')}</span>
+                      <span>{meeting.duration} min</span>
+                      <span>{meeting.participants} participants</span>
+                      {meeting.recording && (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <Video size={14} />
+                          Enregistré
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {meeting.recording && (
+                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      Voir l'enregistrement
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </motion.div>
     </div>

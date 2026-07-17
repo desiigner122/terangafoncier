@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
+import {
+  MapPin,
   ArrowRight,
   Landmark,
   Shield,
@@ -11,13 +11,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import StatsService from '@/services/StatsService';
 
 const CommunalLandsPreview = () => {
-  const stats = [
-    { value: "156", label: "Terrains disponibles" },
-    { value: "14", label: "Régions couvertes" },
-    { value: "89%", label: "Attributions réussies" }
-  ];
+  const [stats, setStats] = useState([
+    { value: "—", label: "Terrains disponibles" },
+    { value: "—", label: "Régions couvertes" },
+    { value: "—", label: "Note moyenne" }
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    StatsService.getPlatformStats().then(({ stats: s }) => {
+      if (!active) return;
+      setStats([
+        { value: `${s.verifiedProperties}`, label: "Terrains disponibles" },
+        { value: `${s.regions}`, label: "Régions couvertes" },
+        { value: s.avgRating ? `${s.avgRating}/5` : "—", label: "Note moyenne" }
+      ]);
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <section className="py-16 bg-green-50">

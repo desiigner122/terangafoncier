@@ -9,7 +9,6 @@ import {
   Upload,
   Camera,
   Edit,
-  Eye,
   BarChart3,
   Settings,
   Bell,
@@ -70,6 +69,7 @@ import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 // Import des pages spécialisées - VERSION REAL DATA
 // 🆕 PAGES MODERNISÉES - LAZY LOADING
@@ -154,6 +154,12 @@ const CompleteSidebarVendeurDashboard = () => {
     aiOptimized: 0,
     blockchainVerified: 0,
   });
+
+  // "pendingInquiries" (badge de la cloche de notifications) reflète les
+  // notifications réelles non lues chargées depuis Supabase.
+  useEffect(() => {
+    setDashboardStats(prev => ({ ...prev, pendingInquiries: unreadNotificationsCount }));
+  }, [unreadNotificationsCount]);
 
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
@@ -270,7 +276,7 @@ const CompleteSidebarVendeurDashboard = () => {
   ];
 
   useEffect(() => {
-    // Simulation du chargement des données
+    // Chargement des données réelles (notifications, messages, statistiques)
     const loadDashboardData = async () => {
       setLoading(true);
       // Charger données réelles depuis Supabase
@@ -294,7 +300,7 @@ const CompleteSidebarVendeurDashboard = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_read', false)
+        .eq('read', false)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -310,32 +316,34 @@ const CompleteSidebarVendeurDashboard = () => {
   // Charger les messages depuis Supabase
   const loadMessages = async () => {
     try {
-      // Charger les conversations du vendeur puis les messages récents
-      const { data: conversations, error: convError } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('vendor_id', user.id)
+      // Charger les conversations auxquelles le vendeur participe
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id)
         .limit(20);
 
-      if (convError || !conversations || conversations.length === 0) {
+      if (partError || !participations || participations.length === 0) {
         console.log('Aucune conversation trouvée');
+        setMessages([]);
+        setUnreadMessagesCount(0);
         return;
       }
 
-      const conversationIds = conversations.map(c => c.id);
+      const conversationIds = participations.map(p => p.conversation_id);
 
       // Charger les messages récents de ces conversations
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .in('thread_id', conversationIds)
+        .in('conversation_id', conversationIds)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (!error && data) {
         setMessages(data);
-        // Compter non lus où recipient_id = user.id
-        setUnreadMessagesCount(data.filter(m => !m.read_at && m.recipient_id === user.id).length);
+        // Non lus = messages pas encore marqués "read" et pas envoyés par le vendeur lui-même
+        setUnreadMessagesCount(data.filter(m => !m.read && m.sender_id !== user.id).length);
       }
     } catch (error) {
       console.error('Erreur chargement messages:', error);
@@ -343,30 +351,23 @@ const CompleteSidebarVendeurDashboard = () => {
   };
 
   // Charger les statistiques réelles
+  // NB: "digitalServices" n'a aucune table dédiée dans le schéma réel
+  // (pas de "service_subscriptions"). Faute de source, on le laisse à 0
+  // (état neutre honnête) plutôt que d'inventer un chiffre — le badge de
+  // navigation correspondant se masque automatiquement quand la valeur est 0.
   const loadDashboardStats = async () => {
     try {
       if (!user) return;
 
       const [
-        totalPropertiesRes,
-        activeListingsRes,
+        analyticsRes,
         verifiedTitlesRes,
         aiOptimizedRes,
-        blockchainVerifiedRes,
-        pendingInquiriesRes,
-        activeProspectsRes,
-        digitalServicesRes,
-        parcelsRes
+        crmContactsRes,
+        certificatesRes,
+        gpsPhotosRes
       ] = await Promise.all([
-        supabase
-          .from('properties')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id),
-        supabase
-          .from('properties')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id)
-          .eq('status', 'active'),
+        VendeurSupabaseService.getVendeurAnalytics(user.id),
         supabase
           .from('properties')
           .select('id', { count: 'exact', head: true })
@@ -376,95 +377,61 @@ const CompleteSidebarVendeurDashboard = () => {
           .from('properties')
           .select('id', { count: 'exact', head: true })
           .eq('owner_id', user.id)
-          .not('ai_analysis', 'is', null),
-        supabase
-          .from('properties')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id)
-          .eq('blockchain_verified', true),
-        supabase
-          .from('property_inquiries')
-          .select('id, properties!inner(owner_id)', { count: 'exact', head: true })
-          .eq('properties.owner_id', user.id)
-          .eq('status', 'pending'),
+          .not('ai_score', 'is', null),
         supabase
           .from('crm_contacts')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .neq('status', 'lost'),
+          .eq('owner_id', user.id),
+        VendeurSupabaseService.getBlockchainCertificates(user.id),
         supabase
-          .from('service_subscriptions')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'active'),
-        supabase
-          .from('parcels')
-          .select('id')
-          .eq('seller_id', user.id)
+          .from('property_photos')
+          .select('id, properties!inner(owner_id)', { count: 'exact', head: true })
+          .eq('properties.owner_id', user.id)
+          .not('gps_latitude', 'is', null)
       ]);
 
       const queryErrors = [
-        totalPropertiesRes?.error,
-        activeListingsRes?.error,
         verifiedTitlesRes?.error,
         aiOptimizedRes?.error,
-        blockchainVerifiedRes?.error,
-        pendingInquiriesRes?.error,
-        activeProspectsRes?.error,
-        digitalServicesRes?.error,
-        parcelsRes?.error
+        crmContactsRes?.error,
+        gpsPhotosRes?.error
       ].filter(Boolean);
 
       if (queryErrors.length > 0) {
         throw queryErrors[0];
       }
 
-      const parcelIds = parcelsRes?.data?.map(p => p.id) || [];
-
-      let pendingRequestsCount = 0;
-      let conversionRate = 0;
-
-      if (parcelIds.length > 0) {
-        const { data: sellerTransactions, error: transactionsError } = await supabase
-          .from('transactions')
-          .select('id, status, transaction_type')
-          .in('parcel_id', parcelIds);
-
-        if (transactionsError) throw transactionsError;
-
-        const requestTransactions = (sellerTransactions || []).filter(t =>
-          ['purchase', 'request'].includes(t.transaction_type)
-        );
-
-        pendingRequestsCount = requestTransactions.filter(t =>
-          ['pending', 'initiated'].includes(t.status)
-        ).length;
-
-        const convertedStatuses = ['accepted', 'seller_accepted', 'completed', 'payment_processed', 'property_transfer'];
-        const convertedCount = requestTransactions.filter(t => convertedStatuses.includes(t.status)).length;
-        const totalRequests = requestTransactions.length;
-        conversionRate = totalRequests > 0 ? Math.round((convertedCount / totalRequests) * 100) : 0;
-      }
-
-      const totalPropertiesCount = totalPropertiesRes?.count || 0;
+      const analytics = analyticsRes?.success ? analyticsRes.data : null;
+      const totalPropertiesCount = analytics?.totalListings || 0;
       const verifiedTitlesCount = verifiedTitlesRes?.count || 0;
       const securityScore = totalPropertiesCount > 0
         ? Math.round((verifiedTitlesCount / totalPropertiesCount) * 100)
         : 0;
 
+      // Taux de conversion = offres acceptées / total des offres reçues (financial_transactions)
+      const totalOffers = analytics?.totalOffers || 0;
+      const acceptedOffers = analytics?.acceptedOffers || 0;
+      const conversionRate = totalOffers > 0
+        ? Math.round((acceptedOffers / totalOffers) * 100)
+        : 0;
+
+      const blockchainVerifiedCount = certificatesRes?.success
+        ? (certificatesRes.data || []).filter(c => c.status === 'verified').length
+        : 0;
+
       setDashboardStats(prev => ({
         ...prev,
         totalProperties: totalPropertiesCount,
-        activeListings: activeListingsRes?.count || 0,
-        pendingInquiries: pendingInquiriesRes?.count || 0,
-        pendingRequests: pendingRequestsCount,
-        activeProspects: activeProspectsRes?.count || 0,
+        activeListings: analytics?.activeListings || 0,
+        pendingRequests: analytics?.pendingOffers || 0,
+        activeProspects: crmContactsRes?.count || 0,
         verifiedTitles: verifiedTitlesCount,
         securityScore,
         conversionRate,
-        digitalServices: digitalServicesRes?.count || 0,
+        gpsCoordinates: gpsPhotosRes?.count || 0,
+        digitalServices: 0,
         aiOptimized: aiOptimizedRes?.count || 0,
-        blockchainVerified: blockchainVerifiedRes?.count || 0,
+        blockchainVerified: blockchainVerifiedCount,
       }));
     } catch (error) {
       console.error('Erreur chargement stats:', error);
@@ -744,36 +711,38 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/vendeur/messages')}>
                     <MessageSquare className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      3
-                    </Badge>
+                    {unreadMessagesCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadMessagesCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Marie Diallo</p>
-                        <p className="text-sm text-gray-600">Intéressée par la villa Almadies</p>
-                      </div>
+                  {messages.length === 0 ? (
+                    <div className="px-2 py-4 text-sm text-gray-500 text-center">
+                      Aucun message récent
                     </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Amadou Ba</p>
-                        <p className="text-sm text-gray-600">Question sur le financement</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  ) : (
+                    messages.slice(0, 3).map((msg) => {
+                      const isOwn = msg.sender_id === user?.id;
+                      return (
+                        <DropdownMenuItem key={msg.id} onClick={() => navigate('/vendeur/messages')}>
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${isOwn ? 'bg-blue-100' : 'bg-green-100'}`}>
+                              <Users className={`h-4 w-4 ${isOwn ? 'text-blue-600' : 'text-green-600'}`} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium">{isOwn ? 'Vous' : 'Contact'}</p>
+                              <p className="text-sm text-gray-600 truncate">{msg.content}</p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
                     <MessageSquare className="mr-2 h-4 w-4" />
@@ -787,36 +756,35 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      {dashboardStats.pendingInquiries}
-                    </Badge>
+                    {unreadNotificationsCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadNotificationsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Eye className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Nouvelle vue</p>
-                        <p className="text-sm text-gray-600">Villa Almadies - 15 vues aujourd'hui</p>
-                      </div>
+                  {notifications.length === 0 ? (
+                    <div className="px-2 py-4 text-sm text-gray-500 text-center">
+                      Aucune notification non lue
                     </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-orange-100 p-2 rounded-full">
-                        <TrendingUp className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Performance IA</p>
-                        <p className="text-sm text-gray-600">6 propriétés optimisées cette semaine</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  ) : (
+                    notifications.slice(0, 5).map((notif) => (
+                      <DropdownMenuItem key={notif.id}>
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-blue-100 p-2 rounded-full">
+                            <Bell className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium">{notif.title}</p>
+                            <p className="text-sm text-gray-600 truncate">{notif.message}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 

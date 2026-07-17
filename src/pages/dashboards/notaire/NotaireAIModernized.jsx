@@ -6,39 +6,32 @@ import {
   Sparkles,
   FileText,
   MessageSquare,
-  Search,
   TrendingUp,
   Zap,
   CheckCircle2,
-  AlertCircle,
   Clock,
   Lightbulb,
   Target,
-  BarChart3,
   Send,
-  RefreshCw,
-  Download,
-  History,
   BookOpen,
   Scale,
   Users,
   Shield,
-  Activity
+  Info
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+// Contenu ÉDITORIAL statique (présentation des fonctionnalités, ne prétend pas être une métrique).
 const aiFeatures = [
   {
     id: 'document_analysis',
@@ -90,6 +83,7 @@ const aiFeatures = [
   }
 ];
 
+// Suggestions éditoriales (exemples de questions), pas des métriques.
 const sampleQueries = [
   'Quelles sont les clauses essentielles pour un acte de vente immobilière ?',
   'Comment optimiser les délais de traitement d\'une succession ?',
@@ -100,115 +94,142 @@ const sampleQueries = [
 ];
 
 const NotaireAIModernized = () => {
-  const { dashboardStats } = useOutletContext() || {};
+  useOutletContext();
   const { user } = useAuth();
 
   const [query, setQuery] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('assistant');
   const [selectedFeature, setSelectedFeature] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [aiStats, setAiStats] = useState({
     totalQueries: 0,
     documentsAnalyzed: 0,
-    avgResponseTime: 0,
-    satisfactionRate: 0,
-    savedHours: 0
+    avgConfidence: null
   });
+  const [monthlyUsage, setMonthlyUsage] = useState([]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadAIData();
     }
   }, [user]);
 
+  // Reconnexion RÉELLE : ai_chat_history + ai_analyses filtrés par user.id.
   const loadAIData = async () => {
-    // Simuler le chargement des statistiques IA
-    // Dans une vraie application, ces données viendraient de Supabase
-    setAiStats({
-      totalQueries: Math.floor(Math.random() * 500) + 100,
-      documentsAnalyzed: Math.floor(Math.random() * 200) + 50,
-      avgResponseTime: Math.random() * 2 + 0.5,
-      satisfactionRate: Math.floor(Math.random() * 20) + 80,
-      savedHours: Math.floor(Math.random() * 100) + 50
-    });
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const [{ data: chatData }, { count: analysesCount }] = await Promise.all([
+        supabase
+          .from('ai_chat_history')
+          .select('id, role, content, confidence, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('ai_analyses')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+      ]);
 
-    // Simuler un historique de conversation
-    setChatHistory([
-      {
-        id: 1,
-        type: 'user',
-        content: 'Quelles sont les clauses obligatoires pour un acte de vente ?',
-        timestamp: new Date(Date.now() - 3600000)
-      },
-      {
-        id: 2,
-        type: 'ai',
-        content:
-          'Pour un acte de vente immobilière au Sénégal, les clauses obligatoires incluent :\n\n1. **Identification des parties** : Identité complète du vendeur et de l\'acheteur\n2. **Désignation du bien** : Description précise avec références cadastrales\n3. **Prix de vente** : Montant en FCFA et modalités de paiement\n4. **Origine de propriété** : Titre foncier ou acte de propriété antérieur\n5. **Servitudes et charges** : Mention explicite des éventuelles servitudes\n6. **Garantie d\'éviction** : Engagement du vendeur sur la propriété du bien\n7. **Déclarations fiscales** : Conformité aux obligations de la DGI\n\nJe peux vous assister pour rédiger un modèle adapté à votre dossier.',
-        timestamp: new Date(Date.now() - 3599000),
-        confidence: 0.95
-      }
-    ]);
-  };
+      const rows = chatData || [];
 
-  const handleSendQuery = async () => {
-    if (!query.trim()) return;
+      // Historique de conversation réel
+      const mapped = rows.map((m) => ({
+        id: m.id,
+        type: m.role === 'user' ? 'user' : 'ai',
+        content: m.content,
+        timestamp: m.created_at,
+        confidence: m.confidence != null ? Number(m.confidence) : undefined
+      }));
+      setChatHistory(mapped);
 
-    const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: query,
-      timestamp: new Date()
-    };
+      // Requêtes réellement posées par l'utilisateur
+      const totalQueries = rows.filter((m) => m.role === 'user').length;
 
-    setChatHistory((prev) => [...prev, userMessage]);
-    setQuery('');
-    setIsProcessing(true);
+      // Confiance moyenne réelle des réponses IA enregistrées
+      const confVals = rows
+        .filter((m) => m.role !== 'user' && m.confidence != null)
+        .map((m) => Number(m.confidence));
+      const avgConfidence = confVals.length
+        ? (() => {
+            const raw = confVals.reduce((a, b) => a + b, 0) / confVals.length;
+            return Math.round(raw <= 1 ? raw * 100 : raw);
+          })()
+        : null;
 
-    // Simuler un délai de réponse de l'IA
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: generateAIResponse(query),
-        timestamp: new Date(),
-        confidence: Math.random() * 0.2 + 0.8
-      };
-
-      setChatHistory((prev) => [...prev, aiResponse]);
-      setIsProcessing(false);
-
-      window.safeGlobalToast?.({
-        title: 'Réponse générée',
-        description: 'L\'assistant IA a analysé votre requête.',
-        variant: 'success'
+      setAiStats({
+        totalQueries,
+        documentsAnalyzed: analysesCount || 0,
+        avgConfidence
       });
-    }, 2000);
+
+      // Utilisation par mois calculée à partir des requêtes réelles (6 derniers mois)
+      const now = new Date();
+      const buckets = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        buckets.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+          label: d.toLocaleDateString('fr-FR', { month: 'short' }),
+          value: 0
+        });
+      }
+      rows.forEach((m) => {
+        if (m.role !== 'user' || !m.created_at) return;
+        const k = String(m.created_at).substring(0, 7);
+        const b = buckets.find((x) => x.key === k);
+        if (b) b.value += 1;
+      });
+      setMonthlyUsage(buckets);
+    } catch (error) {
+      console.error('Erreur chargement données IA notaire:', error);
+      setChatHistory([]);
+      setAiStats({ totalQueries: 0, documentsAnalyzed: 0, avgConfidence: null });
+      setMonthlyUsage([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const generateAIResponse = (userQuery) => {
-    // Simuler une réponse intelligente basée sur la requête
-    const responses = {
-      default: `Merci pour votre question. Voici une analyse détaillée basée sur ma connaissance du droit notarial sénégalais :\n\n**Points clés :**\n- Analyse juridique approfondie requise\n- Vérification des documents nécessaires\n- Respect des délais légaux\n\nPour plus de précision, pourriez-vous me fournir des détails supplémentaires sur votre dossier ?`,
-      succession:
-        'Concernant les successions au Sénégal, voici les étapes principales :\n\n1. **Certificat de décès** : Document obligatoire\n2. **Inventaire des biens** : Liste exhaustive du patrimoine\n3. **Dévolution successorale** : Détermination des héritiers légaux\n4. **Droits de succession** : Calcul et paiement des taxes\n5. **Acte de partage** : Répartition entre héritiers\n\nDélai moyen : 45-60 jours selon la complexité.',
-      vente: 'Pour une vente immobilière optimale :\n\n**Étapes critiques :**\n- Vérification du titre foncier (2-3 semaines)\n- Obtention du certificat de non-hypothèque\n- Rédaction de l\'avant-contrat\n- Signature de l\'acte authentique\n- Enregistrement à la Conservation Foncière\n\n**Frais estimés :** 15-20% du prix (droits d\'enregistrement + honoraires)',
-      risque:
-        '**Analyse des risques identifiés :**\n\n🔴 **Risques élevés :**\n- Défaut de purge hypothécaire\n- Servitudes non déclarées\n- Litiges fonciers en cours\n\n🟡 **Risques modérés :**\n- Retards administratifs\n- Documentation incomplète\n\n✅ **Recommandations :**\n- Audit juridique préalable\n- Garantie bancaire de paiement\n- Clause suspensive adaptée'
+  // Aucune intégration LLM conversationnelle n'est branchée : on enregistre la question
+  // dans ai_chat_history (réel) et on répond honnêtement sans fabriquer de contenu juridique.
+  const handleSendQuery = async () => {
+    if (!query.trim() || !user?.id) return;
+
+    const content = query.trim();
+    const userMessage = {
+      id: `local-${Date.now()}`,
+      type: 'user',
+      content,
+      timestamp: new Date().toISOString()
+    };
+    const notice = {
+      id: `local-${Date.now() + 1}`,
+      type: 'ai',
+      content:
+        "L'assistant conversationnel IA n'est pas encore connecté à un moteur de langage. " +
+        'Votre question a bien été enregistrée et cette fonctionnalité sera bientôt disponible.',
+      timestamp: new Date().toISOString()
     };
 
-    const lowerQuery = userQuery.toLowerCase();
+    setChatHistory((prev) => [...prev, userMessage, notice]);
+    setQuery('');
 
-    if (lowerQuery.includes('succession') || lowerQuery.includes('héritage')) {
-      return responses.succession;
-    } else if (lowerQuery.includes('vente') || lowerQuery.includes('immobilier')) {
-      return responses.vente;
-    } else if (lowerQuery.includes('risque') || lowerQuery.includes('danger')) {
-      return responses.risque;
-    } else {
-      return responses.default;
+    try {
+      await supabase
+        .from('ai_chat_history')
+        .insert({ user_id: user.id, role: 'user', content });
+      setAiStats((prev) => ({ ...prev, totalQueries: prev.totalQueries + 1 }));
+    } catch (error) {
+      console.error('Erreur enregistrement question IA:', error);
     }
+
+    window.safeGlobalToast?.({
+      title: 'Question enregistrée',
+      description: 'L\'assistant conversationnel sera bientôt disponible.',
+      variant: 'default'
+    });
   };
 
   const handleSampleQuery = (sampleQuery) => {
@@ -232,6 +253,9 @@ const NotaireAIModernized = () => {
     }, {});
   }, []);
 
+  const maxUsage = Math.max(...monthlyUsage.map((b) => b.value), 1);
+  const hasUsage = monthlyUsage.some((b) => b.value > 0);
+
   return (
     <motion.div
       className="space-y-6"
@@ -249,11 +273,11 @@ const NotaireAIModernized = () => {
         <div className="flex items-center gap-2">
           <Badge className="bg-purple-100 text-purple-700 flex items-center gap-1">
             <Brain className="h-4 w-4" />
-            IA active
+            Historique connecté
           </Badge>
-          <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
+          <Badge className="bg-slate-100 text-slate-700 flex items-center gap-1">
             <Sparkles className="h-4 w-4" />
-            GPT-4 Turbo
+            Moteur conversationnel bientôt disponible
           </Badge>
         </div>
       </div>
@@ -265,8 +289,8 @@ const NotaireAIModernized = () => {
             <MessageSquare className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{aiStats.totalQueries}</div>
-            <p className="text-xs text-muted-foreground">Questions analysées ce mois</p>
+            <div className="text-3xl font-bold">{loading ? '—' : aiStats.totalQueries}</div>
+            <p className="text-xs text-muted-foreground">Questions enregistrées</p>
           </CardContent>
         </Card>
 
@@ -276,8 +300,8 @@ const NotaireAIModernized = () => {
             <FileText className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{aiStats.documentsAnalyzed}</div>
-            <p className="text-xs text-muted-foreground">Analyses automatiques effectuées</p>
+            <div className="text-3xl font-bold">{loading ? '—' : aiStats.documentsAnalyzed}</div>
+            <p className="text-xs text-muted-foreground">Analyses IA enregistrées</p>
           </CardContent>
         </Card>
 
@@ -287,19 +311,28 @@ const NotaireAIModernized = () => {
             <Zap className="h-5 w-5 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{aiStats.avgResponseTime.toFixed(1)}s</div>
-            <p className="text-xs text-muted-foreground">Moyenne par requête</p>
+            <div className="text-3xl font-bold">—</div>
+            <p className="text-xs text-muted-foreground">Bientôt disponible</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Satisfaction</CardTitle>
+            <CardTitle className="text-sm font-medium">Confiance moyenne</CardTitle>
             <Target className="h-5 w-5 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{aiStats.satisfactionRate}%</div>
-            <Progress value={aiStats.satisfactionRate} className="mt-2" />
+            {aiStats.avgConfidence != null ? (
+              <>
+                <div className="text-3xl font-bold">{aiStats.avgConfidence}%</div>
+                <Progress value={aiStats.avgConfidence} className="mt-2" />
+              </>
+            ) : (
+              <>
+                <div className="text-3xl font-bold">—</div>
+                <p className="text-xs text-muted-foreground">Aucune analyse IA notée</p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -309,8 +342,8 @@ const NotaireAIModernized = () => {
             <TrendingUp className="h-5 w-5 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{aiStats.savedHours}h</div>
-            <p className="text-xs text-muted-foreground">Économisées ce mois</p>
+            <div className="text-3xl font-bold">—</div>
+            <p className="text-xs text-muted-foreground">Bientôt disponible</p>
           </CardContent>
         </Card>
       </div>
@@ -328,12 +361,20 @@ const NotaireAIModernized = () => {
               <CardHeader>
                 <CardTitle>Conversation avec l'assistant IA</CardTitle>
                 <CardDescription>
-                  Posez vos questions juridiques et obtenez des réponses instantanées
+                  Vos échanges enregistrés. Le moteur de réponse automatique sera bientôt disponible.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-4">
+                    {chatHistory.length === 0 && !loading && (
+                      <div className="h-[360px] flex flex-col items-center justify-center text-center text-gray-500">
+                        <MessageSquare className="h-10 w-10 mb-3 text-gray-300" />
+                        <p className="text-sm font-medium">Aucune conversation enregistrée</p>
+                        <p className="text-xs">Posez une question pour démarrer votre historique.</p>
+                      </div>
+                    )}
+
                     {chatHistory.map((message) => (
                       <div
                         key={message.id}
@@ -353,9 +394,15 @@ const NotaireAIModernized = () => {
                               <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
                                 <Clock className="h-3 w-3" />
                                 {formatDate(message.timestamp)}
-                                {message.confidence && (
+                                {message.confidence != null && (
                                   <Badge variant="outline" className="text-xs">
-                                    Confiance: {Math.round(message.confidence * 100)}%
+                                    Confiance:{' '}
+                                    {Math.round(
+                                      message.confidence <= 1
+                                        ? message.confidence * 100
+                                        : message.confidence
+                                    )}
+                                    %
                                   </Badge>
                                 )}
                               </div>
@@ -364,27 +411,6 @@ const NotaireAIModernized = () => {
                         </div>
                       </div>
                     ))}
-
-                    {isProcessing && (
-                      <div className="flex justify-start">
-                        <div className="bg-gray-100 rounded-lg p-4">
-                          <div className="flex items-center gap-2">
-                            <Brain className="h-5 w-5 text-purple-600 animate-pulse" />
-                            <div className="flex gap-1">
-                              <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" />
-                              <div
-                                className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
-                                style={{ animationDelay: '0.1s' }}
-                              />
-                              <div
-                                className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
-                                style={{ animationDelay: '0.2s' }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </ScrollArea>
 
@@ -405,7 +431,7 @@ const NotaireAIModernized = () => {
                     />
                     <Button
                       onClick={handleSendQuery}
-                      disabled={!query.trim() || isProcessing}
+                      disabled={!query.trim()}
                       className="bg-purple-600 hover:bg-purple-700"
                     >
                       <Send className="h-4 w-4" />
@@ -413,11 +439,11 @@ const NotaireAIModernized = () => {
                   </div>
 
                   <Alert>
-                    <Lightbulb className="h-4 w-4" />
-                    <AlertTitle>Conseil</AlertTitle>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Assistant en cours d'intégration</AlertTitle>
                     <AlertDescription>
-                      Pour des réponses plus précises, mentionnez le type d'acte, les parties concernées et le
-                      contexte juridique.
+                      Le moteur de réponse automatique n'est pas encore connecté. Vos questions sont
+                      enregistrées et l'assistant y répondra dès sa mise en service.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -453,10 +479,10 @@ const NotaireAIModernized = () => {
         <TabsContent value="features" className="space-y-4 mt-4">
           <Alert className="bg-purple-50 border-purple-200">
             <Brain className="h-4 w-4 text-purple-600" />
-            <AlertTitle className="text-purple-900">Intelligence artificielle avancée</AlertTitle>
+            <AlertTitle className="text-purple-900">Fonctionnalités en préparation</AlertTitle>
             <AlertDescription className="text-purple-800">
-              Notre assistant IA utilise des modèles de langage de dernière génération, entraînés sur le droit
-              notarial sénégalais et les meilleures pratiques internationales.
+              Ces modules d'intelligence artificielle, dédiés au droit notarial sénégalais, seront
+              progressivement activés. La présentation ci-dessous est indicative.
             </AlertDescription>
           </Alert>
 
@@ -487,8 +513,8 @@ const NotaireAIModernized = () => {
                         </CardHeader>
                         <CardContent>
                           <p className="text-sm text-gray-600">{feature.description}</p>
-                          <Button variant="outline" size="sm" className="mt-4 w-full">
-                            Activer
+                          <Button variant="outline" size="sm" className="mt-4 w-full" disabled>
+                            Bientôt disponible
                           </Button>
                         </CardContent>
                       </Card>
@@ -505,25 +531,30 @@ const NotaireAIModernized = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Utilisation de l'IA par mois</CardTitle>
-                <CardDescription>Volume de requêtes traitées</CardDescription>
+                <CardDescription>Requêtes enregistrées (6 derniers mois)</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end gap-3">
-                  {[65, 82, 95, 120, 145, 178].map((value, index) => (
-                    <div key={index} className="flex-1 flex flex-col items-center justify-end">
-                      <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-purple-500 to-purple-300"
-                        style={{ height: `${(value / 178) * 100}%` }}
-                      />
-                      <div className="mt-2 text-xs text-gray-700">
-                        {['Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov'][index]}
+                {hasUsage ? (
+                  <div className="h-64 flex items-end gap-3">
+                    {monthlyUsage.map((item, index) => (
+                      <div key={index} className="flex-1 flex flex-col items-center justify-end">
+                        <div
+                          className="w-full rounded-t-md bg-gradient-to-t from-purple-500 to-purple-300"
+                          style={{ height: `${(item.value / maxUsage) * 100}%` }}
+                        />
+                        <div className="mt-2 text-xs text-gray-700 capitalize">{item.label}</div>
+                        <Badge className="mt-1 bg-slate-100 text-slate-700" variant="secondary">
+                          {item.value}
+                        </Badge>
                       </div>
-                      <Badge className="mt-1 bg-slate-100 text-slate-700" variant="secondary">
-                        {value}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-64 flex flex-col items-center justify-center text-center text-gray-500">
+                    <MessageSquare className="h-10 w-10 mb-3 text-gray-300" />
+                    <p className="text-sm">Aucune requête enregistrée sur la période</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -532,24 +563,14 @@ const NotaireAIModernized = () => {
                 <CardTitle>Catégories de requêtes</CardTitle>
                 <CardDescription>Répartition par type de question</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { label: 'Ventes immobilières', value: 35, color: 'bg-blue-500' },
-                  { label: 'Successions', value: 28, color: 'bg-purple-500' },
-                  { label: 'Donations', value: 18, color: 'bg-emerald-500' },
-                  { label: 'Sociétés', value: 12, color: 'bg-amber-500' },
-                  { label: 'Autres', value: 7, color: 'bg-gray-500' }
-                ].map((item, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                      <Badge variant="outline">{item.value}%</Badge>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color}`} style={{ width: `${item.value}%` }} />
-                    </div>
-                  </div>
-                ))}
+              <CardContent>
+                <div className="h-64 flex flex-col items-center justify-center text-center text-gray-500">
+                  <Target className="h-10 w-10 mb-3 text-gray-300" />
+                  <p className="text-sm font-medium">Classification bientôt disponible</p>
+                  <p className="text-xs">
+                    La catégorisation automatique des requêtes n'est pas encore active.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -560,38 +581,13 @@ const NotaireAIModernized = () => {
               <CardDescription>Gains d'efficacité grâce à l'IA</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
-                    <Clock className="h-4 w-4" /> Réduction délais
-                  </div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">-42%</div>
-                  <p className="text-xs text-gray-500 mt-1">Traitement des dossiers</p>
-                </div>
-
-                <div className="p-4 rounded-lg border bg-gradient-to-br from-emerald-50 to-white">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
-                    <CheckCircle2 className="h-4 w-4" /> Précision
-                  </div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">98.5%</div>
-                  <p className="text-xs text-gray-500 mt-1">Analyses juridiques</p>
-                </div>
-
-                <div className="p-4 rounded-lg border bg-gradient-to-br from-purple-50 to-white">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-purple-700">
-                    <Activity className="h-4 w-4" /> Productivité
-                  </div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">+67%</div>
-                  <p className="text-xs text-gray-500 mt-1">Gains par notaire</p>
-                </div>
-
-                <div className="p-4 rounded-lg border bg-gradient-to-br from-amber-50 to-white">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
-                    <Target className="h-4 w-4" /> Satisfaction
-                  </div>
-                  <div className="mt-2 text-3xl font-bold text-gray-900">94%</div>
-                  <p className="text-xs text-gray-500 mt-1">Utilisateurs satisfaits</p>
-                </div>
+              <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
+                <Lightbulb className="h-10 w-10 mb-3 text-gray-300" />
+                <p className="text-sm font-medium">Mesure d'impact bientôt disponible</p>
+                <p className="text-xs max-w-md mt-1">
+                  Les indicateurs de gains (délais, précision, productivité) seront calculés à partir
+                  de vos données réelles une fois l'assistant pleinement opérationnel.
+                </p>
               </div>
             </CardContent>
           </Card>

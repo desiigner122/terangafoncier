@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Shield, Scan, FileCheck, AlertTriangle, CheckCircle,
   Upload, Eye, Download, Clock, MapPin, Database, Lock,
   Zap, Camera, FileText, Search, Filter, Award, Activity,
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
 
 const VendeurAntiFraudeRealData = () => {
@@ -24,24 +25,21 @@ const VendeurAntiFraudeRealData = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  
+
   // États
-  const [fraudChecks, setFraudChecks] = useState([]);
+  const [disputes, setDisputes] = useState([]);
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [stats, setStats] = useState({
-    totalScans: 0,
-    verified: 0,
-    suspicious: 0,
-    pending: 0,
-    averageScore: 0
-  });
+  const [scanResult, setScanResult] = useState(null);
 
-  // Charger données anti-fraude
+  // Charger données anti-fraude (litiges réels + propriétés)
   useEffect(() => {
     if (user) {
-      loadFraudChecks();
-      loadProperties();
+      (async () => {
+        setLoading(true);
+        await Promise.all([loadProperties(), loadDisputes()]);
+        setLoading(false);
+      })();
     }
   }, [user]);
 
@@ -58,72 +56,43 @@ const VendeurAntiFraudeRealData = () => {
     }
   };
 
-  const loadFraudChecks = async () => {
+  const loadDisputes = async () => {
     try {
-      setLoading(true);
-      // Fetch fraud checks first, then fetch related properties separately
-      const { data: checksData, error } = await supabase
-        .from('fraud_checks')
-        .select('*')
-        .eq('vendor_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const checks = checksData || [];
-
-      // Batch load related properties to avoid PostgREST FK embed errors
-      const propertyIds = Array.from(new Set(checks
-        .map(c => c.property_id)
-        .filter(Boolean)));
-
-      let propertiesMap = {};
-      if (propertyIds.length > 0) {
-        const { data: propsData, error: propsError } = await supabase
-          .from('properties')
-          .select('id, title, location, price, surface, images')
-          .in('id', propertyIds);
-
-        if (propsError) {
-          console.error('Erreur chargement propriétés liées:', propsError);
-        } else if (propsData) {
-          propertiesMap = propsData.reduce((acc, p) => {
-            acc[p.id] = p; return acc;
-          }, {});
-        }
-      }
-
-      const enrichedChecks = checks.map(c => ({
-        ...c,
-        properties: propertiesMap[c.property_id] || null
-      }));
-
-      setFraudChecks(enrichedChecks);
-      
-      // Calculer stats
-  const verified = enrichedChecks?.filter(c => c.status === 'verified').length || 0;
-  const suspicious = enrichedChecks?.filter(c => c.status === 'suspicious').length || 0;
-  const pending = enrichedChecks?.filter(c => c.status === 'pending').length || 0;
-  const totalScore = enrichedChecks?.reduce((sum, c) => sum + (c.fraud_score || 0), 0) || 0;
-  const averageScore = enrichedChecks?.length ? Math.round(totalScore / enrichedChecks.length) : 0;
-
-      setStats({
-        totalScans: data?.length || 0,
-        verified,
-        suspicious,
-        pending,
-        averageScore
-      });
-
-      setLoading(false);
+      const result = await VendeurSupabaseService.getDisputes(user.id);
+      if (!result.success) throw new Error(result.error || 'Erreur inconnue');
+      setDisputes(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement anti-fraude:', error);
-      toast.error('Erreur lors du chargement des vérifications');
-      setLoading(false);
+      console.error('Erreur chargement litiges:', error);
+      toast.error('Erreur lors du chargement des litiges');
+      setDisputes([]);
     }
   };
 
-  const runFraudCheck = async (propertyId) => {
+  // Statistiques réelles calculées à partir des propriétés et des litiges du vendeur
+  // (aucun score IA n'est fabriqué : uniquement des comptages dérivés de données réelles)
+  const stats = useMemo(() => {
+    const totalProperties = properties.length;
+    const openDisputes = disputes.filter(d => d.status === 'open');
+    const resolvedDisputes = disputes.filter(d => d.status === 'resolved');
+    const propertiesAtRiskIds = new Set(openDisputes.map(d => d.property_id));
+    const propertiesClean = Math.max(totalProperties - propertiesAtRiskIds.size, 0);
+    const confidenceRate = totalProperties > 0
+      ? Math.round((propertiesClean / totalProperties) * 100)
+      : null;
+
+    return {
+      totalProperties,
+      propertiesClean,
+      openDisputesCount: openDisputes.length,
+      resolvedDisputesCount: resolvedDisputes.length,
+      confidenceRate
+    };
+  }, [properties, disputes]);
+
+  // Vérification en direct d'une propriété : statut de vérification réel,
+  // présence de coordonnées GPS réelles, et litiges réels associés.
+  // Ne produit aucun score inventé et n'écrit dans aucune table fictive.
+  const runPropertyCheck = async (propertyId) => {
     if (!propertyId) {
       toast.error('Veuillez sélectionner une propriété');
       return;
@@ -131,221 +100,87 @@ const VendeurAntiFraudeRealData = () => {
 
     setIsScanning(true);
     try {
-      // 1. Récupérer la propriété
       const { data: property, error: propError } = await supabase
         .from('properties')
-        .select('*')
+        .select('id, title, location, price, surface, status, verification_status, latitude, longitude')
         .eq('id', propertyId)
         .single();
 
       if (propError) throw propError;
 
-      // 2. Simuler analyses IA
-      const ocrResults = await simulateOCRAnalysis(property);
-      const gpsResults = await simulateGPSAnalysis(property);
-      const priceResults = await simulatePriceAnalysis(property);
-      
-      // 3. Calculer score de fraude (0-100, plus bas = moins de risque)
-      const fraudScore = Math.floor(Math.random() * 30) + 10; // Score entre 10-40 (bon)
-      const riskLevel = fraudScore < 20 ? 'low' : fraudScore < 40 ? 'medium' : 'high';
-      const status = fraudScore < 30 ? 'verified' : fraudScore < 60 ? 'suspicious' : 'rejected';
+      const propertyDisputes = disputes.filter(d => d.property_id === propertyId);
+      const openCount = propertyDisputes.filter(d => d.status === 'open').length;
+      const resolvedCount = propertyDisputes.filter(d => d.status === 'resolved').length;
+      const hasGps = property.latitude != null && property.longitude != null;
 
-      // 4. Créer vérification anti-fraude
-      const { data: newCheck, error } = await supabase
-        .from('fraud_checks')
-        .insert({
-          vendor_id: user.id,
-          property_id: propertyId,
-          verified_at: new Date().toISOString(),
-          overall_score: fraudScore,
-          ocr_score: ocrResults.score || 0,
-          gps_score: gpsResults.score || 0,
-          price_score: priceResults.score || 0,
-          risk_level: riskLevel,
-          status: status,
-          ocr_results: ocrResults,
-          gps_results: gpsResults,
-          price_results: priceResults,
-          is_approved: status === 'verified',
-          alerts: generateAlerts(fraudScore, ocrResults, gpsResults, priceResults)
-        })
-        .select()
-        .single();
+      setScanResult({
+        property,
+        openCount,
+        resolvedCount,
+        hasGps,
+        checkedAt: new Date().toISOString()
+      });
 
-      if (error) throw error;
-
-      toast.success(`Vérification terminée ! Score de sécurité: ${100 - fraudScore}/100`);
-      loadFraudChecks();
-      setSelectedProperty(null);
+      toast.success(
+        openCount > 0
+          ? `Vérification terminée : ${openCount} litige(s) ouvert(s) détecté(s)`
+          : 'Vérification terminée : aucun litige ouvert sur cette propriété'
+      );
     } catch (error) {
-      console.error('Erreur vérification anti-fraude:', error);
+      console.error('Erreur vérification propriété:', error);
       toast.error('Erreur lors de la vérification');
     } finally {
       setIsScanning(false);
     }
   };
 
-  const simulateOCRAnalysis = async (property) => {
-    // Simuler analyse OCR de documents
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const authentic = Math.random() > 0.2; // 80% chances d'être authentique
-    
-    return {
-      authentic,
-      confidence: Math.random() * 10 + 90, // 90-100%
-      signatures_valid: authentic,
-      dates_consistent: authentic,
-      references_found: authentic,
-      issues: authentic ? [] : ['Signature suspecte', 'Date incohérente']
-    };
+  const handleRefreshDisputes = async () => {
+    await loadDisputes();
+    toast.success('Litiges actualisés');
   };
 
-  const simulateGPSAnalysis = async (property) => {
-    // Simuler vérification GPS
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const verified = Math.random() > 0.15; // 85% chances d'être vérifié
-    
-    return {
-      verified,
-      accuracy: Math.random() * 5 + 95, // 95-100%
-      coordinates_match: verified,
-      cadastral_match: verified,
-      boundary_issues: !verified,
-      distance_from_declared: Math.random() * 50 // mètres
-    };
-  };
-
-  const simulatePriceAnalysis = async (property) => {
-    // Simuler analyse de prix
-    await new Promise(resolve => setTimeout(resolve, 600));
-    const consistent = Math.random() > 0.1; // 90% chances d'être cohérent
-    
-    return {
-      consistent,
-      market_price: property.price,
-      estimated_price: property.price * (0.9 + Math.random() * 0.2), // ±10%
-      deviation_percentage: Math.random() * 15,
-      comparable_properties: Math.floor(Math.random() * 10) + 5
-    };
-  };
-
-  const generateAlerts = (fraudScore, ocr, gps, price) => {
-    const alerts = [];
-    
-    if (!ocr.authentic) alerts.push('Document authentication failed');
-    if (!gps.verified) alerts.push('GPS coordinates mismatch');
-    if (!price.consistent) alerts.push('Price significantly different from market');
-    if (fraudScore > 60) alerts.push('High fraud risk detected');
-    
-    return alerts;
-  };
-
-  const handleRecheck = async (checkId) => {
+  const handleExportReport = async (disputeId) => {
     try {
-      const check = fraudChecks.find(c => c.id === checkId);
-      if (check) {
-        await runFraudCheck(check.property_id);
-      }
-    } catch (error) {
-      console.error('Erreur re-vérification:', error);
-      toast.error('Erreur lors de la re-vérification');
-    }
-  };
-
-  const handleExportReport = async (checkId) => {
-    try {
-      const check = fraudChecks.find(c => c.id === checkId);
-      if (!check) {
-        toast.error('Vérification introuvable');
+      const dispute = disputes.find(d => d.id === disputeId);
+      if (!dispute) {
+        toast.error('Litige introuvable');
         return;
       }
 
-      // Générer rapport détaillé
-      const report = `RAPPORT ANTI-FRAUDE DÉTAILLÉ
+      const partiesText = Array.isArray(dispute.parties)
+        ? dispute.parties.map((p, i) => `  ${i + 1}. ${typeof p === 'string' ? p : (p?.name || JSON.stringify(p))}`).join('\n')
+        : (dispute.parties ? JSON.stringify(dispute.parties, null, 2) : 'Aucune partie enregistrée');
+
+      const report = `RAPPORT DE SUIVI ANTI-FRAUDE
 =====================================================
 Généré le: ${new Date().toLocaleString('fr-FR')}
-Propriété: ${check.properties?.title || 'Sans titre'}
+Propriété: ${dispute.property?.title || 'Sans titre'}
 
 RÉSUMÉ
 ------
-Score de Sécurité: ${100 - check.fraud_score}/100
-Niveau de Risque: ${check.risk_level}
-Statut: ${check.status}
-Date de Vérification: ${new Date(check.check_date).toLocaleString('fr-FR')}
-Type: ${check.check_type}
+Litige: ${dispute.title || 'N/A'}
+Statut: ${dispute.status === 'open' ? 'Ouvert' : dispute.status === 'resolved' ? 'Résolu' : (dispute.status || 'N/A')}
+Ouvert le: ${dispute.created_at ? new Date(dispute.created_at).toLocaleString('fr-FR') : 'N/A'}
+Dernière mise à jour: ${dispute.updated_at ? new Date(dispute.updated_at).toLocaleString('fr-FR') : 'N/A'}
 
-PROPRIÉTÉ
----------
-Titre: ${check.properties?.title || 'N/A'}
-Localisation: ${check.properties?.location || 'N/A'}
-Prix: ${check.properties?.price ? check.properties.price.toLocaleString('fr-FR') + ' FCFA' : 'N/A'}
-Surface: ${check.properties?.surface || 'N/A'} m²
-
-ANALYSE OCR (Documents)
------------------------
-Authenticité: ${check.ai_analysis?.ocr?.authentic ? '✓ AUTHENTIQUE' : '✗ SUSPECT'}
-Confiance: ${check.ai_analysis?.ocr?.confidence?.toFixed(1)}%
-Signatures Valides: ${check.ai_analysis?.ocr?.signatures_valid ? 'Oui' : 'Non'}
-Dates Cohérentes: ${check.ai_analysis?.ocr?.dates_consistent ? 'Oui' : 'Non'}
-Références Trouvées: ${check.ai_analysis?.ocr?.references_found ? 'Oui' : 'Non'}
-${check.ai_analysis?.ocr?.issues?.length > 0 ? 
-  '\nProblèmes détectés:\n' + check.ai_analysis.ocr.issues.map(i => `  - ${i}`).join('\n') : 
-  'Aucun problème détecté'}
-
-ANALYSE GPS (Géolocalisation)
-------------------------------
-Vérification: ${check.ai_analysis?.gps?.verified ? '✓ VÉRIFIÉ' : '✗ ÉCHEC'}
-Précision: ${check.ai_analysis?.gps?.accuracy?.toFixed(1)}%
-Coordonnées Correspondantes: ${check.ai_analysis?.gps?.coordinates_match ? 'Oui' : 'Non'}
-Correspondance Cadastrale: ${check.ai_analysis?.gps?.cadastral_match ? 'Oui' : 'Non'}
-Problèmes de Limites: ${check.ai_analysis?.gps?.boundary_issues ? 'Oui' : 'Non'}
-Distance de la Position Déclarée: ${check.ai_analysis?.gps?.distance_from_declared?.toFixed(1)}m
-
-ANALYSE PRIX (Marché)
-----------------------
-Cohérence: ${check.ai_analysis?.price?.consistent ? '✓ COHÉRENT' : '✗ INCOHÉRENT'}
-Prix Marché: ${check.ai_analysis?.price?.market_price?.toLocaleString('fr-FR')} FCFA
-Prix Estimé: ${check.ai_analysis?.price?.estimated_price?.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} FCFA
-Déviation: ${check.ai_analysis?.price?.deviation_percentage?.toFixed(1)}%
-Propriétés Comparables: ${check.ai_analysis?.price?.comparable_properties}
-
-ANALYSE IA GLOBALE
-------------------
-Confiance Globale: ${check.ai_analysis?.confidence?.toFixed(1)}%
-Authenticité Documents: ${check.results?.document_authenticity ? '✓' : '✗'}
-Vérification GPS: ${check.results?.gps_verification ? '✓' : '✗'}
-Cohérence Prix: ${check.results?.price_consistency ? '✓' : '✗'}
-Verdict Final: ${check.results?.overall_verdict || 'N/A'}
-
-ALERTES
--------
-${check.alerts && check.alerts.length > 0 ? 
-  check.alerts.map((a, i) => `${i + 1}. ⚠️ ${a}`).join('\n') : 
-  '✅ Aucune alerte détectée'}
-
-RECOMMANDATIONS
----------------
-${check.fraud_score < 30 ? 
-  '✅ Propriété vérifiée. Niveau de confiance élevé. Transaction recommandée.' :
-  check.fraud_score < 60 ?
-  '⚠️ Anomalies détectées. Vérification supplémentaire recommandée.' :
-  '🚫 Risque élevé de fraude. Transaction déconseillée.'}
+PARTIES IMPLIQUÉES
+-------------------
+${partiesText}
 
 ---
-Rapport généré par Teranga Foncier - Système Anti-Fraude IA
+Rapport généré par Teranga Foncier
 Pour toute question, contactez: support@terangafoncier.sn
 `;
 
-      // Télécharger rapport
       const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rapport-antifraude-${check.properties?.title?.replace(/\s+/g, '-').toLowerCase() || 'propriete'}-${new Date().toISOString().split('T')[0]}.txt`;
+      a.download = `rapport-litige-${(dispute.property?.title || 'propriete').replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success('📄 Rapport anti-fraude téléchargé');
+      toast.success('Rapport téléchargé');
     } catch (error) {
       console.error('Erreur export:', error);
       toast.error('Erreur lors de l\'export');
@@ -354,32 +189,28 @@ Pour toute question, contactez: support@terangafoncier.sn
 
   const getStatusColor = (status) => {
     const colors = {
-      verified: 'bg-green-100 text-green-800 border-green-200',
-      suspicious: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      pending: 'bg-blue-100 text-blue-800 border-blue-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200'
+      resolved: 'bg-green-100 text-green-800 border-green-200',
+      open: 'bg-red-100 text-red-800 border-red-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  const getRiskColor = (risk) => {
-    const colors = {
-      low: 'text-green-600',
-      medium: 'text-yellow-600',
-      high: 'text-red-600'
-    };
-    return colors[risk] || 'text-gray-600';
+  const getStatusLabel = (status) => {
+    if (status === 'open') return 'Ouvert';
+    if (status === 'resolved') return 'Résolu';
+    return status || 'N/A';
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+  const partiesCount = (parties) => {
+    if (Array.isArray(parties)) return parties.length;
+    if (parties && typeof parties === 'object') return Object.keys(parties).length;
+    return null;
   };
 
-  const filteredChecks = fraudChecks.filter(check =>
-    check.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    check.status?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDisputes = disputes.filter(d =>
+    d.property?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.status?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -409,10 +240,10 @@ Pour toute question, contactez: support@terangafoncier.sn
             Vérification Anti-Fraude
           </h1>
           <p className="text-gray-600 mt-2">
-            Protection IA contre les fraudes immobilières
+            Surveillance des litiges et vérification de vos annonces
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setActiveTab('scan')}
           className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
         >
@@ -425,38 +256,40 @@ Pour toute question, contactez: support@terangafoncier.sn
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           {
-            label: 'Total Scans',
-            value: stats.totalScans,
+            label: 'Propriétés Suivies',
+            value: stats.totalProperties,
             icon: Scan,
             color: 'blue',
             trend: null
           },
           {
-            label: 'Vérifiés',
-            value: stats.verified,
+            label: 'Sans Litige',
+            value: stats.propertiesClean,
             icon: CheckCircle,
             color: 'green',
-            trend: `${Math.round((stats.verified / stats.totalScans) * 100)}%`
+            trend: stats.totalProperties > 0
+              ? `${Math.round((stats.propertiesClean / stats.totalProperties) * 100)}%`
+              : null
           },
           {
-            label: 'Suspects',
-            value: stats.suspicious,
+            label: 'Litiges Ouverts',
+            value: stats.openDisputesCount,
             icon: AlertTriangle,
             color: 'yellow',
             trend: null
           },
           {
-            label: 'En Attente',
-            value: stats.pending,
+            label: 'Litiges Résolus',
+            value: stats.resolvedDisputesCount,
             icon: Clock,
             color: 'purple',
             trend: null
           },
           {
-            label: 'Score Moyen',
-            value: `${stats.averageScore}/100`,
+            label: 'Taux de Confiance',
+            value: stats.confidenceRate !== null ? `${stats.confidenceRate}%` : '—',
             icon: Award,
-            color: stats.averageScore >= 80 ? 'green' : 'yellow',
+            color: (stats.confidenceRate ?? 0) >= 80 ? 'green' : 'yellow',
             trend: null
           }
         ].map((stat, index) => (
@@ -514,23 +347,23 @@ Pour toute question, contactez: support@terangafoncier.sn
         {/* Overview */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Security Score */}
+            {/* Confidence Score */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-green-600" />
-                  Score de Sécurité Global
+                  Taux de Confiance Global
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-6">
                   <div className="text-6xl font-bold text-green-600 mb-2">
-                    {100 - (stats.averageScore || 0)}
+                    {stats.confidenceRate !== null ? `${stats.confidenceRate}%` : '—'}
                   </div>
-                  <p className="text-gray-600 mb-4">Score de confiance</p>
-                  <Progress value={100 - stats.averageScore} className="h-3" />
+                  <p className="text-gray-600 mb-4">Propriétés sans litige ouvert</p>
+                  <Progress value={stats.confidenceRate ?? 0} className="h-3" />
                   <p className="text-sm text-gray-500 mt-2">
-                    Basé sur {stats.totalScans} vérifications
+                    Basé sur {stats.totalProperties} propriété(s) suivie(s)
                   </p>
                 </div>
               </CardContent>
@@ -549,77 +382,79 @@ Pour toute question, contactez: support@terangafoncier.sn
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">Faible Risque</span>
+                      <span className="text-sm">Sans Litige</span>
                     </div>
-                    <span className="font-semibold">{stats.verified}</span>
+                    <span className="font-semibold">{stats.propertiesClean}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <span className="text-sm">Risque Moyen</span>
+                      <span className="text-sm">Litiges Ouverts</span>
                     </div>
-                    <span className="font-semibold">{stats.suspicious}</span>
+                    <span className="font-semibold">{stats.openDisputesCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm">Risque Élevé</span>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm">Litiges Résolus</span>
                     </div>
-                    <span className="font-semibold">
-                      {stats.totalScans - stats.verified - stats.suspicious}
-                    </span>
+                    <span className="font-semibold">{stats.resolvedDisputesCount}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Recent Checks */}
+          {/* Recent Disputes */}
           <Card>
             <CardHeader>
-              <CardTitle>Vérifications Récentes</CardTitle>
-              <CardDescription>Dernières analyses anti-fraude</CardDescription>
+              <CardTitle>Litiges Récents</CardTitle>
+              <CardDescription>Derniers litiges enregistrés sur vos annonces</CardDescription>
             </CardHeader>
             <CardContent>
-              {fraudChecks.slice(0, 5).map((check, index) => (
-                <motion.div
-                  key={check.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-4 border rounded-lg mb-3 hover:bg-gray-50"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${
-                      check.status === 'verified' ? 'bg-green-100' :
-                      check.status === 'suspicious' ? 'bg-yellow-100' :
-                      'bg-blue-100'
-                    }`}>
-                      {check.status === 'verified' ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : check.status === 'suspicious' ? (
-                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-blue-600" />
-                      )}
+              {disputes.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-10 w-10 text-green-500 mx-auto mb-3" />
+                  <p className="text-gray-600">Aucun litige enregistré pour le moment</p>
+                </div>
+              ) : (
+                disputes.slice(0, 5).map((dispute, index) => (
+                  <motion.div
+                    key={dispute.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center justify-between p-4 border rounded-lg mb-3 hover:bg-gray-50"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-lg ${
+                        dispute.status === 'resolved' ? 'bg-green-100' :
+                        dispute.status === 'open' ? 'bg-yellow-100' :
+                        'bg-blue-100'
+                      }`}>
+                        {dispute.status === 'resolved' ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : dispute.status === 'open' ? (
+                          <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                        ) : (
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{dispute.property?.title || dispute.title}</p>
+                        <p className="text-sm text-gray-600">
+                          {dispute.created_at ? new Date(dispute.created_at).toLocaleDateString('fr-FR') : 'N/A'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{check.properties?.title}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(check.check_date).toLocaleDateString('fr-FR')}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <Badge className={getStatusColor(dispute.status)}>
+                        {getStatusLabel(dispute.status)}
+                      </Badge>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={getStatusColor(check.status)}>
-                      {check.status}
-                    </Badge>
-                    <span className={`text-2xl font-bold ${getScoreColor(100 - check.fraud_score)}`}>
-                      {100 - check.fraud_score}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -630,18 +465,18 @@ Pour toute question, contactez: support@terangafoncier.sn
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Scan className="h-5 w-5 text-red-600" />
-                Lancer une Vérification Anti-Fraude
+                Lancer une Vérification
               </CardTitle>
               <CardDescription>
-                Analysez vos propriétés avec l'IA pour détecter les fraudes
+                Consultez l'état réel d'une propriété : statut de vérification, coordonnées GPS et litiges en cours
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Notre système IA vérifie: l'authenticité des documents (OCR), 
-                  la cohérence GPS, les prix du marché, et détecte les anomalies automatiquement.
+                  La vérification consulte les informations enregistrées sur la propriété
+                  (statut, coordonnées GPS) et recherche les litiges réellement associés à cette annonce.
                 </AlertDescription>
               </Alert>
 
@@ -650,7 +485,7 @@ Pour toute question, contactez: support@terangafoncier.sn
                 <div>
                   <label className="block text-sm font-medium mb-2">Propriété à vérifier</label>
                   {properties.length > 0 ? (
-                    <select 
+                    <select
                       className="w-full p-2 border rounded-lg"
                       onChange={(e) => setSelectedProperty({ id: e.target.value })}
                       defaultValue=""
@@ -671,25 +506,15 @@ Pour toute question, contactez: support@terangafoncier.sn
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Type de vérification</label>
-                  <select className="w-full p-2 border rounded-lg">
-                    <option>Comprehensive (Recommandé)</option>
-                    <option>Documents uniquement</option>
-                    <option>GPS uniquement</option>
-                    <option>Prix uniquement</option>
-                  </select>
-                </div>
-
                 <Button
-                  onClick={() => runFraudCheck(selectedProperty?.id)}
+                  onClick={() => runPropertyCheck(selectedProperty?.id)}
                   disabled={isScanning || !selectedProperty?.id}
                   className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
                 >
                   {isScanning ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Analyse en cours...
+                      Vérification en cours...
                     </>
                   ) : (
                     <>
@@ -705,11 +530,11 @@ Pour toute question, contactez: support@terangafoncier.sn
                 <h4 className="font-semibold mb-3">Étapes de Vérification</h4>
                 <div className="space-y-2">
                   {[
-                    { label: '1. Analyse OCR des documents', icon: FileText },
-                    { label: '2. Vérification GPS & Cadastre', icon: MapPin },
-                    { label: '3. Analyse des prix du marché', icon: DollarSign },
-                    { label: '4. Détection d\'anomalies IA', icon: Brain },
-                    { label: '5. Génération du rapport', icon: Award }
+                    { label: '1. Récupération des informations de la propriété', icon: FileText },
+                    { label: '2. Vérification du statut de la propriété', icon: Shield },
+                    { label: '3. Vérification des coordonnées GPS enregistrées', icon: MapPin },
+                    { label: '4. Recherche des litiges associés', icon: AlertTriangle },
+                    { label: '5. Génération du récapitulatif', icon: Award }
                   ].map((step, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <step.icon className="h-4 w-4 text-gray-600" />
@@ -718,6 +543,46 @@ Pour toute question, contactez: support@terangafoncier.sn
                   ))}
                 </div>
               </div>
+
+              {/* Résultat de la vérification (données réelles) */}
+              {scanResult && (
+                <div className="bg-white border rounded-lg p-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-red-600" />
+                    Résultat de la Vérification — {scanResult.property.title}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <p className="text-xs text-gray-600">Statut</p>
+                      <p className="text-sm font-semibold">
+                        {scanResult.property.verification_status || scanResult.property.status || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <MapPin className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                      <p className="text-xs text-gray-600">GPS</p>
+                      <p className={`text-sm font-semibold ${scanResult.hasGps ? 'text-green-600' : 'text-red-600'}`}>
+                        {scanResult.hasGps ? 'Renseigné' : 'Manquant'}
+                      </p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <AlertTriangle className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                      <p className="text-xs text-gray-600">Litiges Ouverts</p>
+                      <p className={`text-sm font-semibold ${scanResult.openCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {scanResult.openCount}
+                      </p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <CheckCircle className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                      <p className="text-xs text-gray-600">Litiges Résolus</p>
+                      <p className="text-sm font-semibold text-gray-900">{scanResult.resolvedCount}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    Vérifié le {new Date(scanResult.checkedAt).toLocaleString('fr-FR')}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -728,9 +593,9 @@ Pour toute question, contactez: support@terangafoncier.sn
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Historique des Vérifications</CardTitle>
+                  <CardTitle>Historique des Litiges</CardTitle>
                   <CardDescription>
-                    Toutes vos analyses anti-fraude
+                    Tous les litiges liés à vos annonces
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -740,30 +605,30 @@ Pour toute question, contactez: support@terangafoncier.sn
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-64"
                   />
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleRefreshDisputes}>
                     <Filter className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              {filteredChecks.length === 0 ? (
+              {filteredDisputes.length === 0 ? (
                 <div className="text-center py-12">
                   <Scan className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Aucune vérification effectuée</p>
+                  <p className="text-gray-600 mb-4">Aucun litige trouvé</p>
                   <Button
                     onClick={() => setActiveTab('scan')}
                     className="bg-gradient-to-r from-red-500 to-red-600"
                   >
                     <Scan className="h-4 w-4 mr-2" />
-                    Première Vérification
+                    Vérifier une Propriété
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredChecks.map((check, index) => (
+                  {filteredDisputes.map((dispute, index) => (
                     <motion.div
-                      key={check.id}
+                      key={dispute.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -772,57 +637,51 @@ Pour toute question, contactez: support@terangafoncier.sn
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">
-                            {check.properties?.title || 'Propriété'}
+                            {dispute.property?.title || 'Propriété'}
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">
-                            {check.properties?.location}
+                            {dispute.title}
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className={`text-3xl font-bold ${getScoreColor(100 - check.fraud_score)}`}>
-                            {100 - check.fraud_score}
+                          <div className={`text-lg font-bold ${dispute.status === 'open' ? 'text-red-600' : 'text-green-600'}`}>
+                            {getStatusLabel(dispute.status)}
                           </div>
-                          <p className="text-xs text-gray-600">Score</p>
+                          <p className="text-xs text-gray-600">Statut</p>
                         </div>
                       </div>
 
-                      {/* Détails de vérification */}
+                      {/* Détails du litige */}
                       <div className="grid grid-cols-3 gap-3 mb-3">
                         <div className="text-center p-2 bg-gray-50 rounded">
-                          <FileText className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                          <p className="text-xs text-gray-600">OCR</p>
-                          <p className={`text-sm font-semibold ${
-                            check.ai_analysis?.ocr?.authentic ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {check.ai_analysis?.ocr?.authentic ? '✓' : '✗'}
+                          <Shield className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                          <p className="text-xs text-gray-600">Statut</p>
+                          <p className="text-sm font-semibold">
+                            {getStatusLabel(dispute.status)}
                           </p>
                         </div>
                         <div className="text-center p-2 bg-gray-50 rounded">
-                          <MapPin className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                          <p className="text-xs text-gray-600">GPS</p>
-                          <p className={`text-sm font-semibold ${
-                            check.ai_analysis?.gps?.verified ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {check.ai_analysis?.gps?.verified ? '✓' : '✗'}
+                          <Clock className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                          <p className="text-xs text-gray-600">Ouvert le</p>
+                          <p className="text-sm font-semibold">
+                            {dispute.created_at ? new Date(dispute.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                           </p>
                         </div>
                         <div className="text-center p-2 bg-gray-50 rounded">
-                          <DollarSign className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                          <p className="text-xs text-gray-600">Prix</p>
-                          <p className={`text-sm font-semibold ${
-                            check.ai_analysis?.price?.consistent ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {check.ai_analysis?.price?.consistent ? '✓' : '✗'}
+                          <User className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                          <p className="text-xs text-gray-600">Parties</p>
+                          <p className="text-sm font-semibold">
+                            {partiesCount(dispute.parties) ?? '—'}
                           </p>
                         </div>
                       </div>
 
-                      {/* Alertes */}
-                      {check.alerts && check.alerts.length > 0 && (
+                      {/* Alerte pour litige ouvert */}
+                      {dispute.status === 'open' && (
                         <Alert variant="destructive" className="mb-3">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertDescription>
-                            {check.alerts.join(', ')}
+                            {dispute.title || 'Litige en cours nécessitant une attention'}
                           </AlertDescription>
                         </Alert>
                       )}
@@ -830,28 +689,25 @@ Pour toute question, contactez: support@terangafoncier.sn
                       {/* Actions */}
                       <div className="flex items-center justify-between pt-3 border-t">
                         <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(check.status)}>
-                            {check.status}
-                          </Badge>
-                          <Badge variant="outline" className={getRiskColor(check.risk_level)}>
-                            {check.risk_level} risk
+                          <Badge className={getStatusColor(dispute.status)}>
+                            {getStatusLabel(dispute.status)}
                           </Badge>
                           <span className="text-xs text-gray-500">
-                            {new Date(check.check_date).toLocaleDateString('fr-FR')}
+                            {dispute.created_at ? new Date(dispute.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                           </span>
                         </div>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleRecheck(check.id)}
+                            onClick={handleRefreshDisputes}
                           >
                             <RefreshCw className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleExportReport(check.id)}
+                            onClick={() => handleExportReport(dispute.id)}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -871,28 +727,28 @@ Pour toute question, contactez: support@terangafoncier.sn
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                Alertes et Anomalies
+                Alertes et Litiges Ouverts
               </CardTitle>
               <CardDescription>
                 Propriétés nécessitant une attention particulière
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {fraudChecks.filter(c => c.status === 'suspicious' || c.status === 'rejected').length === 0 ? (
+              {disputes.filter(d => d.status === 'open').length === 0 ? (
                 <div className="text-center py-12">
                   <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                   <p className="text-gray-600">Aucune alerte détectée</p>
                   <p className="text-sm text-gray-500 mt-2">
-                    Toutes vos propriétés sont vérifiées
+                    Aucun litige ouvert sur vos propriétés
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {fraudChecks
-                    .filter(c => c.status === 'suspicious' || c.status === 'rejected')
-                    .map((check, index) => (
+                  {disputes
+                    .filter(d => d.status === 'open')
+                    .map((dispute, index) => (
                       <motion.div
-                        key={check.id}
+                        key={dispute.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -902,23 +758,23 @@ Pour toute question, contactez: support@terangafoncier.sn
                           <AlertTriangle className="h-5 w-5 text-yellow-600 mt-1" />
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900">
-                              {check.properties?.title}
+                              {dispute.property?.title || 'Propriété'}
                             </h4>
                             <p className="text-sm text-gray-600 mt-1">
-                              Score de sécurité: {100 - check.fraud_score}/100
+                              Litige ouvert le {dispute.created_at ? new Date(dispute.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                             </p>
-                            {check.alerts?.map((alert, i) => (
-                              <p key={i} className="text-sm text-yellow-800 mt-1">
-                                • {alert}
+                            {dispute.title && (
+                              <p className="text-sm text-yellow-800 mt-1">
+                                • {dispute.title}
                               </p>
-                            ))}
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
                               className="mt-3"
-                              onClick={() => handleRecheck(check.id)}
+                              onClick={handleRefreshDisputes}
                             >
-                              Re-vérifier
+                              Actualiser
                             </Button>
                           </div>
                         </div>

@@ -35,6 +35,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
 const ParticulierMessages = () => {
   const outletContext = useOutletContext();
@@ -63,20 +64,68 @@ const ParticulierMessages = () => {
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des messages administratifs...');
+      console.log('📊 Chargement des conversations...');
 
-      const { data, error } = await supabase
-        .from('messages_administratifs')
-        .select('*')
-        .eq('destinataire_id', user.id)
-        .order('created_at', { ascending: false });
+      // 1. Conversations réelles de l'utilisateur (via conversation_participants)
+      const convRes = await ParticulierSupabaseService.getConversations(user.id);
+      const conversations = convRes?.data || [];
 
-      if (error) throw error;
+      // 2. Récupérer les profils des autres participants pour afficher un nom réel
+      const otherIds = new Set();
+      conversations.forEach((c) => {
+        (c.participants || []).forEach((p) => {
+          if (p.user_id && p.user_id !== user.id) otherIds.add(p.user_id);
+        });
+      });
 
-      setMessages(data || []);
-      console.log(`✅ ${data?.length || 0} messages chargés`);
+      const profileMap = {};
+      if (otherIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, first_name, last_name, email, company')
+          .in('id', Array.from(otherIds));
+        (profiles || []).forEach((p) => { profileMap[p.id] = p; });
+      }
+
+      // 3. Enrichir chaque conversation avec son dernier message + statut lu/non lu
+      const enriched = await Promise.all(
+        conversations.map(async (c) => {
+          const msgRes = await ParticulierSupabaseService.getMessages(c.id);
+          const msgs = msgRes?.data || [];
+          const lastMsg = msgs.length ? msgs[msgs.length - 1] : null;
+          const hasUnread = msgs.some((m) => m.sender_id !== user.id && !m.read);
+
+          const otherId = (c.participants || [])
+            .map((p) => p.user_id)
+            .find((id) => id && id !== user.id);
+          const profile = otherId ? profileMap[otherId] : null;
+          const nom = profile
+            ? (profile.full_name ||
+               [profile.first_name, profile.last_name].filter(Boolean).join(' ') ||
+               profile.email ||
+               'Correspondant')
+            : 'Correspondant';
+
+          return {
+            id: c.id,
+            objet: c.subject || 'Conversation',
+            contenu: lastMsg?.content || 'Aucun message pour le moment.',
+            statut: hasUnread ? 'non_lu' : 'lu',
+            created_at: lastMsg?.created_at || c.updated_at || c.created_at,
+            expediteur: {
+              nom,
+              service: profile?.company || null
+            },
+            messagesThread: msgs
+          };
+        })
+      );
+
+      setMessages(enriched);
+      console.log(`✅ ${enriched.length} conversation(s) chargée(s)`);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des messages:', error);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -106,18 +155,21 @@ const ParticulierMessages = () => {
     return icons[type] || MessageSquare;
   };
 
-  const markAsRead = async (messageId) => {
+  const markAsRead = async (conversationId) => {
     try {
+      // Marque comme lus les messages reçus (non envoyés par l'utilisateur) de la conversation
       const { error } = await supabase
-        .from('messages_administratifs')
-        .update({ statut: 'lu' })
-        .eq('id', messageId);
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .eq('read', false);
 
       if (error) throw error;
 
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId ? { ...msg, statut: 'lu' } : msg
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === conversationId ? { ...msg, statut: 'lu' } : msg
         )
       );
     } catch (error) {
@@ -216,7 +268,7 @@ const ParticulierMessages = () => {
                   <MessageSquare className="h-12 w-12 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun message</h3>
                   <p className="text-gray-600 text-center">
-                    Vous n'avez pas encore reçu de messages de la part des services administratifs.
+                    Vous n'avez pas encore de conversation. Vos échanges avec les vendeurs et les services apparaîtront ici.
                   </p>
                 </CardContent>
               </Card>
@@ -268,8 +320,8 @@ const ParticulierMessages = () => {
                                 )}
                               </div>
                               <p className="text-xs text-gray-500 mb-2">
-                                {message.expediteur?.service || 'Service Administratif'} • 
-                                {message.dossier_ref && ` Dossier: ${message.dossier_ref} • `}
+                                {message.expediteur?.service && `${message.expediteur.service} • `}
+                                {message.dossier_ref && `Dossier: ${message.dossier_ref} • `}
                                 {new Date(message.created_at).toLocaleDateString('fr-FR')}
                               </p>
                               <h3 className="text-sm font-medium text-gray-900 mb-2">
@@ -350,9 +402,11 @@ const ParticulierMessages = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge className={getPrioriteColor(selectedMessage.priorite)} variant="secondary">
-                      {selectedMessage.priorite}
-                    </Badge>
+                    {selectedMessage.priorite && (
+                      <Badge className={getPrioriteColor(selectedMessage.priorite)} variant="secondary">
+                        {selectedMessage.priorite}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </DialogHeader>
@@ -361,8 +415,8 @@ const ParticulierMessages = () => {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Service:</span>
-                      <p className="text-gray-600">{selectedMessage.expediteur?.service || 'Service Administratif'}</p>
+                      <span className="font-medium text-gray-700">Interlocuteur:</span>
+                      <p className="text-gray-600">{selectedMessage.expediteur?.service || selectedMessage.expediteur?.nom || '—'}</p>
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Date:</span>

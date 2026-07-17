@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -20,6 +20,8 @@ import { useDropzone } from 'react-dropzone';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import StatsService from '@/services/StatsService';
 
 const VendeurAddTerrainRealData = () => {
   const { user } = useAuth();
@@ -27,7 +29,11 @@ const VendeurAddTerrainRealData = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
-  
+  // Prix moyen réel par région, calculé côté serveur depuis les annonces actives
+  // (StatsService.getRegionMarket) — utilisé pour comparer le prix saisi au marché réel
+  // au lieu d'un badge "Prix compétitif" toujours affiché sans base de comparaison.
+  const [regionMarket, setRegionMarket] = useState([]);
+
   // Données du formulaire - Structure complète basée sur ParcelleDetailPage
   const [propertyData, setPropertyData] = useState({
     // === ÉTAPE 1: INFORMATIONS DE BASE ===
@@ -93,6 +99,19 @@ const VendeurAddTerrainRealData = () => {
     has_urban_certificate: false,
     documents: []
   });
+
+  // Charge les vraies moyennes de prix/m² par région depuis Supabase (properties actives)
+  useEffect(() => {
+    let isMounted = true;
+    StatsService.getRegionMarket().then((data) => {
+      if (isMounted) setRegionMarket(Array.isArray(data) ? data : []);
+    }).catch(() => {
+      if (isMounted) setRegionMarket([]);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const selectedRegionMarket = regionMarket.find(r => r.region === propertyData.region);
 
   const steps = [
     { id: 1, title: 'Informations', icon: FileText },
@@ -384,9 +403,9 @@ const VendeurAddTerrainRealData = () => {
 
     setIsGeneratingAI(true);
     try {
-      // Simuler génération IA (remplacer par vraie API)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Génère un brouillon de description à partir des données réelles déjà saisies
+      // dans le formulaire (type, surface, ville, zonage) — pas d'appel à un service
+      // d'IA externe : le vendeur peut ensuite librement modifier ce texte.
       const aiDescription = `Magnifique terrain ${propertyData.type.toLowerCase()} de ${propertyData.surface} m² situé à ${propertyData.city}. \n\n` +
         `Ce terrain offre un potentiel exceptionnel pour ${propertyData.type === 'Résidentiel' ? 'la construction d\'une villa moderne' : propertyData.type === 'Commercial' ? 'l\'implantation d\'un commerce' : 'votre projet'}. \n\n` +
         `Caractéristiques principales :\n` +
@@ -397,9 +416,9 @@ const VendeurAddTerrainRealData = () => {
         `Ce terrain représente une opportunité unique pour concrétiser votre projet immobilier dans un environnement en plein développement. Titre foncier en règle.`;
       
       handleInputChange('description', aiDescription);
-      toast.success('✨ Description générée par l\'IA avec succès !');
+      toast.success('✨ Brouillon de description généré avec succès !');
     } catch (error) {
-      toast.error('Erreur lors de la génération IA');
+      toast.error('Erreur lors de la génération de la description');
     } finally {
       setIsGeneratingAI(false);
     }
@@ -409,6 +428,11 @@ const VendeurAddTerrainRealData = () => {
     // Validation finale
     if (!validateStep(currentStep)) return;
 
+    if (!user?.id) {
+      toast.error('Vous devez être connecté pour publier une annonce');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 1. Upload images vers Supabase Storage
@@ -416,7 +440,7 @@ const VendeurAddTerrainRealData = () => {
       for (const image of uploadedImages) {
         const fileExt = image.file.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('property-photos')
           .upload(fileName, image.file);
@@ -430,119 +454,92 @@ const VendeurAddTerrainRealData = () => {
         imageUrls.push(data.publicUrl);
       }
 
-      // 2. Préparer les métadonnées de financement
-      const financingMetadata = {
-        methods: propertyData.financing_methods,
-        bank_financing: propertyData.financing_methods.includes('bank') ? {
-          available: true,
-          min_down_payment: propertyData.min_down_payment,
-          max_duration: propertyData.max_duration,
-          partner_banks: propertyData.partner_banks
-        } : null,
-        installment: propertyData.financing_methods.includes('installment') ? {
-          available: true,
-          duration: propertyData.installment_duration,
-          monthly_payment: propertyData.installment_duration && propertyData.price 
-            ? Math.round(parseFloat(propertyData.price) / parseInt(propertyData.installment_duration))
-            : null
-        } : null,
-        crypto: propertyData.financing_methods.includes('crypto') ? {
-          available: true,
-          accepted_currencies: propertyData.accepted_cryptos,
-          discount: propertyData.crypto_discount || '0'
-        } : null
-      };
+      // 2. La table `properties` n'a pas de colonne dédiée pour le zonage, le statut
+      // juridique, le financement ou les équipements saisis dans le formulaire : plutôt
+      // que d'inventer des colonnes inexistantes ou de perdre ces informations, on les
+      // ajoute proprement à la description (colonne réelle et déjà lue par les acheteurs).
+      const extraDetails = [];
+      if (propertyData.address) extraDetails.push(`Adresse précise : ${propertyData.address}`);
+      if (propertyData.postal_code) extraDetails.push(`Code postal : ${propertyData.postal_code}`);
+      if (propertyData.zoning) {
+        const zoneLabel = zoningTypes.find(z => z.value === propertyData.zoning)?.label || propertyData.zoning;
+        extraDetails.push(`Zonage : ${zoneLabel}`);
+      }
+      if (propertyData.legal_status) extraDetails.push(`Statut juridique : ${propertyData.legal_status}`);
+      if (propertyData.land_registry_ref) extraDetails.push(`Référence cadastrale : ${propertyData.land_registry_ref}`);
+      if (propertyData.title_deed_number) extraDetails.push(`Numéro titre foncier : ${propertyData.title_deed_number}`);
+      if (propertyData.buildable_ratio) extraDetails.push(`Coefficient d'emprise au sol : ${propertyData.buildable_ratio}`);
+      if (propertyData.max_floors) extraDetails.push(`Étages maximum autorisés : ${propertyData.max_floors}`);
+      if (propertyData.main_features.length > 0) extraDetails.push(`Caractéristiques : ${propertyData.main_features.join(', ')}`);
+      if (propertyData.utilities.length > 0) {
+        const labels = propertyData.utilities.map(v => utilitiesList.find(u => u.value === v)?.label || v);
+        extraDetails.push(`Utilités disponibles : ${labels.join(', ')}`);
+      }
+      if (propertyData.access.length > 0) {
+        const labels = propertyData.access.map(v => accessList.find(a => a.value === v)?.label || v);
+        extraDetails.push(`Accès : ${labels.join(', ')}`);
+      }
+      const distanceFacilities = propertyData.nearby_facilities.filter(f => typeof f === 'object');
+      if (distanceFacilities.length > 0) {
+        const labels = distanceFacilities.map(f => {
+          const label = nearbyFacilitiesOptions.find(o => o.value === f.type)?.label || f.type;
+          return f.distance ? `${label} (${f.distance})` : label;
+        });
+        extraDetails.push(`Proximités : ${labels.join(', ')}`);
+      }
+      const landmarks = propertyData.nearby_landmarks.filter(Boolean);
+      if (landmarks.length > 0) extraDetails.push(`Points d'intérêt : ${landmarks.join(', ')}`);
+      if (propertyData.financing_methods.length > 0) {
+        extraDetails.push(`Modes de paiement acceptés : ${propertyData.financing_methods.join(', ')}`);
+      }
+      if (propertyData.financing_methods.includes('bank') && propertyData.min_down_payment) {
+        extraDetails.push(`Financement bancaire : apport minimum ${propertyData.min_down_payment}%, durée max ${propertyData.max_duration || '?'} ans${propertyData.partner_banks.length > 0 ? ` (banques : ${propertyData.partner_banks.join(', ')})` : ''}`);
+      }
+      if (propertyData.financing_methods.includes('installment') && propertyData.installment_duration) {
+        extraDetails.push(`Paiement échelonné possible sur ${propertyData.installment_duration} mois`);
+      }
+      if (propertyData.financing_methods.includes('crypto') && propertyData.accepted_cryptos.length > 0) {
+        extraDetails.push(`Crypto-monnaies acceptées : ${propertyData.accepted_cryptos.join(', ')}${propertyData.crypto_discount ? ` (réduction ${propertyData.crypto_discount}%)` : ''}`);
+      }
+      const legalDocs = [];
+      if (propertyData.has_title_deed) legalDocs.push('titre foncier');
+      if (propertyData.has_survey) legalDocs.push('plan de bornage');
+      if (propertyData.has_building_permit) legalDocs.push('permis de construire');
+      if (propertyData.has_urban_certificate) legalDocs.push("certificat d'urbanisme");
+      if (legalDocs.length > 0) extraDetails.push(`Documents disponibles : ${legalDocs.join(', ')}`);
+      if (propertyData.nft_available) extraDetails.push(`Tokenisation NFT souhaitée par le vendeur (réseau ${propertyData.blockchain_network})`);
 
-      // 3. Préparer les features
-      const featuresData = {
-        main: propertyData.main_features,
-        utilities: propertyData.utilities,
-        access: propertyData.access,
-        zoning: propertyData.zoning,
-        buildable_ratio: propertyData.buildable_ratio ? parseFloat(propertyData.buildable_ratio) : null,
-        max_floors: propertyData.max_floors ? parseInt(propertyData.max_floors) : null
-      };
+      const fullDescription = extraDetails.length > 0
+        ? `${propertyData.description}\n\n---\nInformations complémentaires :\n${extraDetails.map(d => `• ${d}`).join('\n')}`
+        : propertyData.description;
 
-      // 4. Créer la propriété dans Supabase
-      const { data: property, error: propertyError } = await supabase
-        .from('properties')
-        .insert({
-          owner_id: user.id,
-          property_type: 'terrain', // FIXÉ - vendeur ne vend que des terrains
-          type: propertyData.type, // Type de terrain (Résidentiel, Commercial, etc.)
-          
-          // Informations de base
-          title: propertyData.title,
-          description: propertyData.description,
-          
-          // Localisation
-          address: propertyData.address,
-          city: propertyData.city,
-          region: propertyData.region,
-          postal_code: propertyData.postal_code || null,
-          latitude: propertyData.latitude,
-          longitude: propertyData.longitude,
-          location: `${propertyData.city}, ${propertyData.region}, Sénégal`,
-          nearby_landmarks: propertyData.nearby_landmarks,
-          
-          // Prix & Surface
-          price: parseFloat(propertyData.price),
-          currency: propertyData.currency,
-          surface: parseFloat(propertyData.surface),
-          surface_unit: propertyData.surface_unit,
-          
-          // Caractéristiques terrain
-          zoning: propertyData.zoning,
-          legal_status: propertyData.legal_status,
-          land_registry_ref: propertyData.land_registry_ref || null,
-          title_deed_number: propertyData.title_deed_number,
-          
-          // Features (JSONB)
-          features: featuresData,
-          
-          // Amenities (JSONB)
-          amenities: propertyData.nearby_facilities,
-          
-          // Images (JSONB)
-          images: imageUrls,
-          
-          // Metadata (JSONB) - inclut le financement
-          metadata: {
-            financing: financingMetadata,
-            nft: propertyData.nft_available ? {
-              available: true,
-              network: propertyData.blockchain_network
-            } : null,
-            documents: {
-              has_title_deed: propertyData.has_title_deed,
-              has_survey: propertyData.has_survey,
-              has_building_permit: propertyData.has_building_permit,
-              has_urban_certificate: propertyData.has_urban_certificate
-            }
-          },
-          
-          // Statuts
-          status: 'pending', // En attente de vérification
-          verification_status: 'pending',
-          published_at: null, // Pas encore publié
-          
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      // 3. Créer la propriété dans Supabase — uniquement les colonnes réelles de `properties`
+      const { success: listingSuccess, data: property, error: listingError } = await VendeurSupabaseService.createListing({
+        owner_id: user.id,
+        title: propertyData.title,
+        name: propertyData.title,
+        description: fullDescription,
+        type: propertyData.type, // Type de terrain (Résidentiel, Commercial, Agricole...)
+        price: parseFloat(propertyData.price),
+        surface: parseFloat(propertyData.surface),
+        location: `${propertyData.address ? propertyData.address + ', ' : ''}${propertyData.city}, ${propertyData.region}, Sénégal`,
+        region: propertyData.region,
+        city: propertyData.city,
+        latitude: propertyData.latitude,
+        longitude: propertyData.longitude,
+        status: 'pending', // En attente de vérification
+        verification_status: 'pending'
+      });
 
-      if (propertyError) throw propertyError;
+      if (!listingSuccess) throw new Error(listingError || "Erreur lors de la création de l'annonce");
 
-      // 5. Créer les entrées dans property_photos
-      if (imageUrls.length > 0) {
+      // 4. Créer les entrées dans property_photos (colonnes réelles : property_id, url,
+      // is_primary, gps_latitude, gps_longitude, quality_score)
+      if (imageUrls.length > 0 && property?.id) {
         const photosToInsert = imageUrls.map((url, index) => ({
           property_id: property.id,
-          owner_id: user.id,
-          file_url: url,
-          is_primary: index === 0,
-          display_order: index,
-          uploaded_at: new Date().toISOString()
+          url,
+          is_primary: index === 0
         }));
 
         const { error: photosError } = await supabase
@@ -550,6 +547,40 @@ const VendeurAddTerrainRealData = () => {
           .insert(photosToInsert);
 
         if (photosError) throw photosError;
+      }
+
+      // 5. Documents légaux joints (titre foncier, plan de bornage...) : on les envoie
+      // vers la table réelle `documents`, en best-effort (ne bloque pas la publication
+      // de l'annonce si l'upload d'un document échoue).
+      if (propertyData.documents.length > 0 && property?.id) {
+        try {
+          for (const doc of propertyData.documents) {
+            const fileExt = doc.file.name.split('.').pop();
+            const docFileName = `documents/${property.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { error: docUploadError } = await supabase.storage
+              .from('property-photos')
+              .upload(docFileName, doc.file);
+            if (docUploadError) throw docUploadError;
+
+            const { data: docUrlData } = supabase.storage
+              .from('property-photos')
+              .getPublicUrl(docFileName);
+
+            const { error: docInsertError } = await supabase.from('documents').insert({
+              owner_id: user.id,
+              property_id: property.id,
+              name: doc.name,
+              type: doc.type,
+              url: docUrlData.publicUrl,
+              status: 'pending'
+            });
+            if (docInsertError) throw docInsertError;
+          }
+        } catch (docError) {
+          console.warn('Documents non téléversés (non bloquant) :', docError);
+          toast.error("L'annonce a été publiée, mais certains documents n'ont pas pu être envoyés.");
+        }
       }
 
       // Toast de succès détaillé
@@ -628,6 +659,21 @@ const VendeurAddTerrainRealData = () => {
   };
 
   const progressPercentage = (currentStep / steps.length) * 100;
+
+  // Score de complétude de l'annonce, calculé à partir des critères réellement remplis
+  // par le vendeur (remplace un ancien "Score de qualité IA" fixe à 95/100).
+  const listingCompletionChecks = [
+    propertyData.title.length >= 10,
+    propertyData.description.length >= 200,
+    Boolean(propertyData.price) && Boolean(propertyData.surface),
+    Boolean(propertyData.zoning) && Boolean(propertyData.legal_status) && Boolean(propertyData.title_deed_number),
+    propertyData.utilities.length > 0,
+    uploadedImages.length >= 3,
+    propertyData.has_title_deed
+  ];
+  const listingCompletionScore = Math.round(
+    (listingCompletionChecks.filter(Boolean).length / listingCompletionChecks.length) * 100
+  );
 
   return (
     <div className="space-y-6 p-6 max-w-5xl mx-auto">
@@ -809,7 +855,7 @@ const VendeurAddTerrainRealData = () => {
                   <Alert className="mt-6">
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      💡 <strong>Conseil :</strong> Une description détaillée augmente vos chances de vente de 60% !
+                      💡 <strong>Conseil :</strong> Une description détaillée et précise aide les acheteurs à se projeter et à vous contacter plus vite.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1016,9 +1062,21 @@ const VendeurAddTerrainRealData = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <Badge className="bg-green-600 text-white">
-                            ✓ Prix compétitif
-                          </Badge>
+                          {selectedRegionMarket && selectedRegionMarket.count > 0 ? (
+                            Math.round(parseFloat(propertyData.price) / parseFloat(propertyData.surface)) <= selectedRegionMarket.avgPricePerM2 * 1.15 ? (
+                              <Badge className="bg-green-600 text-white">
+                                ✓ Dans la moyenne {propertyData.region}
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-amber-500 text-white">
+                                Au-dessus de la moyenne {propertyData.region}
+                              </Badge>
+                            )
+                          ) : (
+                            <Badge variant="outline">
+                              Pas encore de données de marché
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -1027,7 +1085,9 @@ const VendeurAddTerrainRealData = () => {
                   <Alert className="mt-6">
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      💰 <strong>Conseil :</strong> Prix moyen au m² à Dakar : 17,000 - 25,000 FCFA selon la zone
+                      💰 <strong>Conseil :</strong> {selectedRegionMarket && selectedRegionMarket.count > 0
+                        ? `Prix moyen réel observé sur ${selectedRegionMarket.count} annonce${selectedRegionMarket.count > 1 ? 's' : ''} active${selectedRegionMarket.count > 1 ? 's' : ''} à ${propertyData.region} : ${selectedRegionMarket.avgPricePerM2.toLocaleString('fr-FR')} FCFA/m²`
+                        : "Pas encore assez d'annonces actives sur la plateforme pour cette région pour calculer un prix moyen fiable."}
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1553,7 +1613,7 @@ const VendeurAddTerrainRealData = () => {
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      💡 Proposer plusieurs options de financement augmente vos chances de vente de 40% !
+                      💡 Proposer plusieurs options de financement facilite la prise de décision de vos acheteurs.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1832,10 +1892,11 @@ const VendeurAddTerrainRealData = () => {
                     </div>
                   </div>
 
-                  {/* Validation IA */}
+                  {/* Vérification de la qualité de l'annonce (calculée à partir des
+                      informations réellement saisies dans le formulaire, pas d'IA) */}
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
                     <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      ✨ Vérification Intelligente IA
+                      ✨ Vérification de la Qualité de l'Annonce
                     </h3>
                     <div className="space-y-3">
                       {/* Analyse prix */}
@@ -1843,14 +1904,17 @@ const VendeurAddTerrainRealData = () => {
                         <div className="flex items-start gap-3 p-3 bg-white rounded-lg">
                           <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                           <div>
-                            <p className="font-medium text-sm">Prix cohérent</p>
+                            <p className="font-medium text-sm">Prix renseigné</p>
                             <p className="text-xs text-gray-600">
-                              {Math.round(propertyData.price / propertyData.surface).toLocaleString()} FCFA/m² - Dans la moyenne pour {propertyData.city}
+                              {Math.round(propertyData.price / propertyData.surface).toLocaleString('fr-FR')} FCFA/m²
+                              {selectedRegionMarket && selectedRegionMarket.count > 0
+                                ? ` — moyenne région ${propertyData.region} : ${selectedRegionMarket.avgPricePerM2.toLocaleString('fr-FR')} FCFA/m²`
+                                : ` (pas encore de moyenne région disponible pour ${propertyData.city || 'cette zone'})`}
                             </p>
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Analyse photos */}
                       {uploadedImages.length >= 3 && (
                         <div className="flex items-start gap-3 p-3 bg-white rounded-lg">
@@ -1863,7 +1927,7 @@ const VendeurAddTerrainRealData = () => {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Analyse description */}
                       {propertyData.description.length >= 200 && (
                         <div className="flex items-start gap-3 p-3 bg-white rounded-lg">
@@ -1876,12 +1940,18 @@ const VendeurAddTerrainRealData = () => {
                           </div>
                         </div>
                       )}
-                      
-                      {/* Score global */}
+
+                      {/* Score de complétude — calculé à partir des critères réellement remplis
+                          (titre, description, prix/surface, réglementation, utilités, photos,
+                          titre foncier), pas une valeur fixe */}
                       <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                        <p className="font-bold text-green-700 mb-1">Score de qualité : 95/100 🎯</p>
+                        <p className="font-bold text-green-700 mb-1">Complétude de l'annonce : {listingCompletionScore}/100 🎯</p>
                         <p className="text-xs text-gray-600">
-                          Votre annonce a d'excellentes chances d'être vendue rapidement !
+                          {listingCompletionScore >= 85
+                            ? "Votre annonce est complète et a de bonnes chances d'attirer des acheteurs sérieux !"
+                            : listingCompletionScore >= 50
+                            ? 'Complétez encore quelques informations pour renforcer votre annonce.'
+                            : "Ajoutez plus d'informations (description, réglementation, photos, titre foncier) pour compléter votre annonce."}
                         </p>
                       </div>
                     </div>

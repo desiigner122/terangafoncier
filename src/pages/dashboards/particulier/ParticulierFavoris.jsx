@@ -25,112 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'react-hot-toast';
-
-// Static mock data previously declared inside the component (moved out to avoid hooks being
-// conditionally rendered after an early return). Kept as a const since it's not mutated.
-const FAVORIS_MOCK_REMOVED = [
-  // Terrains privés favoris
-  {
-    id: 'TP-2024-001',
-    type: 'terrain_prive',
-    libelle: 'Terrain Résidentiel - Almadies',
-    proprietaire: 'Société SÉNÉGAL IMMOBILIER',
-    superficie: '500m²',
-    prix: 75000000,
-    localisation: 'Almadies, Dakar',
-    statut: 'Disponible',
-    dateAjoutFavori: '2024-01-20',
-    description: 'Terrain viabilisé avec vue sur mer, idéal pour villa de standing',
-    caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès bitumé'],
-    icon: Building2,
-    color: 'blue'
-  },
-  {
-    id: 'TP-2024-002',
-    type: 'terrain_prive',
-    libelle: 'Terrain Commercial - Plateau',
-    proprietaire: 'IMMOBILIER DU PLATEAU SARL',
-    superficie: '300m²',
-    prix: 120000000,
-    localisation: 'Plateau, Dakar',
-    statut: 'Disponible',
-    dateAjoutFavori: '2024-02-05',
-    description: 'Terrain commercial en plein centre-ville, très bien situé',
-    caracteristiques: ['Commercial', 'Centre-ville', 'Fort passage', 'Transport'],
-    icon: Building2,
-    color: 'blue'
-  },
-  
-  // Zones communales favorites
-  {
-    id: 'ZC-2024-001',
-    type: 'zone_communale',
-    libelle: 'Zone d\'Extension Urbaine - Rufisque',
-    commune: 'Rufisque',
-    superficie: '400m²',
-    prix: 8000000,
-    statut: 'Lots disponibles',
-    dateAjoutFavori: '2024-01-18',
-    description: 'Zone résidentielle en développement avec toutes commodités',
-    caracteristiques: ['Résidentielle', 'Proche commodités', 'Transport', 'École'],
-    lotsDisponibles: 15,
-    icon: MapPin,
-    color: 'green'
-  },
-  {
-    id: 'ZC-2024-002',
-    type: 'zone_communale',
-    libelle: 'Zone Mixte - Pikine Nord',
-    commune: 'Pikine',
-    superficie: '350m²',
-    prix: 6500000,
-    statut: 'En attribution',
-    dateAjoutFavori: '2024-02-10',
-    description: 'Zone mixte permettant habitation et commerce de proximité',
-    caracteristiques: ['Mixte', 'Commerce autorisé', 'Desserte', 'Marché proche'],
-    lotsDisponibles: 8,
-    icon: MapPin,
-    color: 'green'
-  },
-  
-  // Projets promoteurs favoris
-  {
-    id: 'PP-2024-001',
-    type: 'projet_promoteur',
-    libelle: 'Villa Moderne - Cité Keur Gorgui',
-    promoteur: 'TERANGA DEVELOPMENT',
-    superficie: '250m²',
-    prix: 45000000,
-    localisation: 'Cité Keur Gorgui, Dakar',
-    statut: 'En construction',
-    dateAjoutFavori: '2024-01-22',
-    description: 'Villa R+1 moderne avec finitions haut de gamme',
-    caracteristiques: ['3 chambres', 'Salon', 'Cuisine équipée', 'Jardin', 'Garage'],
-    progression: 65,
-    dateLivraison: '2024-06-30',
-    icon: Award,
-    color: 'purple'
-  },
-  {
-    id: 'PP-2024-002',
-    type: 'projet_promoteur',
-    libelle: 'Résidence Les Palmiers - Almadies',
-    promoteur: 'SÉNÉGAL HABITAT',
-    superficie: '180m²',
-    prix: 38000000,
-    localisation: 'Almadies, Dakar',
-    statut: 'Pré-commercialisation',
-    dateAjoutFavori: '2024-02-15',
-    description: 'Appartement F4 dans résidence sécurisée avec piscine',
-    caracteristiques: ['F4', '2 salles de bain', 'Balcon', 'Piscine', 'Sécurité 24h'],
-    progression: 20,
-    dateLivraison: '2024-12-31',
-    icon: Award,
-    color: 'purple'
-  }
-];
 
 const ParticulierFavoris = () => {
   const outletContext = useOutletContext();
@@ -159,99 +55,51 @@ const ParticulierFavoris = () => {
     try {
       setLoading(true);
 
-      // Récupérer tous les favoris avec JOINs
-      const { data: favoritesData, error } = await supabase
-        .from('favorites')
-        .select(`
-          id,
-          created_at,
-          property_id,
-          communal_zone_id,
-          developer_project_id,
-          property:properties (
-            id, title, city, price, address, images, status,
-            owner:profiles!owner_id (id, full_name)
-          ),
-          zone:communal_zones (
-            id, name, commune, zone_type, lot_size, price_per_lot, 
-            lots_available, status, address
-          ),
-          project:developer_projects (
-            id, title, developer_name, city, project_type, price_min, 
-            price_max, available_units, status, images, estimated_completion
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Favoris réels : table `favorites` (user_id, property_id) jointe à `properties`.
+      // Le schéma ne contient que des favoris de biens (pas de zones/projets favoris).
+      const result = await ParticulierSupabaseService.getFavorites(user.id);
+      if (!result.success) throw new Error(result.error || 'Erreur de chargement');
 
-      if (error) throw error;
+      const statusLabels = {
+        active: 'Disponible',
+        sold: 'Vendu',
+        reserved: 'Réservé',
+        pending: 'En attente'
+      };
 
-      // Transformer les données pour le format de l'interface
-      const transformedFavorites = favoritesData.map(fav => {
-        if (fav.property_id && fav.property) {
+      // Transformer vers le format d'affichage à partir des VRAIES colonnes de `properties`.
+      const transformedFavorites = (result.data || [])
+        .filter(fav => fav.property)
+        .map(fav => {
+          const p = fav.property;
+          const localisation = p.location
+            || [p.city, p.region].filter(Boolean).join(', ')
+            || null;
           return {
             id: fav.id,
             favoriteId: fav.id,
-            itemId: fav.property.id,
+            itemId: p.id,
             type: 'terrain_prive',
-            libelle: fav.property.title,
-            proprietaire: fav.property.owner?.full_name || 'Propriétaire',
-            superficie: fav.property.surface_area ? `${fav.property.surface_area}m²` : 'N/A',
-            prix: fav.property.price,
-            localisation: `${fav.property.city}${fav.property.address ? ', ' + fav.property.address : ''}`,
-            statut: fav.property.status === 'available' ? 'Disponible' : 'Non disponible',
+            libelle: p.title || p.name || 'Bien sans intitulé',
+            superficie: p.surface ? `${p.surface}m²` : null,
+            prix: p.price,
+            localisation,
+            statut: statusLabels[p.status] || p.status || '—',
             dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
-            images: fav.property.images || [],
             icon: Building2,
             color: 'blue'
           };
-        } else if (fav.communal_zone_id && fav.zone) {
-          return {
-            id: fav.id,
-            favoriteId: fav.id,
-            itemId: fav.zone.id,
-            type: 'zone_communale',
-            libelle: fav.zone.name,
-            commune: fav.zone.commune,
-            superficie: fav.zone.lot_size ? `${fav.zone.lot_size}m²` : 'N/A',
-            prix: fav.zone.price_per_lot,
-            statut: fav.zone.lots_available > 0 ? 'Lots disponibles' : 'Complet',
-            dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
-            lotsDisponibles: fav.zone.lots_available,
-            icon: MapPin,
-            color: 'green'
-          };
-        } else if (fav.developer_project_id && fav.project) {
-          return {
-            id: fav.id,
-            favoriteId: fav.id,
-            itemId: fav.project.id,
-            type: 'projet_promoteur',
-            libelle: fav.project.title,
-            promoteur: fav.project.developer_name,
-            localisation: fav.project.city,
-            prix: fav.project.price_min,
-            prixMax: fav.project.price_max,
-            statut: fav.project.status === 'active' ? 'En construction' : 'Pré-commercialisation',
-            dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
-            unitsDisponibles: fav.project.available_units,
-            dateLivraison: fav.project.estimated_completion,
-            images: fav.project.images || [],
-            icon: Award,
-            color: 'purple'
-          };
-        }
-        return null;
-      }).filter(Boolean);
+        });
 
       setFavoris(transformedFavorites);
 
-      // Calculer les statistiques
+      // Statistiques réelles. Seuls les favoris de biens existent dans le schéma :
+      // zones/projets restent à 0 tant qu'aucune table de favoris dédiée n'existe.
       setStats({
         total: transformedFavorites.length,
-        properties: transformedFavorites.filter(f => f.type === 'terrain_prive').length,
-        zones: transformedFavorites.filter(f => f.type === 'zone_communale').length,
-        projects: transformedFavorites.filter(f => f.type === 'projet_promoteur').length
+        properties: transformedFavorites.length,
+        zones: 0,
+        projects: 0
       });
 
     } catch (error) {
@@ -264,12 +112,8 @@ const ParticulierFavoris = () => {
 
   const handleRemoveFavorite = async (favoriteId) => {
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', favoriteId);
-
-      if (error) throw error;
+      const result = await ParticulierSupabaseService.removeFavorite(favoriteId);
+      if (!result.success) throw new Error(result.error || 'Suppression échouée');
 
       toast.success('Retiré des favoris');
       loadFavorites(); // Recharger la liste
@@ -296,8 +140,6 @@ const ParticulierFavoris = () => {
       </div>
     );
   }
-
-  // Removed the inline hook-based mock data; use FAVORIS_MOCK_REMOVED if needed elsewhere.
 
   const getStatusColor = (statut) => {
     const colors = {

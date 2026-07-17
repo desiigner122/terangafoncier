@@ -1,17 +1,45 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { 
+import {
   Star
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
-const testimonials = [
-  { name: "Moussa Diop", location: "Dakar", quote: "Processus clair, rapide et sécurisé. J'ai enfin acheté mon terrain à Diamniadio sans tracas grâce à l'équipe Teranga Foncier.", imgDesc: "Portrait homme sénégalais souriant chemise traditionnelle", rating: 5 },
-  { name: "Awa Gueye", location: "Diaspora (France)", quote: "Étant à l'étranger, j'avais peur des arnaques. Teranga Foncier m'a rassurée et accompagnée à chaque étape. Investissement réussi !", imgDesc: "Portrait femme sénégalaise élégante foulard coloré", rating: 5 },
-  { name: "Ibrahima Sow", location: "Promoteur Immobilier", quote: "Une plateforme sérieuse avec des informations fiables. Facilite grandement la recherche de terrains viabilisés pour nos projets.", imgDesc: "Portrait homme affaires sénégalais casque chantier", rating: 4 },
-];
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1697256200022-f61abccad430';
 
 const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('reviews')
+      .select('id, author_name, location, content, rating, avatar_url')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) { console.error('Erreur chargement témoignages:', error); setLoaded(true); return; }
+        setTestimonials((data || []).map(r => ({
+          name: r.author_name,
+          location: r.location,
+          quote: r.content,
+          rating: r.rating || 5,
+          image: r.avatar_url || FALLBACK_AVATAR
+        })));
+        setLoaded(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  // Masquer la section tant qu'aucun témoignage approuvé n'est disponible
+  if (loaded && testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section className="bg-muted/50 dark:bg-card/60 py-12 md:py-16"> {/* Reduced padding */}
       <div className="container mx-auto px-4">
@@ -43,7 +71,7 @@ const Testimonials = () => {
                               <p className="text-muted-foreground italic mb-4 flex-grow">"{testimonial.quote}"</p>
                               <div className="flex items-center mt-auto">
                                   <div className="w-11 h-11 rounded-full bg-muted mr-4 overflow-hidden ring-2 ring-primary/10">
-                                    <img  className="w-full h-full object-cover" alt={`Portrait ${testimonial.name}`} src="https://images.unsplash.com/photo-1697256200022-f61abccad430" />
+                                    <img className="w-full h-full object-cover" alt={`Portrait ${testimonial.name}`} src={testimonial.image} />
                                   </div>
                                   <div>
                                       <p className="font-semibold text-foreground">{testimonial.name}</p>

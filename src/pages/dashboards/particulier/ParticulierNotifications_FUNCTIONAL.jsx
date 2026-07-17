@@ -44,7 +44,6 @@ const ParticulierNotifications_FUNCTIONAL = () => {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [filterPriority, setFilterPriority] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedNotifications, setSelectedNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -57,7 +56,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
   useEffect(() => {
     filterNotifications();
-  }, [notifications, searchTerm, filterType, filterPriority, filterStatus]);
+  }, [notifications, searchTerm, filterType, filterStatus]);
 
   const loadNotifications = async () => {
     try {
@@ -94,40 +93,35 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
     // Filtrage par type
     if (filterType !== 'all') {
-      filtered = filtered.filter(notif => notif.notification_type === filterType);
+      filtered = filtered.filter(notif => notif.type === filterType);
     }
 
-    // Filtrage par priorité
-    if (filterPriority !== 'all') {
-      filtered = filtered.filter(notif => notif.priority === filterPriority);
-    }
-
-    // Filtrage par statut
+    // Filtrage par statut (colonne réelle 'read' booléenne)
     if (filterStatus !== 'all') {
       if (filterStatus === 'read') {
-        filtered = filtered.filter(notif => notif.read_at !== null);
+        filtered = filtered.filter(notif => notif.read === true);
       } else if (filterStatus === 'unread') {
-        filtered = filtered.filter(notif => notif.read_at === null);
+        filtered = filtered.filter(notif => !notif.read);
       }
     }
 
     setFilteredNotifications(filtered);
-    setUnreadCount(notifications.filter(n => !n.read_at).length);
+    setUnreadCount(notifications.filter(n => !n.read).length);
   };
 
   const markAsRead = async (notificationId) => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read_at: new Date().toISOString() })
+        .update({ read: true })
         .eq('id', notificationId)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
       setNotifications(prev => prev.map(notif =>
-        notif.id === notificationId 
-          ? { ...notif, read_at: new Date().toISOString() }
+        notif.id === notificationId
+          ? { ...notif, read: true }
           : notif
       ));
 
@@ -142,15 +136,15 @@ const ParticulierNotifications_FUNCTIONAL = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read_at: null })
+        .update({ read: false })
         .eq('id', notificationId)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
       setNotifications(prev => prev.map(notif =>
-        notif.id === notificationId 
-          ? { ...notif, read_at: null }
+        notif.id === notificationId
+          ? { ...notif, read: false }
           : notif
       ));
 
@@ -164,7 +158,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
   const markAllAsRead = async () => {
     try {
       const unreadIds = notifications
-        .filter(n => !n.read_at)
+        .filter(n => !n.read)
         .map(n => n.id);
 
       if (unreadIds.length === 0) {
@@ -174,7 +168,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
       const { error } = await supabase
         .from('notifications')
-        .update({ read_at: new Date().toISOString() })
+        .update({ read: true })
         .in('id', unreadIds)
         .eq('user_id', user.id);
 
@@ -182,7 +176,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
       setNotifications(prev => prev.map(notif =>
         unreadIds.includes(notif.id)
-          ? { ...notif, read_at: new Date().toISOString() }
+          ? { ...notif, read: true }
           : notif
       ));
 
@@ -237,13 +231,8 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
   const handleNotificationClick = (notification) => {
     // Marquer comme lu si pas encore lu
-    if (!notification.read_at) {
+    if (!notification.read) {
       markAsRead(notification.id);
-    }
-
-    // Redirection si URL d'action
-    if (notification.action_url) {
-      window.open(notification.action_url, '_blank');
     }
   };
 
@@ -263,29 +252,6 @@ const ParticulierNotifications_FUNCTIONAL = () => {
     } else {
       setSelectedNotifications(filteredNotifications.map(n => n.id));
     }
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      urgent: 'bg-red-100 text-red-800 border-red-200',
-      high: 'bg-orange-100 text-orange-800 border-orange-200',
-      medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      normal: 'bg-blue-100 text-blue-800 border-blue-200',
-      low: 'bg-gray-100 text-gray-800 border-gray-200'
-    };
-    return colors[priority] || colors.normal;
-  };
-
-  const getPriorityIcon = (priority) => {
-    const icons = {
-      urgent: AlertCircle,
-      high: AlertCircle,
-      medium: Info,
-      normal: Bell,
-      low: Clock
-    };
-    const Icon = icons[priority] || Bell;
-    return <Icon className="h-4 w-4" />;
   };
 
   const getTypeIcon = (type) => {
@@ -399,12 +365,12 @@ const ParticulierNotifications_FUNCTIONAL = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Priorité haute</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {notifications.filter(n => n.priority === 'high' || n.priority === 'urgent').length}
+                <p className="text-sm text-gray-600">Lues</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {notifications.filter(n => n.read).length}
                 </p>
               </div>
-              <AlertCircle className="h-8 w-8 text-orange-600" />
+              <CheckCheck className="h-8 w-8 text-emerald-600" />
             </div>
           </CardContent>
         </Card>
@@ -446,20 +412,6 @@ const ParticulierNotifications_FUNCTIONAL = () => {
                   <SelectItem value="payment">Paiement</SelectItem>
                   <SelectItem value="system_maintenance">Système</SelectItem>
                   <SelectItem value="general">Général</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Priorité..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes priorités</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="normal">Normale</SelectItem>
-                  <SelectItem value="low">Basse</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -515,7 +467,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
                     onClick={() => {
                       selectedNotifications.forEach(id => {
                         const notif = notifications.find(n => n.id === id);
-                        if (notif && !notif.read_at) {
+                        if (notif && !notif.read) {
                           markAsRead(id);
                         }
                       });
@@ -549,7 +501,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
               <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune notification</h3>
               <p className="text-gray-600">
-                {searchTerm || filterType !== 'all' || filterPriority !== 'all' || filterStatus !== 'all' ? 
+                {searchTerm || filterType !== 'all' || filterStatus !== 'all' ?
                   'Aucune notification ne correspond à vos filtres.' : 
                   'Vous n\'avez pas encore de notifications.'
                 }
@@ -569,7 +521,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
                   className="mb-3"
                 >
                   <Card className={`transition-all hover:shadow-md cursor-pointer ${
-                    !notification.read_at ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''
+                    !notification.read ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''
                   }`}>
                     <CardContent className="p-4">
                       <div className="flex items-start space-x-4">
@@ -587,45 +539,25 @@ const ParticulierNotifications_FUNCTIONAL = () => {
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-2">
                                 <div className="flex items-center text-gray-600">
-                                  {getTypeIcon(notification.notification_type)}
+                                  {getTypeIcon(notification.type)}
                                 </div>
-                                <h4 className={`font-semibold ${!notification.read_at ? 'text-gray-900' : 'text-gray-700'}`}>
+                                <h4 className={`font-semibold ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
                                   {notification.title}
                                 </h4>
-                                <Badge className={`text-xs ${getPriorityColor(notification.priority)}`}>
-                                  {getPriorityIcon(notification.priority)}
-                                  <span className="ml-1">
-                                    {notification.priority === 'urgent' ? 'Urgent' :
-                                     notification.priority === 'high' ? 'Haute' :
-                                     notification.priority === 'medium' ? 'Moyenne' :
-                                     notification.priority === 'normal' ? 'Normale' : 'Basse'}
-                                  </span>
-                                </Badge>
-                                {!notification.read_at && (
+                                {!notification.read && (
                                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                 )}
                               </div>
-                              
-                              <p className={`text-sm mb-2 ${!notification.read_at ? 'text-gray-900' : 'text-gray-600'}`}>
+
+                              <p className={`text-sm mb-2 ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
                                 {notification.message}
                               </p>
-                              
+
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 <div className="flex items-center">
                                   <Clock className="h-3 w-3 mr-1" />
                                   {formatRelativeTime(notification.created_at)}
                                 </div>
-                                {notification.reference_id && (
-                                  <div className="flex items-center">
-                                    <span>Réf: {notification.reference_id}</span>
-                                  </div>
-                                )}
-                                {notification.action_url && (
-                                  <div className="flex items-center text-blue-600">
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    <span>Action disponible</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
                             
@@ -635,11 +567,11 @@ const ParticulierNotifications_FUNCTIONAL = () => {
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  notification.read_at ? markAsUnread(notification.id) : markAsRead(notification.id);
+                                  notification.read ? markAsUnread(notification.id) : markAsRead(notification.id);
                                 }}
                                 className="text-gray-600 hover:text-gray-700"
                               >
-                                {notification.read_at ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                {notification.read ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                               </Button>
                               <Button
                                 variant="ghost"

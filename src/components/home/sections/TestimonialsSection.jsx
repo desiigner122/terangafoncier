@@ -1,49 +1,46 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Star, 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Star,
   Quote
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const testimonials = [
-  {
-    name: "Fatou B.",
-    location: "Diaspora (France)",
-    quote: "Grâce à Teranga Foncier, j'ai pu acheter mon terrain à Diamniadio en toute confiance depuis Paris. Le processus de vérification m'a vraiment rassurée. Service impeccable !",
-    rating: 5,
-    avatarDesc: "Avatar Fatou B.",
-    avatarTextDesc: "Portrait d'une femme sénégalaise professionnelle"
-  },
-  {
-    name: "Moussa D.",
-    location: "Dakar",
-    quote: "J'étais sceptique au début, mais leur équipe a été très professionnelle. Ils ont vérifié tous les FileTexts et m'ont accompagné chez le notaire. Je recommande vivement.",
-    rating: 5,
-    avatarDesc: "Avatar Moussa D.",
-    avatarTextDesc: "Portrait d'un homme sénégalais souriant"
-  },
-  {
-    name: "Aïcha S.",
-    location: "Diaspora (Canada)",
-    quote: "Enfin une plateforme sérieuse pour investir au pays ! La carte interactive et les détails sur chaque parcelle sont très utiles. J'ai trouvé le terrain parfait pour ma future maison.",
-    rating: 4,
-    avatarDesc: "Avatar Aïcha S.",
-    avatarTextDesc: "Portrait d'une femme canadienne heureuse"
-  },
-   {
-    name: "Ibrahim K.",
-    location: "Thiès",
-    quote: "Leur engagement contre la fraude est réel. Ils ont détecté une anomalie sur un terrain qui m'intéressait et m'ont évité de gros problèmes. Merci Teranga Foncier !",
-    rating: 5,
-    avatarDesc: "Avatar Ibrahim K.",
-    avatarTextDesc: "Portrait d'un homme africain, type entrepreneur"
-  },
-];
+import { supabase } from '@/lib/supabaseClient';
 
 const TestimonialsSection = () => {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('reviews')
+      .select('id, author_name, location, content, rating, avatar_url')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) { console.error('Erreur chargement témoignages:', error); setLoaded(true); return; }
+        setTestimonials((data || []).map(r => ({
+          name: r.author_name,
+          location: r.location,
+          quote: r.content,
+          rating: r.rating || 5,
+          avatar: r.avatar_url
+        })));
+        setLoaded(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  // Masquer la section tant qu'aucun témoignage approuvé n'est disponible
+  if (loaded && testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/30 to-background">
       <div className="container mx-auto px-4">
@@ -83,7 +80,7 @@ const TestimonialsSection = () => {
                         <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
                         <div className="flex items-center pt-4 border-t border-dashed">
                           <Avatar className="h-10 w-10 mr-3">
-                            <img  className="w-full h-full object-cover rounded-full" alt={testimonial.avatarDesc} src="https://images.unsplash.com/photo-1613231634498-74aa35fc5820" />
+                            {testimonial.avatar && <AvatarImage className="w-full h-full object-cover rounded-full" alt={testimonial.name} src={testimonial.avatar} />}
                             <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                           </Avatar>
                           <div>

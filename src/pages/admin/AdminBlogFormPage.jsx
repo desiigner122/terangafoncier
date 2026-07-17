@@ -1,27 +1,32 @@
-﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-// useToast import supprimé - utilisation window.safeGlobalToast
-import { 
-  Save, 
-  ArrowLeft, 
-  Image as ImageIcon, 
-  UploadCloud
+import {
+  Save,
+  ArrowLeft,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import BlogService from '@/services/admin/BlogService';
 
-const blogCategories = ["Guide d'Achat", "Juridique", "Marché Immobilier", "Agriculture", "Urbanisme"];
+const blogCategories = [
+  'Guides pratiques',
+  'Conseils experts',
+  'Juridique',
+  'Actualités',
+  'Marché Immobilier',
+  'Agriculture',
+  'Urbanisme'
+];
 
 const AdminBlogFormPage = () => {
-  const { id } = useParams(); // Changer slug en id
+  const { id } = useParams();
   const navigate = useNavigate();
-  // toast remplacé par window.safeGlobalToast
   const isEditing = Boolean(id);
 
   const [post, setPost] = useState({
@@ -31,72 +36,94 @@ const AdminBlogFormPage = () => {
     excerpt: '',
     content: '',
     tags: '',
-    imageUrlYOUR_API_KEY: '',
-    author_name: 'Admin Teranga',
+    cover_image: '',
+    author: 'Admin Teranga',
+    status: 'draft'
   });
-  
-  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(isEditing);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!isEditing) return;
     const fetchPost = async () => {
-      if (isEditing) {
-        const { data, error } = await supabase.from('blog').select('*').eq('id', id).single();
-        if (error || !data) {
-          window.safeGlobalToast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
-          navigate('/admin/blog');
-        } else {
-          setPost({ ...data, tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '') });
-        }
+      setLoading(true);
+      const result = await BlogService.getPostById(id);
+      if (!result.success || !result.post) {
+        window.safeGlobalToast?.({ title: 'Erreur', description: 'Article non trouvé.', variant: 'destructive' });
+        navigate('/admin/blog');
+        return;
       }
+      const data = result.post;
+      setPost({
+        title: data.title || '',
+        slug: data.slug || '',
+        category: data.category || '',
+        excerpt: data.excerpt || '',
+        content: data.content || '',
+        tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
+        cover_image: data.cover_image || '',
+        author: data.author || 'Admin Teranga',
+        status: data.status || 'draft'
+      });
+      setLoading(false);
     };
     fetchPost();
-    // eslint-disable-next-line
-  }, [id, isEditing, navigate, toast]);
+  }, [id, isEditing, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let newSlug = post.slug;
-    if (name === 'title' && !isEditing) { // Auto-generate slug only on creation
-        newSlug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    }
-    setPost(prev => ({ ...prev, [name]: value, slug: name === 'title' ? newSlug : prev.slug }));
-  };
-  
-  const handleCategoryChange = (value) => {
-    setPost(prev => ({ ...prev, category: value }));
-  };
-
-  const handleImageChange = (e) => {
-      if (e.target.files && e.target.files[0]) {
-          setImageFile(e.target.files[0]);
+    setPost(prev => {
+      // Auto-générer le slug depuis le titre uniquement à la création
+      if (name === 'title' && !isEditing) {
+        return { ...prev, title: value, slug: BlogService.generateSlug(value) };
       }
-  }
+      return { ...prev, [name]: value };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      const tagsArray = post.tags.split(',').map(t => t.trim()).filter(Boolean);
-      const payload = { ...post, tags: tagsArray };
-      let result;
-      if (isEditing) {
-        result = await supabase.from('blog').update(payload).eq('id', id);
-      } else {
-        result = await supabase.from('blog').insert([payload]);
-      }
-      if (result.error) throw result.error;
-      window.safeGlobalToast({
+      const payload = {
+        title: post.title,
+        slug: post.slug,
+        category: post.category,
+        excerpt: post.excerpt,
+        content: post.content,
+        cover_image: post.cover_image,
+        author: post.author,
+        status: post.status,
+        tags: post.tags.split(',').map(t => t.trim()).filter(Boolean)
+      };
+
+      const result = isEditing
+        ? await BlogService.updatePost(id, payload)
+        : await BlogService.createPost(payload);
+
+      if (!result.success) throw new Error(result.error || 'Erreur lors de l\'enregistrement');
+
+      window.safeGlobalToast?.({
         title: `Article ${isEditing ? 'modifié' : 'créé'} avec succès !`,
-        description: "Les modifications ont été enregistrées.",
+        description: post.status === 'published' ? 'L\'article est publié.' : 'L\'article est enregistré en brouillon.'
       });
       navigate('/admin/blog');
     } catch (err) {
-      window.safeGlobalToast({
-        title: "Erreur lors de l'enregistrement",
+      window.safeGlobalToast?.({
+        title: 'Erreur lors de l\'enregistrement',
         description: err.message,
-        variant: "destructive",
+        variant: 'destructive'
       });
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-20 text-center text-muted-foreground">Chargement de l'article...</div>
+    );
+  }
 
   return (
     <motion.div
@@ -128,11 +155,31 @@ const AdminBlogFormPage = () => {
                     <div className="space-y-2">
                         <Label htmlFor="content">Contenu de l'article</Label>
                         <Textarea id="content" name="content" value={post.content} onChange={handleChange} required rows={15} />
+                        <p className="text-xs text-muted-foreground">Astuce : une ligne entourée de <code>**...**</code> devient un sous-titre.</p>
                     </div>
                 </CardContent>
             </Card>
         </div>
         <div className="lg:col-span-1 space-y-8">
+             <Card>
+                <CardHeader><CardTitle>Publication</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Statut</Label>
+                        <Select onValueChange={(value) => setPost(prev => ({ ...prev, status: value }))} value={post.status}>
+                            <SelectTrigger id="status"><SelectValue placeholder="Choisir un statut" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="draft">Brouillon</SelectItem>
+                                <SelectItem value="published">Publié</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="author">Auteur</Label>
+                        <Input id="author" name="author" value={post.author} onChange={handleChange} />
+                    </div>
+                </CardContent>
+            </Card>
              <Card>
                 <CardHeader><CardTitle>Organisation</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -142,7 +189,7 @@ const AdminBlogFormPage = () => {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category">Catégorie</Label>
-                        <Select onValueChange={handleCategoryChange} value={post.category}>
+                        <Select onValueChange={(value) => setPost(prev => ({ ...prev, category: value }))} value={post.category}>
                             <SelectTrigger id="category"><SelectValue placeholder="Choisir une catégorie" /></SelectTrigger>
                             <SelectContent>
                                 {blogCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
@@ -151,36 +198,31 @@ const AdminBlogFormPage = () => {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
-                        <Input id="tags" name="tags" value={post.tags} onChange={handleChange} />
+                        <Input id="tags" name="tags" value={post.tags} onChange={handleChange} placeholder="ex: Achat, Diaspora" />
                     </div>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader><CardTitle>Image de couverture</CardTitle></CardHeader>
-                <CardContent>
-                     <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center mb-4">
-                        {imageFile ? (
-                           <img src={URL.createObjectURL(imageFile)} alt="Preview" className="h-full w-full object-cover rounded-lg"/>
+                <CardContent className="space-y-3">
+                     <div className="w-full h-40 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                        {post.cover_image ? (
+                           <img src={post.cover_image} alt="Aperçu" className="h-full w-full object-cover"/>
                         ) : (
                            <ImageIcon className="h-16 w-16 text-muted-foreground"/>
                         )}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="image-upload" className="w-full cursor-pointer">
-                            <div className="flex items-center justify-center border-2 border-dashed rounded-md p-4 text-sm text-center text-muted-foreground hover:bg-muted/50">
-                                <UploadCloud className="h-5 w-5 mr-2"/>
-                                <span>{imageFile ? imageFile.name : "Cliquer pour choisir une image"}</span>
-                            </div>
-                        </Label>
-                        <Input id="image-upload" type="file" className="hidden" onChange={handleImageChange} accept="image/*"/>
+                        <Label htmlFor="cover_image">URL de l'image</Label>
+                        <Input id="cover_image" name="cover_image" value={post.cover_image} onChange={handleChange} placeholder="https://..." />
                     </div>
                 </CardContent>
             </Card>
         </div>
        </div>
         <div className="mt-8 flex justify-end">
-          <Button type="submit" size="lg">
-            <Save className="mr-2 h-4 w-4" /> Enregistrer
+          <Button type="submit" size="lg" disabled={saving}>
+            <Save className="mr-2 h-4 w-4" /> {saving ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </div>
       </form>
@@ -189,4 +231,3 @@ const AdminBlogFormPage = () => {
 };
 
 export default AdminBlogFormPage;
-

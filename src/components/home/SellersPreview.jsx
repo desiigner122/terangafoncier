@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   ArrowRight,
   User,
   Building2,
@@ -15,13 +15,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import StatsService from '@/services/StatsService';
 
 const SellersPreview = () => {
-  const stats = [
-    { value: "1,247", label: "Particuliers" },
-    { value: "89", label: "Professionnels" },
-    { value: "4.8/5", label: "Satisfaction" }
-  ];
+  const [stats, setStats] = useState([
+    { value: "—", label: "Terrains en vente" },
+    { value: "—", label: "Régions couvertes" },
+    { value: "—", label: "Satisfaction" }
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    StatsService.getPlatformStats().then(({ stats: s }) => {
+      if (!active) return;
+      setStats([
+        { value: `${s.verifiedProperties}`, label: "Terrains en vente" },
+        { value: `${s.regions}`, label: "Régions couvertes" },
+        { value: s.avgRating ? `${s.avgRating}/5` : "—", label: "Satisfaction" }
+      ]);
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <section className="py-20 bg-gradient-to-br from-slate-50 to-gray-100">

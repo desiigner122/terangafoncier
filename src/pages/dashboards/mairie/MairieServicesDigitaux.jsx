@@ -32,7 +32,8 @@ import {
   Activity,
   Target,
   Award,
-  Briefcase
+  Briefcase,
+  Loader2
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,143 +43,198 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Catalogue statique des outils digitaux municipaux (outils réels de la plateforme).
+// Les compteurs d'usage sont injectés depuis la vraie donnée (communal_requests / documents).
+const SERVICE_CATALOG = [
+  {
+    id: 1,
+    name: 'Signature Électronique',
+    description: 'Signature numérique sécurisée pour documents officiels',
+    icon: PenTool,
+    category: 'signature',
+    status: 'active',
+    features: ['Signature biométrique', 'Horodatage', 'Certificat numérique'],
+    availability: '24/7'
+  },
+  {
+    id: 2,
+    name: 'Visioconférence Officielle',
+    description: 'Réunions virtuelles avec citoyens et partenaires',
+    icon: Video,
+    category: 'communication',
+    status: 'development',
+    features: ['HD Video', 'Enregistrement', 'Partage écran'],
+    availability: 'Bientôt'
+  },
+  {
+    id: 3,
+    name: 'Dématérialisation Documents',
+    description: 'Numérisation et archivage des documents municipaux',
+    icon: FileText,
+    category: 'documents',
+    status: 'active',
+    features: ['Archivage', 'Classification', 'Consultation'],
+    availability: '24/7'
+  },
+  {
+    id: 4,
+    name: 'Télé-Services Municipaux',
+    description: 'Demandes de terrains communaux et suivi à distance',
+    icon: Globe,
+    category: 'administration',
+    status: 'active',
+    features: ['Demandes en ligne', 'Suivi temps réel', 'Notifications'],
+    availability: '24/7'
+  },
+  {
+    id: 5,
+    name: 'Cloud Municipal',
+    description: 'Stockage sécurisé des données municipales',
+    icon: Cloud,
+    category: 'storage',
+    status: 'active',
+    features: ['Backup automatique', 'Chiffrement', 'Accès contrôlé'],
+    availability: '24/7'
+  },
+  {
+    id: 6,
+    name: 'Application Mobile Citoyen',
+    description: 'App mobile pour services municipaux',
+    icon: Smartphone,
+    category: 'mobile',
+    status: 'development',
+    features: ['Notifications push', 'Géolocalisation', 'Hors ligne'],
+    availability: 'Bientôt'
+  }
+];
 
 const MairieServicesDigitaux = ({ dashboardStats }) => {
+  const { user, profile } = useAuth();
+  const commune = profile?.city || null;
+
   const [activeService, setActiveService] = useState(null);
   const [processingRequest, setProcessingRequest] = useState(false);
   const [selectedTab, setSelectedTab] = useState('e-services');
+  const [loading, setLoading] = useState(true);
 
-  // Statistiques services digitaux
+  // Statistiques services digitaux (compteurs d'usage réels)
   const [digitalStats, setDigitalStats] = useState({
-    totalEServices: 156,
-    activeUsers: 2847,
-    documentsProcessed: 891,
-    videoConferences: 45,
-    digitalSignatures: 234,
-    satisfactionRate: 92.3
+    totalEServices: SERVICE_CATALOG.filter((s) => s.status === 'active').length,
+    activeUsers: null,
+    documentsProcessed: null,
+    teleServices: null
   });
 
-  // Services digitaux disponibles
-  const [digitalServices, setDigitalServices] = useState([
-    {
-      id: 1,
-      name: 'Signature Électronique',
-      description: 'Signature numérique sécurisée pour documents officiels',
-      icon: PenTool,
-      category: 'signature',
-      status: 'active',
-      users: 1247,
-      documentsProcessed: 456,
-      lastUsed: '2024-01-20',
-      features: ['Signature biométrique', 'Horodatage', 'Certificat numérique'],
-      availability: '24/7'
-    },
-    {
-      id: 2,
-      name: 'Visioconférence Officielle',
-      description: 'Réunions virtuelles avec citoyens et partenaires',
-      icon: Video,
-      category: 'communication',
-      status: 'active',
-      users: 342,
-      documentsProcessed: 0,
-      lastUsed: '2024-01-19',
-      features: ['HD Video', 'Enregistrement', 'Partage écran'],
-      availability: '8h-18h'
-    },
-    {
-      id: 3,
-      name: 'Dématérialisation Documents',
-      description: 'Numérisation et OCR automatique des documents',
-      icon: FileText,
-      category: 'documents',
-      status: 'active',
-      users: 89,
-      documentsProcessed: 1247,
-      lastUsed: '2024-01-20',
-      features: ['OCR Intelligence', 'Classification auto', 'Archivage'],
-      availability: '24/7'
-    },
-    {
-      id: 4,
-      name: 'Télé-Services Municipaux',
-      description: 'Services administratifs à distance',
-      icon: Globe,
-      category: 'administration',
-      status: 'active',
-      users: 1869,
-      documentsProcessed: 234,
-      lastUsed: '2024-01-20',
-      features: ['Demandes en ligne', 'Suivi temps réel', 'Notifications'],
-      availability: '24/7'
-    },
-    {
-      id: 5,
-      name: 'Cloud Municipal',
-      description: 'Stockage sécurisé des données municipales',
-      icon: Cloud,
-      category: 'storage',
-      status: 'active',
-      users: 45,
-      documentsProcessed: 0,
-      lastUsed: '2024-01-20',
-      features: ['Backup automatique', 'Chiffrement', 'Accès contrôlé'],
-      availability: '24/7'
-    },
-    {
-      id: 6,
-      name: 'Application Mobile Citoyen',
-      description: 'App mobile pour services municipaux',
-      icon: Smartphone,
-      category: 'mobile',
-      status: 'development',
-      users: 0,
-      documentsProcessed: 0,
-      lastUsed: null,
-      features: ['Notifications push', 'Géolocalisation', 'Hors ligne'],
-      availability: 'Bientôt'
-    }
-  ]);
+  // Services digitaux disponibles (catalogue statique + compteurs réels)
+  const [digitalServices, setDigitalServices] = useState(
+    SERVICE_CATALOG.map((s) => ({ ...s, users: null, documentsProcessed: null, lastUsed: null }))
+  );
 
-  // Activités récentes
-  const [recentActivities, setRecentActivities] = useState([
-    {
-      id: 1,
-      type: 'signature',
-      title: 'Document signé électroniquement',
-      user: 'M. Mamadou Seck',
-      document: 'Autorisation commerciale #AR-2024-045',
-      timestamp: '2024-01-20 14:30',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      type: 'video_conference',
-      title: 'Réunion conseil municipal',
-      user: 'Équipe municipale',
-      document: 'Session du 20/01/2024',
-      timestamp: '2024-01-20 10:00',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'document_processing',
-      title: 'Dématérialisation automatique',
-      user: 'Système IA',
-      document: 'Lot de 15 documents cadastraux',
-      timestamp: '2024-01-20 09:15',
-      status: 'processing'
-    },
-    {
-      id: 4,
-      type: 'e_service',
-      title: 'Demande télé-service',
-      user: 'Mme Fatou Diallo',
-      document: 'Certificat de résidence',
-      timestamp: '2024-01-19 16:45',
-      status: 'pending'
-    }
-  ]);
+  // Activités récentes (dernières demandes communales réelles)
+  const [recentActivities, setRecentActivities] = useState([]);
+
+  // Chargement des compteurs d'usage réels
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Demandes communales (télé-services) — filtrées par commune si disponible
+        let crBase = supabase
+          .from('communal_requests')
+          .select('id, applicant_name, commune, zone, type, status, created_at')
+          .order('created_at', { ascending: false });
+        if (commune) crBase = crBase.eq('commune', commune);
+        const crResp = await crBase;
+
+        // Documents dématérialisés
+        const docResp = await supabase
+          .from('documents')
+          .select('id', { count: 'exact', head: true });
+
+        // Administrés (contacts CRM de la mairie connectée)
+        const contactsResp = await supabase
+          .from('crm_contacts')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id);
+
+        if (!active) return;
+
+        const requests = crResp.error ? [] : (crResp.data || []);
+        const teleServices = requests.length;
+        const documentsProcessed = docResp.error ? null : (docResp.count ?? 0);
+        const activeUsers = contactsResp.error ? null : (contactsResp.count ?? 0);
+
+        setDigitalStats({
+          totalEServices: SERVICE_CATALOG.filter((s) => s.status === 'active').length,
+          activeUsers,
+          documentsProcessed,
+          teleServices
+        });
+
+        // Injection des compteurs réels dans le catalogue (services adossés à une table)
+        setDigitalServices(
+          SERVICE_CATALOG.map((s) => {
+            if (s.category === 'administration') {
+              return {
+                ...s,
+                users: activeUsers,
+                documentsProcessed: teleServices,
+                lastUsed: requests[0]?.created_at || null
+              };
+            }
+            if (s.category === 'documents') {
+              return {
+                ...s,
+                users: null,
+                documentsProcessed: documentsProcessed,
+                lastUsed: null
+              };
+            }
+            return { ...s, users: null, documentsProcessed: null, lastUsed: null };
+          })
+        );
+
+        // Activités récentes = dernières demandes communales
+        setRecentActivities(
+          requests.slice(0, 6).map((r) => ({
+            id: r.id,
+            type: 'e_service',
+            title: `Demande ${r.type || 'terrain communal'}`,
+            user: r.applicant_name || 'Administré',
+            document: [r.commune, r.zone].filter(Boolean).join(' · ') || 'Demande communale',
+            timestamp: r.created_at
+              ? new Date(r.created_at).toLocaleString('fr-FR')
+              : '',
+            status:
+              r.status === 'approved'
+                ? 'completed'
+                : r.status === 'rejected'
+                ? 'completed'
+                : r.status === 'pending'
+                ? 'pending'
+                : 'processing'
+          }))
+        );
+      } catch (err) {
+        if (active) {
+          console.error('Erreur chargement services digitaux:', err);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [user?.id, commune]);
 
   const getServiceIcon = (category) => {
     switch (category) {
@@ -253,12 +309,14 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold text-gray-900">
-                  {service.users} utilisateurs
-                </div>
-                {service.documentsProcessed > 0 && (
+                {service.users != null && (
+                  <div className="text-sm font-semibold text-gray-900">
+                    {service.users} administrés
+                  </div>
+                )}
+                {service.documentsProcessed != null && service.documentsProcessed > 0 && (
                   <div className="text-xs text-gray-600">
-                    {service.documentsProcessed} docs
+                    {service.documentsProcessed} {service.category === 'administration' ? 'demandes' : 'docs'}
                   </div>
                 )}
               </div>
@@ -312,7 +370,7 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">E-Services Actifs</p>
+                  <p className="text-blue-600 text-sm font-medium">Outils Actifs</p>
                   <p className="text-2xl font-bold text-blue-900">{digitalStats.totalEServices}</p>
                 </div>
                 <Globe className="h-8 w-8 text-blue-600" />
@@ -330,8 +388,10 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Utilisateurs Actifs</p>
-                  <p className="text-2xl font-bold text-green-900">{digitalStats.activeUsers}</p>
+                  <p className="text-green-600 text-sm font-medium">Administrés</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (digitalStats.activeUsers ?? '—')}
+                  </p>
                 </div>
                 <Users className="h-8 w-8 text-green-600" />
               </div>
@@ -348,10 +408,12 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 text-sm font-medium">Signatures Digitales</p>
-                  <p className="text-2xl font-bold text-purple-900">{digitalStats.digitalSignatures}</p>
+                  <p className="text-purple-600 text-sm font-medium">Documents Dématérialisés</p>
+                  <p className="text-2xl font-bold text-purple-900">
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (digitalStats.documentsProcessed ?? '—')}
+                  </p>
                 </div>
-                <PenTool className="h-8 w-8 text-purple-600" />
+                <FileText className="h-8 w-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -366,10 +428,12 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-600 text-sm font-medium">Satisfaction</p>
-                  <p className="text-2xl font-bold text-orange-900">{digitalStats.satisfactionRate}%</p>
+                  <p className="text-orange-600 text-sm font-medium">Demandes en ligne</p>
+                  <p className="text-2xl font-bold text-orange-900">
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (digitalStats.teleServices ?? '—')}
+                  </p>
                 </div>
-                <Award className="h-8 w-8 text-orange-600" />
+                <Globe className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -468,52 +532,21 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
 
             {/* Visioconférence */}
             <TabsContent value="video" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-l-4 border-l-blue-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Video className="h-5 w-5 text-blue-600" />
-                      <span>Réunion Conseil</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-sm text-gray-600">
-                      <p>Prochaine session: 25 janvier 2024 à 14h00</p>
-                      <p>Participants: 12 membres du conseil</p>
-                    </div>
-                    <Button className="w-full">
-                      <Video className="h-4 w-4 mr-2" />
-                      Rejoindre la réunion
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-green-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Calendar className="h-5 w-5 text-green-600" />
-                      <span>Consultations Citoyens</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-sm text-gray-600">
-                      <p>Créneaux disponibles: 8 slots cette semaine</p>
-                      <p>Durée: 30 minutes par consultation</p>
-                    </div>
-                    <Button className="w-full" variant="outline">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Planifier consultation
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+              <Alert>
+                <Video className="h-4 w-4" />
+                <AlertTitle>Module de visioconférence</AlertTitle>
+                <AlertDescription>
+                  La planification des réunions de conseil et des consultations citoyens en
+                  visioconférence sera bientôt disponible. Aucune session n'est encore enregistrée.
+                </AlertDescription>
+              </Alert>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                   <CardContent className="p-6 text-center">
                     <Camera className="h-8 w-8 text-teal-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Enregistrements</h3>
-                    <p className="text-2xl font-bold text-teal-900">23</p>
+                    <p className="text-2xl font-bold text-teal-900">—</p>
                   </CardContent>
                 </Card>
 
@@ -521,7 +554,7 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Users className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Participants</h3>
-                    <p className="text-2xl font-bold text-blue-900">156</p>
+                    <p className="text-2xl font-bold text-blue-900">—</p>
                   </CardContent>
                 </Card>
 
@@ -529,7 +562,7 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Clock className="h-8 w-8 text-green-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Durée Totale</h3>
-                    <p className="text-2xl font-bold text-green-900">47h</p>
+                    <p className="text-2xl font-bold text-green-900">—</p>
                   </CardContent>
                 </Card>
               </div>
@@ -537,16 +570,30 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
 
             {/* Activités récentes */}
             <TabsContent value="activities" className="space-y-6">
+              {loading && (
+                <div className="flex items-center justify-center py-12 text-gray-500">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  Chargement des activités...
+                </div>
+              )}
+
+              {!loading && recentActivities.length === 0 && (
+                <div className="text-center py-12">
+                  <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Aucune activité récente</p>
+                </div>
+              )}
+
               <div className="space-y-4">
-                {recentActivities.map((activity) => {
+                {recentActivities.map((activity, index) => {
                   const ActivityIcon = getActivityIcon(activity.type);
-                  
+
                   return (
                     <motion.div
                       key={activity.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: activity.id * 0.1 }}
+                      transition={{ delay: index * 0.1 }}
                     >
                       <Card className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">

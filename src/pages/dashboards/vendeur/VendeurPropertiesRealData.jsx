@@ -30,6 +30,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 // 🆕 NOUVEAUX COMPOSANTS MODERNISÉS
 import EmptyState from '@/components/ui/EmptyState';
@@ -82,62 +83,71 @@ const VendeurPropertiesRealData = () => {
   const loadProperties = async () => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          id,
-          title,
-          description,
-          property_type,
-          status,
-          verification_status,
-          price,
-          surface,
-          location,
-          city,
-          region,
-          images,
-          features,
-          ai_analysis,
-          blockchain_verified,
-          blockchain_network,
-          views_count,
-          favorites_count,
-          contact_requests_count,
-          is_featured,
-          created_at,
-          updated_at,
-          published_at
-        `)
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      // ✅ Source réelle : VendeurSupabaseService.getVendeurListings
+      // (properties du vendeur + property_photos joints), colonnes réelles uniquement.
+      const result = await VendeurSupabaseService.getVendeurListings(user.id, { limit: 500 });
+      if (!result.success) throw new Error(result.error || 'Erreur de chargement');
 
-      // Formater les données
-      const formattedProperties = data.map(prop => ({
-        id: prop.id,
-        title: prop.title,
-        type: prop.property_type,
-        status: prop.status,
-        verificationStatus: prop.verification_status,
-        price: prop.price,
-        location: prop.location || `${prop.city}, ${prop.region}`,
-        area: prop.surface,
-        images: Array.isArray(prop.images) ? prop.images.length : 0,
-        imageUrl: Array.isArray(prop.images) && prop.images.length > 0 ? prop.images[0] : null,
-        views: prop.views_count || 0,
-        favorites: prop.favorites_count || 0,
-        inquiries: prop.contact_requests_count || 0,
-        createdAt: prop.created_at,
-        lastModified: prop.updated_at || prop.created_at,
-        featured: prop.is_featured || false,
-        aiOptimized: prop.ai_analysis && Object.keys(prop.ai_analysis).length > 0,
-        blockchainVerified: prop.blockchain_verified || false,
-        blockchainNetwork: prop.blockchain_network,
-        completion: calculateCompletion(prop)
-      }));
+      const rows = result.data || [];
+      const propertyIds = rows.map(p => p.id);
+
+      // Pas de table "favoris" dans le schéma réel : on utilise les offres d'achat
+      // reçues (financial_transactions liées à chaque propriété) comme signal réel
+      // d'intérêt acheteur le plus proche disponible.
+      let offersByProperty = {};
+      const offersResult = await VendeurSupabaseService.getVendeurOffers(user.id);
+      if (offersResult.success) {
+        offersByProperty = (offersResult.data || []).reduce((acc, offer) => {
+          acc[offer.property_id] = (acc[offer.property_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      // Pas de colonne "contact_requests_count" réelle : on compte les conversations
+      // (messages) réellement ouvertes sur chaque propriété.
+      let conversationsByProperty = {};
+      if (propertyIds.length > 0) {
+        const { data: conversationsData, error: conversationsError } = await supabase
+          .from('conversations')
+          .select('id, property_id')
+          .in('property_id', propertyIds);
+        if (!conversationsError) {
+          conversationsByProperty = (conversationsData || []).reduce((acc, c) => {
+            if (c.property_id) acc[c.property_id] = (acc[c.property_id] || 0) + 1;
+            return acc;
+          }, {});
+        }
+      }
+
+      // Formater les données (uniquement colonnes réelles de `properties` + `property_photos`)
+      const formattedProperties = rows.map(prop => {
+        const photos = Array.isArray(prop.photos) ? prop.photos : [];
+        const primaryPhoto = photos.find(p => p.is_primary) || photos[0] || null;
+
+        return {
+          id: prop.id,
+          title: prop.title,
+          type: prop.type,
+          status: prop.status,
+          verificationStatus: prop.verification_status,
+          price: prop.price,
+          location: prop.location || [prop.city, prop.region].filter(Boolean).join(', '),
+          area: prop.surface,
+          images: photos.length,
+          imageUrl: primaryPhoto?.url || null,
+          views: prop.views_count || 0,
+          favorites: offersByProperty[prop.id] || 0,
+          inquiries: conversationsByProperty[prop.id] || 0,
+          createdAt: prop.created_at,
+          lastModified: prop.updated_at || prop.created_at,
+          // "Optimisée IA" = un score IA réel a été calculé pour cette propriété (colonne ai_score)
+          aiOptimized: typeof prop.ai_score === 'number' && prop.ai_score > 0,
+          // "Certifiée blockchain" = un hash d'ancrage existe réellement (colonne blockchain_hash)
+          blockchainVerified: Boolean(prop.blockchain_hash),
+          completion: calculateCompletion(prop, photos)
+        };
+      });
 
       setProperties(formattedProperties);
       setFilteredProperties(formattedProperties);
@@ -183,18 +193,18 @@ const VendeurPropertiesRealData = () => {
     return subscription;
   };
 
-  // Calculer le pourcentage de complétion
-  const calculateCompletion = (property) => {
+  // Calculer le pourcentage de complétion (uniquement colonnes réelles)
+  const calculateCompletion = (property, photos = []) => {
     let score = 0;
     const checks = [
       property.title,
       property.description,
       property.price,
       property.surface,
-      property.location,
-      property.images && property.images.length >= 3,
-      property.features && Object.keys(property.features).length > 0,
-      property.ai_analysis && Object.keys(property.ai_analysis).length > 0
+      property.location || property.city,
+      photos.length >= 3,
+      typeof property.ai_score === 'number' && property.ai_score > 0,
+      property.verification_status === 'verified'
     ];
 
     checks.forEach(check => {
@@ -209,7 +219,11 @@ const VendeurPropertiesRealData = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')) return;
 
     await notify.promise(
-      supabase.from('properties').delete().eq('id', propertyId),
+      (async () => {
+        const result = await VendeurSupabaseService.deleteListing(propertyId);
+        if (!result.success) throw new Error(result.error || 'Erreur lors de la suppression');
+        return result;
+      })(),
       {
         loading: 'Suppression en cours...',
         success: 'Propriété supprimée avec succès !',
@@ -226,9 +240,11 @@ const VendeurPropertiesRealData = () => {
 
     await notify.promise(
       Promise.all(
-        selectedItems.map(id =>
-          supabase.from('properties').delete().eq('id', id)
-        )
+        selectedItems.map(async (id) => {
+          const result = await VendeurSupabaseService.deleteListing(id);
+          if (!result.success) throw new Error(result.error || 'Erreur lors de la suppression');
+          return result;
+        })
       ),
       {
         loading: `Suppression de ${selectedItems.length} propriété(s)...`,
@@ -281,28 +297,31 @@ const VendeurPropertiesRealData = () => {
   const handleDuplicate = async (property) => {
     await notify.promise(
       (async () => {
-        const { data: original } = await supabase
+        const { data: original, error: fetchError } = await supabase
           .from('properties')
           .select('*')
           .eq('id', property.id)
           .single();
+        if (fetchError) throw fetchError;
 
-        const { id, created_at, updated_at, published_at, views_count, favorites_count, contact_requests_count, ...duplicateData } = original;
+        // On ne recopie pas l'identité, les compteurs ni les preuves de vérification/
+        // blockchain de l'annonce d'origine : la copie doit repartir à zéro sur ces points.
+        const {
+          id, created_at, updated_at, views_count,
+          ai_score, blockchain_hash, transaction_hash,
+          smart_contract_address, nft_token_id, nft_readiness_score,
+          ...duplicateData
+        } = original;
 
-        const { data, error } = await supabase
-          .from('properties')
-          .insert([{
-            ...duplicateData,
-            title: `${duplicateData.title} (Copie)`,
-            status: 'pending_verification',
-            verification_status: 'pending',
-            is_featured: false
-          }])
-          .select()
-          .single();
+        const result = await VendeurSupabaseService.createListing({
+          ...duplicateData,
+          title: `${duplicateData.title} (Copie)`,
+          status: 'pending',
+          verification_status: 'pending'
+        });
 
-        if (error) throw error;
-        return data;
+        if (!result.success) throw new Error(result.error || 'Erreur lors de la duplication');
+        return result.data;
       })(),
       {
         loading: 'Duplication en cours...',
@@ -314,38 +333,28 @@ const VendeurPropertiesRealData = () => {
     loadProperties();
   };
 
-  // Activer/désactiver la mise en avant
-  const toggleFeatured = async (propertyId, currentFeatured) => {
-    await notify.promise(
-      supabase
-        .from('properties')
-        .update({ 
-          is_featured: !currentFeatured,
-          featured_until: !currentFeatured ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null
-        })
-        .eq('id', propertyId),
-      {
-        loading: 'Mise à jour...',
-        success: currentFeatured ? 'Propriété retirée de la mise en avant' : 'Propriété mise en avant !',
-        error: 'Erreur lors de la mise à jour'
-      }
-    );
+  // NOTE: la "mise en avant" (is_featured / featured_until) a été retirée : ces colonnes
+  // n'existent pas dans le schéma réel de `properties` et aucune table équivalente n'est
+  // disponible. Plutôt que d'inventer une donnée, la fonctionnalité est retirée proprement
+  // (voir aussi la suppression du badge "En vedette" et du menu associé plus bas).
 
-    loadProperties();
-  };
-
+  // Statuts réels de `properties` : active | pending | sold | reserved | suspended | rejected
   const statusColors = {
     active: 'bg-green-100 text-green-800',
-    pending_verification: 'bg-yellow-100 text-yellow-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    reserved: 'bg-indigo-100 text-indigo-800',
     suspended: 'bg-red-100 text-red-800',
-    sold: 'bg-blue-100 text-blue-800'
+    sold: 'bg-blue-100 text-blue-800',
+    rejected: 'bg-gray-100 text-gray-800'
   };
 
   const statusLabels = {
-    active: 'Actif',
-    pending_verification: 'En attente',
-    suspended: 'Suspendu',
-    sold: 'Vendu'
+    active: 'Active',
+    pending: 'En attente',
+    reserved: 'Réservée',
+    suspended: 'Suspendue',
+    sold: 'Vendue',
+    rejected: 'Rejetée'
   };
 
   const verificationStatusColors = {
@@ -371,7 +380,7 @@ const VendeurPropertiesRealData = () => {
       placeholder: 'Rechercher par titre ou ville...'
     },
     {
-      name: 'property_type',
+      name: 'type',
       label: 'Type de bien',
       type: 'select',
       options: [
@@ -389,7 +398,7 @@ const VendeurPropertiesRealData = () => {
       type: 'select',
       options: [
         { value: 'active', label: 'Active' },
-        { value: 'pending_verification', label: 'En attente' },
+        { value: 'pending', label: 'En attente' },
         { value: 'suspended', label: 'Suspendue' },
         { value: 'sold', label: 'Vendue' }
       ],
@@ -449,8 +458,8 @@ const VendeurPropertiesRealData = () => {
       );
     }
 
-    if (appliedFilters.property_type) {
-      filtered = filtered.filter(p => p.type === appliedFilters.property_type);
+    if (appliedFilters.type) {
+      filtered = filtered.filter(p => p.type === appliedFilters.type);
     }
 
     if (appliedFilters.status) {
@@ -547,11 +556,25 @@ const VendeurPropertiesRealData = () => {
   const stats = {
     total: properties.length,
     active: properties.filter(p => p.status === 'active').length,
-    pending: properties.filter(p => p.status === 'pending_verification').length,
+    pending: properties.filter(p => p.status === 'pending').length,
     sold: properties.filter(p => p.status === 'sold').length,
     totalViews: properties.reduce((sum, p) => sum + p.views, 0),
     totalInquiries: properties.reduce((sum, p) => sum + p.inquiries, 0)
   };
+
+  // Évolution réelle des annonces actives (comparaison du nombre d'annonces créées
+  // ce mois-ci vs le mois précédent, calculée à partir de createdAt) — remplace
+  // l'ancien trend fixe "12% vs mois dernier".
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const createdThisMonth = properties.filter(p => new Date(p.createdAt) >= startOfThisMonth).length;
+  const createdLastMonth = properties.filter(p =>
+    new Date(p.createdAt) >= startOfLastMonth && new Date(p.createdAt) < startOfThisMonth
+  ).length;
+  const activeTrend = createdLastMonth > 0
+    ? Math.round(((createdThisMonth - createdLastMonth) / createdLastMonth) * 100)
+    : (createdThisMonth > 0 ? 100 : null);
 
   // 🆕 LOADING STATE MODERNE
   if (loading) {
@@ -624,8 +647,8 @@ const VendeurPropertiesRealData = () => {
           value={stats.active}
           icon={CheckCircle}
           color="green"
-          trend={{ value: 12, direction: 'up' }}
-          description="vs mois dernier"
+          trend={activeTrend !== null ? { value: Math.abs(activeTrend), direction: activeTrend >= 0 ? 'up' : 'down' } : null}
+          description="annonces créées vs mois dernier"
           onClick={() => setActiveFilter('active')}
         />
         <StatsCard
@@ -633,7 +656,7 @@ const VendeurPropertiesRealData = () => {
           value={stats.pending}
           icon={Clock}
           color="yellow"
-          onClick={() => setActiveFilter('pending_verification')}
+          onClick={() => setActiveFilter('pending')}
         />
         <StatsCard
           title="Vendues"
@@ -733,12 +756,6 @@ const VendeurPropertiesRealData = () => {
 
                   {/* Badges overlay */}
                   <div className="absolute top-2 left-14 flex flex-col gap-2">
-                    {property.featured && (
-                      <Badge className="bg-yellow-500">
-                        <Star className="h-3 w-3 mr-1" />
-                        En vedette
-                      </Badge>
-                    )}
                     {property.aiOptimized && (
                       <Badge className="bg-purple-500">
                         <Sparkles className="h-3 w-3 mr-1" />
@@ -814,10 +831,6 @@ const VendeurPropertiesRealData = () => {
                           <Copy className="h-4 w-4 mr-2" />
                           Dupliquer
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleFeatured(property.id, property.featured)}>
-                          <Star className="h-4 w-4 mr-2" />
-                          {property.featured ? 'Retirer la mise en avant' : 'Mettre en avant'}
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => handleDelete(property.id)}
@@ -848,31 +861,31 @@ const VendeurPropertiesRealData = () => {
                       </p>
                       <p className="text-sm text-gray-600">{property.area} m²</p>
                     </div>
-                    <Badge className={statusColors[property.status]}>
-                      {statusLabels[property.status]}
+                    <Badge className={statusColors[property.status] || 'bg-gray-100 text-gray-800'}>
+                      {statusLabels[property.status] || property.status}
                     </Badge>
                   </div>
 
                   {/* Verification Status */}
                   {property.verificationStatus !== 'verified' && (
                     <div className="mb-3">
-                      <Badge className={verificationStatusColors[property.verificationStatus]}>
-                        {verificationStatusLabels[property.verificationStatus]}
+                      <Badge className={verificationStatusColors[property.verificationStatus] || 'bg-gray-100 text-gray-800'}>
+                        {verificationStatusLabels[property.verificationStatus] || property.verificationStatus}
                       </Badge>
                     </div>
                   )}
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                    <div className="bg-gray-50 rounded p-2">
+                    <div className="bg-gray-50 rounded p-2" title="Vues de l'annonce">
                       <Eye className="h-4 w-4 mx-auto text-gray-600 mb-1" />
                       <p className="text-xs font-semibold">{property.views}</p>
                     </div>
-                    <div className="bg-gray-50 rounded p-2">
+                    <div className="bg-gray-50 rounded p-2" title="Offres d'achat reçues">
                       <Heart className="h-4 w-4 mx-auto text-gray-600 mb-1" />
                       <p className="text-xs font-semibold">{property.favorites}</p>
                     </div>
-                    <div className="bg-gray-50 rounded p-2">
+                    <div className="bg-gray-50 rounded p-2" title="Conversations ouvertes">
                       <MessageSquare className="h-4 w-4 mx-auto text-gray-600 mb-1" />
                       <p className="text-xs font-semibold">{property.inquiries}</p>
                     </div>

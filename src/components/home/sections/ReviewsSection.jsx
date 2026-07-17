@@ -19,54 +19,6 @@ const ReviewsSection = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Avis de démonstration en cas d'absence de données
-  const defaultReviews = [
-    {
-      id: 1,
-      content: "Grâce à Teranga Foncier, j'ai pu acheter mon terrain à Saly en toute sécurité depuis Paris. Le processus de vérification est exemplaire !",
-      rating: 5,
-      author_name: "Aminata Diallo",
-      author_role: "Diaspora",
-      author_location: "Paris, France",
-      author_avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b608?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-10",
-      project_type: "Achat Terrain Résidentiel"
-    },
-    {
-      id: 2,
-      content: "En tant que promoteur, cette plateforme m'a permis de trouver des terrains vérifiés rapidement. Un gain de temps considérable pour nos projets.",
-      rating: 5,
-      author_name: "Moussa Ba",
-      author_role: "Promoteur",
-      author_location: "Dakar, Sénégal", 
-      author_avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-08",
-      project_type: "Développement Résidentiel"
-    },
-    {
-      id: 3,
-      content: "L'équipe Teranga Foncier nous a accompagnés dans l'évaluation des garanties foncières. Service professionnel et fiable.",
-      rating: 5,
-      author_name: "Fatou Sow",
-      author_role: "Banque", 
-      author_location: "Dakar, Sénégal",
-      author_avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-05",
-      project_type: "Évaluation Bancaire"
-    },
-    {
-      id: 4,
-      content: "J'ai vendu ma parcelle rapidement grâce à leur plateforme. Les acheteurs ont confiance car tout est vérifié en amont.",
-      rating: 5,
-      author_name: "Ibrahima Ndiaye",
-      author_role: "Propriétaire",
-      author_location: "Thiès, Sénégal",
-      author_avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-03",
-      project_type: "Vente Terrain Agricole"
-    }
-  ];
-
   useEffect(() => {
     fetchReviews();
   }, []);
@@ -74,31 +26,30 @@ const ReviewsSection = () => {
   const fetchReviews = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_reviews')
-        .select(`
-          id,
-          content,
-          rating,
-          author_name,
-          author_role,
-          author_location,
-          author_avatar,
-          created_at,
-          project_type
-        `)
-        .eq('published', true)
+        .from('reviews')
+        .select('id, content, rating, author_name, author_role, location, avatar_url, created_at')
+        .eq('is_approved', true)
         .order('created_at', { ascending: false })
         .limit(4);
 
-      if (error) {
-        console.log('Erreur lors du chargement des avis:', error);
-        setReviews(defaultReviews);
-      } else {
-        setReviews(data?.length > 0 ? data : defaultReviews);
-      }
+      if (error) throw error;
+
+      // Adapter les champs de la table `reviews` à l'affichage
+      const mapped = (data || []).map(r => ({
+        id: r.id,
+        content: r.content,
+        rating: r.rating || 5,
+        author_name: r.author_name,
+        author_role: r.author_role,
+        author_location: r.location,
+        author_avatar: r.avatar_url,
+        created_at: r.created_at,
+        project_type: null
+      }));
+      setReviews(mapped);
     } catch (error) {
-      console.log('Erreur:', error);
-      setReviews(defaultReviews);
+      console.error('Erreur lors du chargement des avis:', error);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -132,6 +83,11 @@ const ReviewsSection = () => {
       default: return User;
     }
   };
+
+  // Masquer la section si aucun avis approuvé
+  if (!loading && reviews.length === 0) {
+    return null;
+  }
 
   if (loading) {
     return (

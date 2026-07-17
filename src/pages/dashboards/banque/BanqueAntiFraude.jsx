@@ -1,173 +1,201 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Shield, 
-  Brain, 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  Scan, 
-  Upload, 
-  Eye, 
-  Search, 
-  Network, 
-  Zap, 
-  Target, 
-  Activity, 
-  Clock, 
-  Download, 
-  Share2,
-  Database,
-  Lock,
-  Unlock,
-  UserCheck,
-  FileCheck,
+import {
+  Shield,
+  Brain,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Upload,
+  Eye,
+  Network,
   TrendingUp,
-  Filter,
-  RefreshCw,
+  Clock,
+  Download,
   Archive,
-  Flag,
-  Award,
+  FileCheck,
   CreditCard,
   Receipt,
-  Banknote,
   Calculator,
   DollarSign,
-  Percent
+  Percent,
+  Loader2
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// --- Helpers d'affichage (statuts réels de la table disputes / risk_assessments) ---
+const OPEN_DISPUTE = (status) =>
+  !['resolved', 'closed', 'rejected'].includes((status || '').toLowerCase());
+
+const getDisputeStatusColor = (status) => {
+  const s = (status || '').toLowerCase();
+  if (['resolved', 'closed'].includes(s)) return 'bg-green-100 text-green-800';
+  if (['rejected', 'fraud', 'fraud_detected'].includes(s)) return 'bg-red-100 text-red-800';
+  return 'bg-yellow-100 text-yellow-800';
+};
+
+const getDisputeStatusLabel = (status) => {
+  const s = (status || '').toLowerCase();
+  if (['resolved', 'closed'].includes(s)) return 'Résolu';
+  if (s === 'rejected') return 'Rejeté';
+  if (s === 'open') return 'Ouvert';
+  if (['pending', 'in_progress', 'investigating'].includes(s)) return 'En instruction';
+  return status || 'Inconnu';
+};
+
+const getRiskColor = (risk) => {
+  switch ((risk || '').toLowerCase()) {
+    case 'very_low':
+    case 'low':
+    case 'faible':
+      return 'text-green-600';
+    case 'medium':
+    case 'moyen':
+      return 'text-yellow-600';
+    case 'high':
+    case 'élevé':
+    case 'critical':
+      return 'text-red-600';
+    default: return 'text-gray-600';
+  }
+};
+
+// Extraction lisible des parties d'un litige (jsonb)
+const formatParties = (parties) => {
+  if (!parties) return '—';
+  try {
+    if (Array.isArray(parties)) {
+      const names = parties.map((p) => (typeof p === 'string' ? p : p?.name || p?.role)).filter(Boolean);
+      return names.length ? names.join(', ') : '—';
+    }
+    if (typeof parties === 'object') {
+      const names = Object.values(parties)
+        .map((v) => (typeof v === 'string' ? v : v?.name))
+        .filter((x) => typeof x === 'string');
+      return names.length ? names.join(', ') : '—';
+    }
+    return String(parties);
+  } catch {
+    return '—';
+  }
+};
 
 const BanqueAntiFraude = ({ dashboardStats }) => {
-  const [scanningDocument, setScanningDocument] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState(null);
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState('scanner');
 
-  // Statistiques anti-fraude bancaire
-  const [fraudStats, setFraudStats] = useState({
-    documentsScanned: 2341,
-    fraudsDetected: 18,
-    validDocuments: 2267,
-    pendingVerification: 56,
-    accuracyRate: 97.8,
-    monthlyScans: 347
-  });
+  const [loading, setLoading] = useState(true);
+  const [disputes, setDisputes] = useState([]);
+  const [riskAssessments, setRiskAssessments] = useState([]);
+  const [clients, setClients] = useState([]);
 
-  // Données des analyses récentes
-  const [recentAnalyses, setRecentAnalyses] = useState([
-    {
-      id: 1,
-      documentType: 'Bulletin de Salaire',
-      clientName: 'M. Amadou Diallo',
-      date: '2024-01-20',
-      status: 'validated',
-      confidence: 96.2,
-      issues: [],
-      riskLevel: 'low',
-      creditAmount: 25000000
-    },
-    {
-      id: 2,
-      documentType: 'Titre Foncier',
-      clientName: 'Société Immobilière Sénégal',
-      date: '2024-01-20',
-      status: 'fraud_detected',
-      confidence: 89.4,
-      issues: ['Tampon suspect', 'Numéro série incohérent'],
-      riskLevel: 'high',
-      creditAmount: 150000000
-    },
-    {
-      id: 3,
-      documentType: 'Relevé Bancaire',
-      clientName: 'Mme Fatou Mbaye',
-      date: '2024-01-19',
-      status: 'pending',
-      confidence: 74.8,
-      issues: ['Vérification revenus en cours'],
-      riskLevel: 'medium',
-      creditAmount: 12000000
-    },
-    {
-      id: 4,
-      documentType: 'Contrat de Travail',
-      clientName: 'M. Ousmane Fall',
-      date: '2024-01-19',
-      status: 'validated',
-      confidence: 93.1,
-      issues: [],
-      riskLevel: 'low',
-      creditAmount: 8500000
+  // --- Chargement des données réelles (anti-fraude = litiges + évaluations de risque) ---
+  const fetchData = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
     }
-  ]);
+    setLoading(true);
+    try {
+      const [disputesRes, riskRes, clientsRes] = await Promise.all([
+        // Litiges / anti-fraude : table disputes (schéma partagé, non filtrée par bank_id)
+        supabase
+          .from('disputes')
+          .select('id, title, property_id, status, parties, created_at')
+          .order('created_at', { ascending: false }),
+        // Évaluations de risque de la banque (filtré par bank_id dans le code)
+        supabase
+          .from('risk_assessments')
+          .select('id, client_id, loan_id, risk_level, risk_score, factors, created_at')
+          .eq('bank_id', user.id)
+          .order('created_at', { ascending: false }),
+        // Clients de la banque pour le score moyen réel
+        supabase
+          .from('bank_clients')
+          .select('client_id, name, credit_score')
+          .eq('bank_id', user.id)
+      ]);
 
-  // Simulation du scan de document
-  const handleDocumentScan = async () => {
-    setScanningDocument(true);
-    
-    // Simulation d'analyse IA bancaire
-    setTimeout(() => {
-      const mockResult = {
-        documentType: 'Bulletin de Salaire',
-        confidence: Math.random() * 30 + 70, // 70-100%
-        fraudRisk: Math.random() * 100,
-        issues: Math.random() > 0.7 ? ['Revenus incohérents', 'Signature douteuse'] : [],
-        blockchain_verified: Math.random() > 0.5,
-        authenticity_score: Math.random() * 20 + 80,
-        creditScore: Math.random() * 200 + 600 // Score crédit 600-800
-      };
-      
-      setAnalysisResults(mockResult);
-      setScanningDocument(false);
-    }, 3000);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'validated': return 'bg-green-100 text-green-800';
-      case 'fraud_detected': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      setDisputes(disputesRes.data || []);
+      setRiskAssessments(riskRes.data || []);
+      setClients(clientsRes.data || []);
+    } catch (err) {
+      console.error('Erreur chargement anti-fraude:', err);
+      setDisputes([]);
+      setRiskAssessments([]);
+      setClients([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'high': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
-  const DocumentScanCard = ({ title, description, icon: Icon, onClick, disabled = false }) => (
-    <motion.div
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
-      className={`cursor-pointer ${disabled ? 'opacity-50' : ''}`}
-      onClick={disabled ? undefined : onClick}
-    >
-      <Card className={`h-full transition-all duration-300 ${
-        disabled ? '' : 'hover:shadow-lg border-l-4 border-l-blue-500'
-      }`}>
-        <CardContent className="p-6 text-center">
-          <Icon className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-          <p className="text-sm text-gray-600">{description}</p>
-        </CardContent>
-      </Card>
-    </motion.div>
+  // --- Agrégats réels (aucun chiffre fabriqué) ---
+  const metrics = useMemo(() => {
+    const openDisputes = disputes.filter((d) => OPEN_DISPUTE(d.status)).length;
+    const resolvedDisputes = disputes.filter((d) => !OPEN_DISPUTE(d.status)).length;
+    const inInvestigation = disputes.filter((d) =>
+      ['pending', 'in_progress', 'investigating', 'open'].includes((d.status || '').toLowerCase())
+    ).length;
+
+    const totalRisk = riskAssessments.length;
+    const highRisk = riskAssessments.filter((r) =>
+      ['high', 'critical', 'élevé'].includes((r.risk_level || '').toLowerCase())
+    ).length;
+    const scores = riskAssessments.map((r) => Number(r.risk_score)).filter((n) => !Number.isNaN(n));
+    const avgRiskScore = scores.length
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : null;
+
+    const clientScores = clients.map((c) => Number(c.credit_score)).filter((n) => !Number.isNaN(n) && n > 0);
+    const avgClientScore = clientScores.length
+      ? Math.round(clientScores.reduce((a, b) => a + b, 0) / clientScores.length)
+      : null;
+
+    return {
+      openDisputes,
+      resolvedDisputes,
+      inInvestigation,
+      totalRisk,
+      highRisk,
+      avgRiskScore,
+      avgClientScore
+    };
+  }, [disputes, riskAssessments, clients]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  const DocumentScanCard = ({ title, description, icon: Icon }) => (
+    <Card className="h-full opacity-70">
+      <CardContent className="p-6 text-center">
+        <Icon className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+        <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-600 mb-3">{description}</p>
+        <Badge variant="outline" className="text-gray-500">Bientôt disponible</Badge>
+      </CardContent>
+    </Card>
   );
 
   return (
     <div className="space-y-6">
-      {/* Header avec statistiques anti-fraude */}
+      {/* Header avec agrégats réels (litiges + risques) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -178,8 +206,8 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Documents Validés</p>
-                  <p className="text-2xl font-bold text-green-900">{fraudStats.validDocuments}</p>
+                  <p className="text-green-600 text-sm font-medium">Litiges Résolus</p>
+                  <p className="text-2xl font-bold text-green-900">{metrics.resolvedDisputes}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -196,8 +224,8 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-600 text-sm font-medium">Fraudes Détectées</p>
-                  <p className="text-2xl font-bold text-red-900">{fraudStats.fraudsDetected}</p>
+                  <p className="text-red-600 text-sm font-medium">Litiges Ouverts</p>
+                  <p className="text-2xl font-bold text-red-900">{metrics.openDisputes}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-red-600" />
               </div>
@@ -214,8 +242,10 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Précision IA</p>
-                  <p className="text-2xl font-bold text-blue-900">{fraudStats.accuracyRate}%</p>
+                  <p className="text-blue-600 text-sm font-medium">Score Risque Moyen</p>
+                  <p className="text-2xl font-bold text-blue-900">
+                    {metrics.avgRiskScore != null ? `${metrics.avgRiskScore}/100` : '—'}
+                  </p>
                 </div>
                 <Brain className="h-8 w-8 text-blue-600" />
               </div>
@@ -232,8 +262,8 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-600 text-sm font-medium">En Vérification</p>
-                  <p className="text-2xl font-bold text-yellow-900">{fraudStats.pendingVerification}</p>
+                  <p className="text-yellow-600 text-sm font-medium">En Instruction</p>
+                  <p className="text-2xl font-bold text-yellow-900">{metrics.inInvestigation}</p>
                 </div>
                 <Clock className="h-8 w-8 text-yellow-600" />
               </div>
@@ -247,286 +277,213 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Shield className="h-5 w-5 text-blue-600" />
-            <span>Système Anti-Fraude Bancaire avec IA</span>
+            <span>Système Anti-Fraude Bancaire</span>
           </CardTitle>
           <CardDescription>
-            Détection automatique des fraudes documentaires pour crédits immobiliers avec IA et blockchain
+            Suivi des litiges immobiliers et des évaluations de risque pour les crédits immobiliers
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="scanner">Scanner IA</TabsTrigger>
-              <TabsTrigger value="credit-analysis">Analyse Crédit</TabsTrigger>
-              <TabsTrigger value="analyses">Analyses</TabsTrigger>
+              <TabsTrigger value="credit-analysis">Analyse Risque</TabsTrigger>
+              <TabsTrigger value="analyses">Litiges</TabsTrigger>
               <TabsTrigger value="reports">Rapports</TabsTrigger>
             </TabsList>
 
-            {/* Scanner de documents avec IA */}
+            {/* Scanner de documents avec IA — pas d'intégration OCR/IA active */}
             <TabsContent value="scanner" className="space-y-6">
+              <Alert>
+                <Brain className="h-4 w-4" />
+                <AlertTitle>Analyse documentaire par IA</AlertTitle>
+                <AlertDescription>
+                  Le module d'analyse automatique des documents (OCR, détection de falsification,
+                  vérification blockchain) n'est pas encore connecté. Il sera disponible prochainement.
+                </AlertDescription>
+              </Alert>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <DocumentScanCard
                   title="Analyse Bulletin Salaire"
                   description="Vérification revenus et authenticité"
                   icon={Receipt}
-                  onClick={handleDocumentScan}
-                  disabled={scanningDocument}
                 />
-                
                 <DocumentScanCard
                   title="Vérification Titre Foncier"
                   description="Contrôle authenticité garantie immobilière"
                   icon={FileCheck}
-                  onClick={() => {}}
                 />
-                
                 <DocumentScanCard
                   title="Analyse Relevé Bancaire"
                   description="Vérification flux financiers et cohérence"
                   icon={CreditCard}
-                  onClick={() => {}}
                 />
               </div>
 
-              {/* Zone de scan */}
-              <div className="border-2 border-dashed border-blue-300 bg-blue-50 p-8 rounded-lg text-center">
-                {scanningDocument ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="inline-block"
-                  >
-                    <Brain className="h-12 w-12 text-blue-600 mb-4" />
-                  </motion.div>
-                ) : (
-                  <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                )}
-                
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  {scanningDocument ? 'Analyse IA en cours...' : 'Déposer un document crédit'}
-                </h3>
-                <p className="text-blue-700 mb-4">
-                  {scanningDocument ? 'Vérification avec IA bancaire et blockchain' : 'Glissez un document ou cliquez pour sélectionner'}
-                </p>
-                
-                {scanningDocument && (
-                  <div className="max-w-xs mx-auto">
-                    <Progress value={75} className="mb-2" />
-                    <p className="text-sm text-blue-600">Analyse en cours: 75%</p>
-                  </div>
-                )}
+              <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 rounded-lg text-center">
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Dépôt de document</h3>
+                <p className="text-gray-500">Fonctionnalité d'analyse automatique bientôt disponible</p>
               </div>
-
-              {/* Résultats d'analyse */}
-              {analysisResults && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                >
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        <span>Analyse IA Bancaire</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Confiance IA:</span>
-                        <span className="font-semibold">{analysisResults.confidence.toFixed(1)}%</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Score Crédit:</span>
-                        <span className="font-semibold text-blue-600">{analysisResults.creditScore.toFixed(0)}/800</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Risque Fraude:</span>
-                        <Badge className={`${
-                          analysisResults.fraudRisk < 30 ? 'bg-green-100 text-green-800' :
-                          analysisResults.fraudRisk < 70 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {analysisResults.fraudRisk.toFixed(1)}%
-                        </Badge>
-                      </div>
-
-                      {analysisResults.issues.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-sm font-medium text-red-600 mb-2">Problèmes détectés:</p>
-                          {analysisResults.issues.map((issue, index) => (
-                            <div key={index} className="flex items-center space-x-2 text-sm text-red-600">
-                              <AlertTriangle className="h-4 w-4" />
-                              <span>{issue}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-purple-500">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Network className="h-5 w-5 text-purple-600" />
-                        <span>Vérification Blockchain</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        {analysisResults.blockchain_verified ? (
-                          <>
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            <span className="text-green-600 font-medium">Vérifié sur blockchain bancaire</span>
-                          </>
-                        ) : (
-                          <>
-                            <AlertTriangle className="h-5 w-5 text-red-600" />
-                            <span className="text-red-600 font-medium">Non trouvé sur blockchain</span>
-                          </>
-                        )}
-                      </div>
-                      
-                      <div className="text-sm text-gray-600">
-                        <p>Hash: 0x9f2a1b4c5d6e7f8a9b0c1d2e3f4a5b6c</p>
-                        <p>Block: #2,341,567</p>
-                        <p>Verification: {new Date().toLocaleString('fr-FR')}</p>
-                      </div>
-
-                      <Button className="w-full" size="sm">
-                        <Network className="h-4 w-4 mr-2" />
-                        Voir sur Blockchain
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
             </TabsContent>
 
-            {/* Analyse de crédit */}
+            {/* Analyse de risque — dérivée des données réelles */}
             <TabsContent value="credit-analysis" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-gradient-to-br from-green-50 to-green-100">
                   <CardContent className="p-6 text-center">
                     <Calculator className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-green-900 mb-2">Scoring Automatique</h3>
-                    <p className="text-2xl font-bold text-green-900">847</p>
-                    <p className="text-sm text-green-600">Score moyen clients</p>
+                    <h3 className="font-semibold text-green-900 mb-2">Score Client Moyen</h3>
+                    <p className="text-2xl font-bold text-green-900">
+                      {metrics.avgClientScore != null ? metrics.avgClientScore : '—'}
+                    </p>
+                    <p className="text-sm text-green-600">
+                      {clients.length ? `${clients.length} client(s)` : 'Aucun client'}
+                    </p>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
                   <CardContent className="p-6 text-center">
                     <Percent className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-blue-900 mb-2">Taux d'Endettement</h3>
-                    <p className="text-2xl font-bold text-blue-900">28.4%</p>
-                    <p className="text-sm text-blue-600">Moyenne portefeuille</p>
+                    <h3 className="font-semibold text-blue-900 mb-2">Évaluations de Risque</h3>
+                    <p className="text-2xl font-bold text-blue-900">{metrics.totalRisk}</p>
+                    <p className="text-sm text-blue-600">
+                      {metrics.highRisk} à risque élevé
+                    </p>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
                   <CardContent className="p-6 text-center">
                     <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-purple-900 mb-2">Capacité Remboursement</h3>
-                    <p className="text-2xl font-bold text-purple-900">94.2%</p>
-                    <p className="text-sm text-purple-600">Fiabilité moyenne</p>
+                    <h3 className="font-semibold text-purple-900 mb-2">Score Risque Moyen</h3>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {metrics.avgRiskScore != null ? `${metrics.avgRiskScore}/100` : '—'}
+                    </p>
+                    <p className="text-sm text-purple-600">Sur les évaluations réalisées</p>
                   </CardContent>
                 </Card>
               </div>
 
-              <Alert>
-                <Brain className="h-4 w-4" />
-                <AlertTitle>IA d'Analyse Crédit</AlertTitle>
-                <AlertDescription>
-                  Notre système d'intelligence artificielle analyse automatiquement la solvabilité, 
-                  les revenus et les garanties pour optimiser les décisions de crédit.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-
-            {/* Analyses récentes */}
-            <TabsContent value="analyses" className="space-y-6">
-              <div className="space-y-4">
-                {recentAnalyses.map((analysis) => (
-                  <motion.div
-                    key={analysis.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: analysis.id * 0.1 }}
-                  >
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="bg-blue-100 p-2 rounded-lg">
-                              <FileText className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{analysis.documentType}</h4>
-                              <p className="text-sm text-gray-600">{analysis.clientName}</p>
-                              <p className="text-sm text-blue-600">
-                                Crédit: {(analysis.creditAmount / 1000000).toFixed(1)}M CFA
-                              </p>
-                              <p className="text-xs text-gray-500">{new Date(analysis.date).toLocaleDateString('fr-FR')}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                              <div className="text-sm font-medium">Confiance: {analysis.confidence}%</div>
-                              <div className={`text-sm ${getRiskColor(analysis.riskLevel)}`}>
-                                Risque: {analysis.riskLevel}
-                              </div>
-                            </div>
-                            
-                            <Badge className={getStatusColor(analysis.status)}>
-                              {analysis.status === 'validated' ? 'Validé' :
-                               analysis.status === 'fraud_detected' ? 'Fraude' : 'En attente'}
-                            </Badge>
-                          </div>
+              {riskAssessments.length === 0 ? (
+                <Alert>
+                  <Brain className="h-4 w-4" />
+                  <AlertTitle>Évaluation des risques</AlertTitle>
+                  <AlertDescription>
+                    Aucune évaluation de risque enregistrée pour le moment.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-3">
+                  {riskAssessments.slice(0, 10).map((r) => (
+                    <Card key={r.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            Évaluation {r.loan_id ? `crédit #${String(r.loan_id).slice(0, 8)}` : `client #${String(r.client_id || '').slice(0, 8)}`}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : ''}
+                          </p>
                         </div>
-
-                        {analysis.issues.length > 0 && (
-                          <div className="mt-3 pt-3 border-t">
-                            <div className="flex flex-wrap gap-2">
-                              {analysis.issues.map((issue, index) => (
-                                <Badge key={index} variant="outline" className="text-xs text-red-600 border-red-200">
-                                  {issue}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        <div className="text-right">
+                          <p className={`text-sm font-semibold ${getRiskColor(r.risk_level)}`}>
+                            {r.risk_level || '—'}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {r.risk_score != null ? `${r.risk_score}/100` : '—'}
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Litiges réels (table disputes) */}
+            <TabsContent value="analyses" className="space-y-6">
+              {disputes.length === 0 ? (
+                <div className="text-center py-12">
+                  <Shield className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-1">Aucun litige</h3>
+                  <p className="text-sm text-gray-500">Aucun litige anti-fraude enregistré pour le moment.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {disputes.map((dispute, idx) => (
+                    <motion.div
+                      key={dispute.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: Math.min(idx * 0.05, 0.5) }}
+                    >
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="bg-blue-100 p-2 rounded-lg">
+                                <FileText className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">
+                                  {dispute.title || 'Litige sans titre'}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  Parties: {formatParties(dispute.parties)}
+                                </p>
+                                {dispute.property_id && (
+                                  <p className="text-xs text-blue-600">
+                                    Propriété #{String(dispute.property_id).slice(0, 8)}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  {dispute.created_at
+                                    ? new Date(dispute.created_at).toLocaleDateString('fr-FR')
+                                    : ''}
+                                </p>
+                              </div>
+                            </div>
+
+                            <Badge className={getDisputeStatusColor(dispute.status)}>
+                              {getDisputeStatusLabel(dispute.status)}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Rapports */}
             <TabsContent value="reports" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300">
+                <Card className="hover:shadow-lg transition-all duration-300">
                   <CardContent className="p-6 text-center">
                     <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Rapport Anti-Fraude</h3>
-                    <p className="text-sm text-gray-600 mb-4">Statistiques mensuelles de détection</p>
-                    <Button size="sm">
+                    <p className="text-sm text-gray-600 mb-4">
+                      {disputes.length} litige(s) · {metrics.openDisputes} ouvert(s)
+                    </p>
+                    <Button size="sm" disabled>
                       <Download className="h-4 w-4 mr-2" />
-                      Télécharger
+                      Bientôt disponible
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-300">
+                <Card className="hover:shadow-lg transition-all duration-300">
                   <CardContent className="p-6 text-center">
                     <Archive className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-gray-900 mb-2">Historique Analyses</h3>
-                    <p className="text-sm text-gray-600 mb-4">Archive complète des vérifications</p>
-                    <Button size="sm" variant="outline">
+                    <h3 className="font-semibold text-gray-900 mb-2">Historique des Évaluations</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {riskAssessments.length} évaluation(s) de risque
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => setSelectedTab('credit-analysis')}>
                       <Eye className="h-4 w-4 mr-2" />
                       Consulter
                     </Button>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
-  Navigation, 
+import {
+  MapPin,
+  Navigation,
   Satellite,
   Compass,
   Target,
@@ -43,170 +43,101 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Mappe verification_status (properties) vers un statut d'affichage GPS
+const mapVerifStatus = (vs) => {
+  const v = (vs || '').toString().toLowerCase();
+  if (['verified', 'confirmed', 'valid', 'validated', 'approved'].includes(v)) return 'verified';
+  if (['rejected', 'disputed', 'fraud', 'investigating', 'conflict'].includes(v)) return 'investigating';
+  return 'pending';
+};
 
 const AgentFoncierGPSVerification = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('map');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState([]);
 
-  // Statistiques GPS
+  useEffect(() => {
+    let active = true;
+    const loadProperties = async () => {
+      setLoading(true);
+      try {
+        // Biens fonciers + photos GPS (coordonnées et qualité réelles)
+        const { data: props, error } = await supabase
+          .from('properties')
+          .select('id, owner_id, title, name, type, surface, location, region, city, latitude, longitude, status, verification_status, created_at, property_photos(gps_latitude, gps_longitude, quality_score, is_primary)')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+
+        // Noms des propriétaires
+        const ownerIds = [...new Set((props || []).map(p => p.owner_id).filter(Boolean))];
+        let ownerMap = {};
+        if (ownerIds.length > 0) {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, full_name, first_name, last_name')
+            .in('id', ownerIds);
+          (profs || []).forEach(pr => {
+            ownerMap[pr.id] = pr.full_name || [pr.first_name, pr.last_name].filter(Boolean).join(' ') || null;
+          });
+        }
+
+        const mapped = (props || []).map((p) => {
+          const photos = Array.isArray(p.property_photos) ? p.property_photos : [];
+          const primary = photos.find(ph => ph.is_primary) || photos[0] || null;
+          // Coordonnées: on privilégie celles du bien, sinon celles de la photo GPS
+          const lat = p.latitude ?? primary?.gps_latitude ?? null;
+          const lng = p.longitude ?? primary?.gps_longitude ?? null;
+          // Qualité GPS: score réel de la photo primaire (0-100)
+          const qualityScore = primary?.quality_score ?? null;
+          return {
+            id: p.id,
+            reference: p.title || p.name || `#${String(p.id).slice(0, 8)}`,
+            owner: ownerMap[p.owner_id] || '—',
+            location: [p.city, p.region].filter(Boolean).join(', ') || p.location || '—',
+            coordinates: { lat, lng, quality: qualityScore },
+            status: mapVerifStatus(p.verification_status),
+            area: p.surface ?? null,
+            photos: photos.length,
+            hasGps: lat != null && lng != null,
+            conflicts: []
+          };
+        });
+
+        if (active) setProperties(mapped);
+      } catch (e) {
+        if (active) setProperties([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadProperties();
+    return () => { active = false; };
+  }, [user?.id]);
+
+  // Statistiques GPS dérivées des données réelles
+  const withGps = properties.filter(p => p.hasGps);
+  const verifiedCount = properties.filter(p => p.status === 'verified').length;
+  const pendingCount = properties.filter(p => p.status === 'pending').length;
+  const qualityVals = properties.map(p => p.coordinates.quality).filter(q => q != null);
+  const avgQuality = qualityVals.length
+    ? Math.round(qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length)
+    : null;
+
   const gpsStats = {
-    totalProperties: 2456,
-    verifiedProperties: 2234,
-    pendingVerification: 156,
-    gpsAccuracy: 98.2,
-    lastUpdate: '2024-03-01 15:30',
-    activeSurveys: 23,
-    completedSurveys: 145,
-    averageAccuracy: 2.3 // en mètres
+    totalProperties: properties.length,
+    gpsCount: withGps.length,
+    verifiedProperties: verifiedCount,
+    pendingVerification: pendingCount,
+    avgQuality
   };
-
-  // Propriétés avec coordonnées GPS
-  const properties = [
-    {
-      id: 1,
-      reference: 'TF-2024-001',
-      owner: 'Amadou Diallo',
-      location: 'Dakar, Parcelles Assainies',
-      coordinates: {
-        lat: 14.7644,
-        lng: -17.3844,
-        accuracy: 1.2,
-        elevation: 45
-      },
-      status: 'verified',
-      surveyDate: '2024-02-28',
-      area: 450, // m²
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 8,
-      documents: ['Plan cadastral', 'Titre foncier', 'Photos terrain']
-    },
-    {
-      id: 2,
-      reference: 'TF-2024-002',
-      owner: 'Fatou Seck',
-      location: 'Thiès, Cité Malick Sy',
-      coordinates: {
-        lat: 14.7889,
-        lng: -16.9317,
-        accuracy: 3.5,
-        elevation: 78
-      },
-      status: 'pending',
-      surveyDate: '2024-03-01',
-      area: 320,
-      boundaries: 'disputed',
-      conflicts: ['Chevauchement parcelle voisine'],
-      photos: 12,
-      documents: ['Plan provisoire', 'Demande titre']
-    },
-    {
-      id: 3,
-      reference: 'TF-2024-003',
-      owner: 'Ousmane Ba',
-      location: 'Saint-Louis, Sor',
-      coordinates: {
-        lat: 16.0378,
-        lng: -16.4890,
-        accuracy: 0.8,
-        elevation: 12
-      },
-      status: 'verified',
-      surveyDate: '2024-02-25',
-      area: 678,
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 15,
-      documents: ['Titre définitif', 'Levé topographique', 'Photos drone']
-    },
-    {
-      id: 4,
-      reference: 'TF-2024-004',
-      owner: 'Awa Thiam',
-      location: 'Kaolack, Médina',
-      coordinates: {
-        lat: 14.1592,
-        lng: -16.0731,
-        accuracy: 4.2,
-        elevation: 23
-      },
-      status: 'investigating',
-      surveyDate: '2024-03-01',
-      area: 256,
-      boundaries: 'unclear',
-      conflicts: ['Coordonnées incohérentes', 'Limites floues'],
-      photos: 6,
-      documents: ['Plan ancien', 'Récépissé']
-    },
-    {
-      id: 5,
-      reference: 'TF-2024-005',
-      owner: 'Mamadou Fall',
-      location: 'Ziguinchor, Boucotte',
-      coordinates: {
-        lat: 12.5681,
-        lng: -16.2733,
-        accuracy: 2.1,
-        elevation: 8
-      },
-      status: 'verified',
-      surveyDate: '2024-02-20',
-      area: 534,
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 10,
-      documents: ['Titre foncier', 'Plan géomètre', 'Certificat GPS']
-    }
-  ];
-
-  // Équipements GPS
-  const gpsEquipment = [
-    {
-      id: 1,
-      name: 'GPS Trimble R12',
-      type: 'RTK',
-      operator: 'Agent Samba',
-      status: 'active',
-      accuracy: '±2cm',
-      battery: 87,
-      lastCalibration: '2024-02-15',
-      surveysToday: 5
-    },
-    {
-      id: 2,
-      name: 'GPS Leica GS18',
-      type: 'GNSS',
-      operator: 'Agent Ndiaye',
-      status: 'active',
-      accuracy: '±1cm',
-      battery: 94,
-      lastCalibration: '2024-02-10',
-      surveysToday: 8
-    },
-    {
-      id: 3,
-      name: 'Drone DJI P4 RTK',
-      type: 'Aerial',
-      operator: 'Agent Diop',
-      status: 'maintenance',
-      accuracy: '±3cm',
-      battery: 0,
-      lastCalibration: '2024-01-20',
-      surveysToday: 0
-    },
-    {
-      id: 4,
-      name: 'Smartphone Galaxy S23',
-      type: 'Mobile',
-      operator: 'Agent Cissé',
-      status: 'active',
-      accuracy: '±3m',
-      battery: 76,
-      lastCalibration: '2024-02-28',
-      surveysToday: 3
-    }
-  ];
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -228,9 +159,11 @@ const AgentFoncierGPSVerification = () => {
     }
   };
 
-  const getAccuracyColor = (accuracy) => {
-    if (accuracy <= 1) return 'text-green-600';
-    if (accuracy <= 3) return 'text-yellow-600';
+  // Couleur de la qualité GPS (score 0-100 : plus haut = meilleur)
+  const getQualityColor = (quality) => {
+    if (quality == null) return 'text-slate-400';
+    if (quality >= 80) return 'text-green-600';
+    if (quality >= 50) return 'text-yellow-600';
     return 'text-red-600';
   };
 
@@ -239,6 +172,9 @@ const AgentFoncierGPSVerification = () => {
     property.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
     property.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Points affichables sur la carte : uniquement ceux avec coordonnées réelles
+  const mapPoints = withGps.slice(0, 8);
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-slate-50 via-white to-green-50 min-h-screen">
@@ -266,36 +202,32 @@ const AgentFoncierGPSVerification = () => {
         </div>
       </motion.div>
 
-      {/* Stats globales */}
+      {/* Stats globales (dérivées des données réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { 
-            title: 'Propriétés Total', 
-            value: gpsStats.totalProperties, 
-            icon: MapPin, 
-            color: 'from-blue-500 to-cyan-600',
-            change: '+45'
+          {
+            title: 'Propriétés Total',
+            value: gpsStats.totalProperties,
+            icon: MapPin,
+            color: 'from-blue-500 to-cyan-600'
           },
-          { 
-            title: 'Vérifiées', 
-            value: gpsStats.verifiedProperties, 
-            icon: CheckCircle, 
-            color: 'from-green-500 to-emerald-600',
-            change: '+12'
+          {
+            title: 'Coordonnées GPS',
+            value: gpsStats.gpsCount,
+            icon: Satellite,
+            color: 'from-green-500 to-emerald-600'
           },
-          { 
-            title: 'Précision GPS', 
-            value: `${gpsStats.gpsAccuracy}%`, 
-            icon: Target, 
-            color: 'from-purple-500 to-indigo-600',
-            change: '+0.3%'
+          {
+            title: 'Vérifiées',
+            value: gpsStats.verifiedProperties,
+            icon: CheckCircle,
+            color: 'from-purple-500 to-indigo-600'
           },
-          { 
-            title: 'Relevés Actifs', 
-            value: gpsStats.activeSurveys, 
-            icon: Activity, 
-            color: 'from-orange-500 to-red-600',
-            change: '+8'
+          {
+            title: 'Qualité moyenne',
+            value: gpsStats.avgQuality != null ? `${gpsStats.avgQuality}%` : '—',
+            icon: Target,
+            color: 'from-orange-500 to-red-600'
           }
         ].map((stat, index) => (
           <motion.div
@@ -310,12 +242,9 @@ const AgentFoncierGPSVerification = () => {
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
                     <stat.icon className="w-5 h-5 text-white" />
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {stat.change}
-                  </Badge>
                 </div>
                 <p className="text-sm text-slate-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-2xl font-bold text-slate-900">{loading ? '—' : stat.value}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -329,7 +258,7 @@ const AgentFoncierGPSVerification = () => {
         transition={{ delay: 0.2 }}
         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
-        {/* Vue carte simulée */}
+        {/* Vue carte (points réels géolocalisés) */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -355,34 +284,42 @@ const AgentFoncierGPSVerification = () => {
           </CardHeader>
           <CardContent>
             <div className="h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg relative overflow-hidden">
-              {/* Simulation d'une carte */}
+              {/* Fond de carte décoratif */}
               <div className="absolute inset-0 opacity-20">
                 <div className="w-full h-full bg-gradient-to-br from-green-200 via-blue-200 to-purple-200"></div>
               </div>
-              
-              {/* Points GPS simulés */}
-              {properties.slice(0, 5).map((property, index) => (
-                <motion.div
-                  key={property.id}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.2 }}
-                  className={`absolute w-4 h-4 rounded-full cursor-pointer transform -translate-x-2 -translate-y-2 ${
-                    property.status === 'verified' ? 'bg-green-500' :
-                    property.status === 'pending' ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  } shadow-lg hover:scale-125 transition-transform`}
-                  style={{
-                    left: `${20 + index * 15}%`,
-                    top: `${30 + (index % 2) * 20}%`
-                  }}
-                  onClick={() => setSelectedProperty(property)}
-                >
-                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-slate-700 opacity-0 hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {property.reference}
+
+              {mapPoints.length > 0 ? (
+                mapPoints.map((property, index) => (
+                  <motion.div
+                    key={property.id}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.2 }}
+                    className={`absolute w-4 h-4 rounded-full cursor-pointer transform -translate-x-2 -translate-y-2 ${
+                      property.status === 'verified' ? 'bg-green-500' :
+                      property.status === 'pending' ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    } shadow-lg hover:scale-125 transition-transform`}
+                    style={{
+                      left: `${15 + (index % 4) * 20}%`,
+                      top: `${25 + Math.floor(index / 4) * 30}%`
+                    }}
+                    onClick={() => setSelectedProperty(property)}
+                  >
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-slate-700 opacity-0 hover:opacity-100 transition-opacity whitespace-nowrap">
+                      {property.reference}
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-slate-500">
+                    <Satellite className="w-12 h-12 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">{loading ? 'Chargement des coordonnées…' : 'Aucune propriété géolocalisée'}</p>
                   </div>
-                </motion.div>
-              ))}
+                </div>
+              )}
 
               {/* Légende */}
               <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-xs space-y-1">
@@ -400,11 +337,16 @@ const AgentFoncierGPSVerification = () => {
                 </div>
               </div>
 
-              {/* Coordonnées */}
+              {/* Coordonnées du point sélectionné */}
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-xs">
-                <div>Lat: 14.7644°N</div>
-                <div>Lng: 17.3844°W</div>
-                <div>Zoom: 12</div>
+                {selectedProperty && selectedProperty.coordinates.lat != null ? (
+                  <>
+                    <div>Lat: {Number(selectedProperty.coordinates.lat).toFixed(4)}°</div>
+                    <div>Lng: {Number(selectedProperty.coordinates.lng).toFixed(4)}°</div>
+                  </>
+                ) : (
+                  <div className="text-slate-500">Sélectionner un point</div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -436,25 +378,27 @@ const AgentFoncierGPSVerification = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Superficie</span>
-                    <span className="font-semibold">{selectedProperty.area} m²</span>
+                    <span className="font-semibold">{selectedProperty.area != null ? `${selectedProperty.area} m²` : '—'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Précision GPS</span>
-                    <span className={`font-semibold ${getAccuracyColor(selectedProperty.coordinates.accuracy)}`}>
-                      ±{selectedProperty.coordinates.accuracy}m
+                    <span className="text-sm text-slate-600">Qualité GPS</span>
+                    <span className={`font-semibold ${getQualityColor(selectedProperty.coordinates.quality)}`}>
+                      {selectedProperty.coordinates.quality != null ? `${selectedProperty.coordinates.quality}%` : '—'}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Altitude</span>
-                    <span className="font-semibold">{selectedProperty.coordinates.elevation}m</span>
                   </div>
                 </div>
 
                 <div>
                   <p className="text-sm text-slate-600 mb-2">Coordonnées</p>
                   <div className="bg-slate-50 p-2 rounded text-xs font-mono">
-                    <div>Lat: {selectedProperty.coordinates.lat}°</div>
-                    <div>Lng: {selectedProperty.coordinates.lng}°</div>
+                    {selectedProperty.coordinates.lat != null ? (
+                      <>
+                        <div>Lat: {selectedProperty.coordinates.lat}°</div>
+                        <div>Lng: {selectedProperty.coordinates.lng}°</div>
+                      </>
+                    ) : (
+                      <div className="text-slate-400">Coordonnées non renseignées</div>
+                    )}
                   </div>
                 </div>
 
@@ -535,13 +479,20 @@ const AgentFoncierGPSVerification = () => {
 
             {/* Tableau des propriétés */}
             <div className="space-y-3">
-              {filteredProperties.map((property, index) => (
+              {loading ? (
+                <div className="text-center py-8 text-slate-500">Chargement des propriétés…</div>
+              ) : filteredProperties.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <MapPin className="w-12 h-12 mx-auto mb-2 opacity-40" />
+                  <p>Aucune propriété à afficher</p>
+                </div>
+              ) : filteredProperties.map((property, index) => (
                 <motion.div
                   key={property.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border rounded-lg p-4 hover:shadow-md transition-all duration-300"
+                  className="border rounded-lg p-4 hover:shadow-md transition-all duration-300 cursor-pointer"
                   onClick={() => setSelectedProperty(property)}
                 >
                   <div className="flex items-center justify-between">
@@ -555,16 +506,16 @@ const AgentFoncierGPSVerification = () => {
                         <p className="text-xs text-slate-500">{property.location}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-6">
                       <div className="text-center">
                         <p className="text-xs text-slate-500">Superficie</p>
-                        <p className="font-semibold">{property.area}m²</p>
+                        <p className="font-semibold">{property.area != null ? `${property.area}m²` : '—'}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-slate-500">Précision</p>
-                        <p className={`font-semibold ${getAccuracyColor(property.coordinates.accuracy)}`}>
-                          ±{property.coordinates.accuracy}m
+                        <p className="text-xs text-slate-500">Qualité GPS</p>
+                        <p className={`font-semibold ${getQualityColor(property.coordinates.quality)}`}>
+                          {property.coordinates.quality != null ? `${property.coordinates.quality}%` : '—'}
                         </p>
                       </div>
                       <div className="text-center">
@@ -594,7 +545,7 @@ const AgentFoncierGPSVerification = () => {
         </Card>
       </motion.div>
 
-      {/* Équipements GPS */}
+      {/* Équipements GPS — pas de table réelle : état honnête */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -611,56 +562,9 @@ const AgentFoncierGPSVerification = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {gpsEquipment.map((equipment, index) => (
-                <motion.div
-                  key={equipment.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-4 border rounded-lg hover:shadow-md transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-10 h-10 rounded-lg ${
-                      equipment.status === 'active' ? 'bg-green-100' : 'bg-orange-100'
-                    } flex items-center justify-center`}>
-                      {equipment.type === 'Mobile' ? (
-                        <Smartphone className={`w-5 h-5 ${
-                          equipment.status === 'active' ? 'text-green-600' : 'text-orange-600'
-                        }`} />
-                      ) : (
-                        <Navigation className={`w-5 h-5 ${
-                          equipment.status === 'active' ? 'text-green-600' : 'text-orange-600'
-                        }`} />
-                      )}
-                    </div>
-                    <Badge className={getStatusColor(equipment.status)}>
-                      {equipment.status}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-sm">{equipment.name}</h3>
-                    <p className="text-xs text-slate-600">{equipment.operator}</p>
-                    
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Précision</span>
-                        <span className="font-semibold">{equipment.accuracy}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Batterie</span>
-                        <span className="font-semibold">{equipment.battery}%</span>
-                      </div>
-                      <Progress value={equipment.battery} className="h-1" />
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Relevés aujourd'hui</span>
-                        <span className="font-semibold">{equipment.surveysToday}</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="text-center py-8 text-slate-500">
+              <Compass className="w-12 h-12 mx-auto mb-2 opacity-40" />
+              <p>Suivi du parc d'équipements GPS bientôt disponible</p>
             </div>
           </CardContent>
         </Card>

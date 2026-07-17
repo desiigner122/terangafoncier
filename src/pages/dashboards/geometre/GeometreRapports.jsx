@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  FileText, 
-  Download, 
-  Upload, 
-  Search, 
+import {
+  FileText,
+  Download,
+  Upload,
+  Search,
   Filter,
   Calendar,
   MapPin,
@@ -25,136 +24,91 @@ import {
   Clock,
   AlertTriangle,
   PaperclipIcon,
-  ImageIcon
+  ImageIcon,
+  Loader2
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Modèles de rapports : catalogue statique (aucune table matériel/modèles réelle).
+// Descriptif des modèles proposés — ne prétend à aucune métrique temps réel.
+const reportTemplates = [
+  {
+    id: 1,
+    name: 'Levé Topographique Standard',
+    description: 'Modèle pour levés topographiques classiques',
+    category: 'topographie'
+  },
+  {
+    id: 2,
+    name: 'Plan Cadastral Officiel',
+    description: 'Modèle conforme aux normes cadastrales',
+    category: 'cadastre'
+  },
+  {
+    id: 3,
+    name: 'Certificat de Bornage',
+    description: 'Modèle standard de bornage',
+    category: 'bornage'
+  }
+];
 
 const GeometreRapports = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Rapports et documents
-  const reports = [
-    {
-      id: 1,
-      title: 'Levé Topographique - Résidence Les Almadies',
-      type: 'Levé Topographique',
-      client: 'Fall Promotion SARL',
-      location: 'Almadies, Dakar',
-      date: '2024-12-10',
-      status: 'Terminé',
-      pages: 15,
-      size: '2.3 MB',
-      format: 'PDF',
-      attachments: 3,
-      category: 'topographie'
-    },
-    {
-      id: 2,
-      title: 'Plan Cadastral - Lotissement Diamaguène',
-      type: 'Plan Cadastral',
-      client: 'Mairie de Guédiawaye',
-      location: 'Diamaguène, Sicap',
-      date: '2024-12-08',
-      status: 'En révision',
-      pages: 8,
-      size: '1.8 MB',
-      format: 'PDF',
-      attachments: 2,
-      category: 'cadastre'
-    },
-    {
-      id: 3,
-      title: 'Certificat de Bornage - Villa VDN',
-      type: 'Bornage',
-      client: 'Amadou Cissé',
-      location: 'VDN, Dakar',
-      date: '2024-12-05',
-      status: 'Terminé',
-      pages: 6,
-      size: '1.2 MB',
-      format: 'PDF',
-      attachments: 1,
-      category: 'bornage'
-    },
-    {
-      id: 4,
-      title: 'Étude Faisabilité - Complexe Commercial',
-      type: 'Étude Faisabilité',
-      client: 'Teranga Invest',
-      location: 'Liberté 6, Dakar',
-      date: '2024-12-03',
-      status: 'En cours',
-      pages: 22,
-      size: '4.1 MB',
-      format: 'PDF',
-      attachments: 5,
-      category: 'etude'
-    },
-    {
-      id: 5,
-      title: 'Rapport Géotechnique - Fondations',
-      type: 'Géotechnique',
-      client: 'BTP Sénégal',
-      location: 'Rufisque',
-      date: '2024-11-28',
-      status: 'Terminé',
-      pages: 18,
-      size: '3.2 MB',
-      format: 'PDF',
-      attachments: 4,
-      category: 'geotechnique'
-    }
-  ];
+  useEffect(() => {
+    const loadReports = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        // Rapports/documents du géomètre (owner_id) + propriété liée pour la localisation
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*, properties(title, name, location)')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false });
 
-  // Statistiques
-  const reportStats = {
-    totalReports: 127,
-    thisMonth: 18,
-    pending: 5,
-    completed: 122,
-    totalSize: '186.7 MB',
-    categories: {
-      topographie: 45,
-      cadastre: 32,
-      bornage: 28,
-      etude: 15,
-      geotechnique: 7
-    }
+        if (error) throw error;
+        setReports(data || []);
+      } catch (err) {
+        console.error('Erreur chargement rapports:', err);
+        setReports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReports();
+  }, [user?.id]);
+
+  // Un statut est-il considéré comme finalisé/terminé ?
+  const isCompleted = (status) => {
+    const s = (status || '').toLowerCase();
+    return ['completed', 'terminé', 'termine', 'valide', 'validé', 'finalisé', 'finalise', 'approuvé', 'approuve', 'signé', 'signe'].includes(s);
   };
 
-  // Modèles de rapports
-  const reportTemplates = [
-    {
-      id: 1,
-      name: 'Levé Topographique Standard',
-      description: 'Modèle pour levés topographiques classiques',
-      category: 'topographie',
-      pages: 12,
-      usage: 45
-    },
-    {
-      id: 2,
-      name: 'Plan Cadastral Officiel',
-      description: 'Modèle conforme aux normes cadastrales',
-      category: 'cadastre',
-      pages: 8,
-      usage: 32
-    },
-    {
-      id: 3,
-      name: 'Certificat de Bornage',
-      description: 'Modèle standard de bornage',
-      category: 'bornage',
-      pages: 6,
-      usage: 28
-    }
-  ];
+  // Libellé lisible du statut réel (vocabulaire variable en base)
+  const getStatusLabel = (status) => {
+    if (!status) return '—';
+    const s = status.toLowerCase();
+    if (['completed', 'terminé', 'termine', 'finalisé', 'finalise'].includes(s)) return 'Terminé';
+    if (['in_progress', 'en_cours', 'en cours'].includes(s)) return 'En cours';
+    if (['pending', 'en_attente', 'draft', 'brouillon'].includes(s)) return 'En attente';
+    if (['review', 'révision', 'revision'].includes(s)) return 'En révision';
+    if (['cancelled', 'annulé', 'annule'].includes(s)) return 'Annulé';
+    return status;
+  };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    const label = getStatusLabel(status);
+    switch (label) {
       case 'Terminé': return 'bg-green-100 text-green-800';
       case 'En cours': return 'bg-blue-100 text-blue-800';
+      case 'En attente': return 'bg-gray-100 text-gray-800';
       case 'En révision': return 'bg-yellow-100 text-yellow-800';
       case 'Annulé': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -162,7 +116,8 @@ const GeometreRapports = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    const label = getStatusLabel(status);
+    switch (label) {
       case 'Terminé': return <CheckCircle className="w-4 h-4" />;
       case 'En cours': return <Clock className="w-4 h-4" />;
       case 'En révision': return <Edit className="w-4 h-4" />;
@@ -171,26 +126,50 @@ const GeometreRapports = () => {
     }
   };
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'topographie': return 'bg-blue-100 text-blue-800';
-      case 'cadastre': return 'bg-green-100 text-green-800';
-      case 'bornage': return 'bg-purple-100 text-purple-800';
-      case 'etude': return 'bg-orange-100 text-orange-800';
-      case 'geotechnique': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getCategoryColor = () => 'bg-blue-100 text-blue-800';
+
+  // Localisation réelle depuis la propriété liée (sinon état honnête)
+  const getLocation = (report) => report.properties?.location || '—';
+
+  // Format déduit de l'extension réelle du fichier (url/name), sinon état honnête
+  const getFormat = (report) => {
+    const source = report.url || report.name || '';
+    const match = source.match(/\.([a-z0-9]{2,5})(?:\?|$)/i);
+    return match ? match[1].toUpperCase() : '—';
   };
 
+  // Statistiques agrégées à partir des VRAIES données (aucun chiffre fabriqué)
+  const now = new Date();
+  const reportStats = {
+    totalReports: reports.length,
+    thisMonth: reports.filter(r => {
+      const d = new Date(r.created_at);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length,
+    pending: reports.filter(r => !isCompleted(r.status)).length,
+    completed: reports.filter(r => isCompleted(r.status)).length
+  };
+
+  // Catégories dynamiques dérivées des VRAIS types présents en base
+  const categoryCounts = reports.reduce((acc, r) => {
+    const key = r.type || 'autre';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const categories = Object.keys(categoryCounts).sort();
+
   const filteredReports = reports.filter(report => {
-    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      (report.name || '').toLowerCase().includes(term) ||
+      getLocation(report).toLowerCase().includes(term) ||
+      (report.type || '').toLowerCase().includes(term);
+    const matchesCategory = selectedCategory === 'all' || (report.type || 'autre') === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
@@ -220,7 +199,7 @@ const GeometreRapports = () => {
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -276,20 +255,6 @@ const GeometreRapports = () => {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Stockage</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportStats.totalSize}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Archive className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -317,7 +282,7 @@ const GeometreRapports = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Filtres par catégorie */}
+                {/* Filtres par catégorie (types réels présents en base) */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   <Button
                     variant={selectedCategory === 'all' ? 'default' : 'outline'}
@@ -326,126 +291,123 @@ const GeometreRapports = () => {
                   >
                     Tous ({reportStats.totalReports})
                   </Button>
-                  <Button
-                    variant={selectedCategory === 'topographie' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedCategory('topographie')}
-                  >
-                    Topographie ({reportStats.categories.topographie})
-                  </Button>
-                  <Button
-                    variant={selectedCategory === 'cadastre' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedCategory('cadastre')}
-                  >
-                    Cadastre ({reportStats.categories.cadastre})
-                  </Button>
-                  <Button
-                    variant={selectedCategory === 'bornage' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedCategory('bornage')}
-                  >
-                    Bornage ({reportStats.categories.bornage})
-                  </Button>
+                  {categories.map((cat) => (
+                    <Button
+                      key={cat}
+                      variant={selectedCategory === cat ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {cat} ({categoryCounts[cat]})
+                    </Button>
+                  ))}
                 </div>
 
                 {/* Liste des rapports */}
-                <div className="space-y-4">
-                  {filteredReports.map((report) => (
-                    <motion.div
-                      key={report.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                              <div className="flex items-center">
-                                <User className="w-4 h-4 mr-1" />
-                                {report.client}
-                              </div>
-                              <div className="flex items-center">
-                                <MapPin className="w-4 h-4 mr-1" />
-                                {report.location}
-                              </div>
-                              <div className="flex items-center">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                {formatDate(report.date)}
+                {loading ? (
+                  <div className="flex items-center justify-center py-12 text-gray-500">
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Chargement des rapports...
+                  </div>
+                ) : filteredReports.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun rapport</h3>
+                    <p className="text-gray-600">
+                      Vos rapports et documents techniques apparaîtront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredReports.map((report) => (
+                      <motion.div
+                        key={report.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{report.name || 'Document sans titre'}</h3>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                <div className="flex items-center">
+                                  <MapPin className="w-4 h-4 mr-1" />
+                                  {getLocation(report)}
+                                </div>
+                                <div className="flex items-center">
+                                  <Calendar className="w-4 h-4 mr-1" />
+                                  {formatDate(report.created_at)}
+                                </div>
                               </div>
                             </div>
                           </div>
+                          <div className="flex items-center space-x-2">
+                            {report.type && (
+                              <Badge className={getCategoryColor()}>
+                                {report.type}
+                              </Badge>
+                            )}
+                            <Badge className={getStatusColor(report.status)}>
+                              {getStatusIcon(report.status)}
+                              <span className="ml-1">{getStatusLabel(report.status)}</span>
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getCategoryColor(report.category)}>
-                            {report.type}
-                          </Badge>
-                          <Badge className={getStatusColor(report.status)}>
-                            {getStatusIcon(report.status)}
-                            <span className="ml-1">{report.status}</span>
-                          </Badge>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-4 gap-4 mb-3 text-sm">
-                        <div>
-                          <span className="text-gray-500">Pages:</span>
-                          <span className="ml-1 font-medium">{report.pages}</span>
+                        <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                          <div>
+                            <span className="text-gray-500">Type:</span>
+                            <span className="ml-1 font-medium">{report.type || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Format:</span>
+                            <span className="ml-1 font-medium">{getFormat(report)}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Taille:</span>
-                          <span className="ml-1 font-medium">{report.size}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Format:</span>
-                          <span className="ml-1 font-medium">{report.format}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <PaperclipIcon className="w-4 h-4 text-gray-500 mr-1" />
-                          <span className="font-medium">{report.attachments} pièces jointes</span>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Progress value={report.status === 'Terminé' ? 100 : report.status === 'En cours' ? 65 : 85} className="w-24 h-2" />
-                          <span className="text-xs text-gray-500">
-                            {report.status === 'Terminé' ? '100%' : report.status === 'En cours' ? '65%' : '85%'}
-                          </span>
+                        <div className="flex items-center justify-end">
+                          <div className="flex space-x-2">
+                            {report.url && (
+                              <>
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={report.url} target="_blank" rel="noopener noreferrer">
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Voir
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={report.url} download>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Télécharger
+                                  </a>
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="outline" size="sm">
+                              <Share className="w-4 h-4 mr-2" />
+                              Partager
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-2" />
-                            Voir
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Download className="w-4 h-4 mr-2" />
-                            Télécharger
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Share className="w-4 h-4 mr-2" />
-                            Partager
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Panneau latéral */}
           <div className="space-y-6">
-            {/* Modèles */}
+            {/* Modèles (catalogue statique) */}
             <Card>
               <CardHeader>
                 <CardTitle>Modèles de Rapports</CardTitle>
+                <CardDescription>Modèles types proposés</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -453,12 +415,6 @@ const GeometreRapports = () => {
                     <div key={template.id} className="border rounded-lg p-3">
                       <h4 className="font-medium text-sm mb-1">{template.name}</h4>
                       <p className="text-xs text-gray-600 mb-2">{template.description}</p>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">{template.pages} pages</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {template.usage} utilisations
-                        </Badge>
-                      </div>
                       <Button size="sm" className="w-full mt-2">
                         Utiliser
                       </Button>

@@ -1,8 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { sampleBlogPosts } from '@/data';
-import { 
+import {
   Calendar, 
   User, 
   Tag, 
@@ -27,19 +26,12 @@ const BlogPostPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // Phase 1: Load from BlogService
         const result = await BlogService.getPostBySlug(slug);
-        if (!result.success) {
-          // Fallback to hardcoded data
-          const fallbackPost = sampleBlogPosts.find(p => p.slug === slug);
-          if (fallbackPost) {
-            setPost(fallbackPost);
-          } else {
-            throw new Error('Article non trouvé');
-          }
-        } else {
-          setPost(result.data);
+        if (!result.success || !result.post) {
+          throw new Error('Article non trouvé');
         }
+        // BlogService renvoie l'article dans `post`
+        setPost(result.post);
       } catch (err) {
         setError(err.message);
         console.error('Error loading blog post:', err);
@@ -109,9 +101,10 @@ const BlogPostPage = () => {
       className="bg-background text-foreground"
     >
       <div className="relative h-72 md:h-96 w-full overflow-hidden">
-        <img  
-            alt={post.title} 
-            className="absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1504983875-d3b163aba9e6" />
+        <img
+            alt={post.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            src={post.cover_image || 'https://images.unsplash.com/photo-1504983875-d3b163aba9e6'} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
         <div className="absolute bottom-0 left-0 p-6 md:p-10">
             <Badge variant="secondary" className="mb-2 bg-primary/80 text-primary-foreground backdrop-blur-sm">{post.category}</Badge>
@@ -126,7 +119,7 @@ const BlogPostPage = () => {
           <div className="flex items-center space-x-4 mb-3 sm:mb-0">
             <div className="flex items-center">
               <User className="h-4 w-4 mr-1.5" />
-              <span>{post.author_name}</span>
+              <span>{post.author || post.author_name}</span>
             </div>
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-1.5" />
@@ -147,16 +140,18 @@ const BlogPostPage = () => {
 
         <Separator className="my-8" />
 
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-3 text-foreground">Tags:</h3>
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map(tag => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                <Tag className="h-3 w-3 mr-1" /> {tag}
-              </Badge>
-            ))}
+        {Array.isArray(post.tags) && post.tags.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-3 text-foreground">Tags:</h3>
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map(tag => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  <Tag className="h-3 w-3 mr-1" /> {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <Button onClick={() => navigate(-1)} variant="outline">
           <ArrowLeft className="h-4 w-4 mr-2" /> Retour au Blog

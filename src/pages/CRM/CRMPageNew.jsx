@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   Users,
@@ -17,9 +17,48 @@ import KanbanBoard from '@/components/CRM/KanbanBoard';
 import StatsCard from '@/components/CRM/StatsCard';
 import ActivityTimeline from '@/components/CRM/ActivityTimeline';
 import CRMBuyerIntegrationService from '@/services/CRMBuyerIntegrationService';
-import { useCRM } from '@/hooks/useCRM';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Normalize a real crm_contacts row for the (unmodified) CRM widgets.
+// Only real columns exist: id, owner_id, name, email, phone, company,
+// status, temperature, score, created_at, updated_at.
+const normalizeContact = (c) => ({
+  ...c,
+  name: c.name || '',
+  email: c.email || '',
+  status: c.status || 'prospect',
+  score: c.score ?? 0,
+});
+
+// Normalize a real crm_deals row. Real columns: id, contact_id, owner_id,
+// title, amount, stage, created_at. The Kanban card UI (out of scope for
+// this pass) still expects `value`, `probability` and `expected_close_date`
+// props that have no backing column in the real schema — we alias `value`
+// to the real `amount`, and use an honest "—" / null placeholder for the
+// two fields that cannot be sourced from real data instead of inventing
+// numbers.
+const normalizeDeal = (d) => ({
+  ...d,
+  value: d.amount ?? 0,
+  stage: d.stage || 'Prospection',
+  probability: '—',
+  expected_close_date: null,
+});
+
+// Normalize a real crm_activities row. Real columns: id, contact_id,
+// owner_id, type, prospect, action, created_at. The timeline UI expects
+// `title`/`description` — map them to the closest real fields instead of
+// leaving fabricated text.
+const normalizeActivity = (a) => ({
+  ...a,
+  title: a.prospect || null,
+  description: a.action || null,
+});
 
 const CRMPageNew = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
   // Modals state
@@ -30,65 +69,185 @@ const CRMPageNew = () => {
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [importing, setImporting] = useState(false);
 
-  // CRM Hook
-  const {
-    contacts,
-    deals,
-    activities,
-    stats,
-    loading,
-    error,
-    fetchContacts,
-    addContact,
-    updateContact,
-    deleteContact,
-    fetchDeals,
-    addDeal,
-    updateDeal,
-    moveDeal,
-    deleteDeal,
-    fetchActivities,
-    fetchStats,
-    clearError,
-  } = useCRM();
+  // Real CRM data (Supabase) — scoped to the current user via owner_id
+  const [contacts, setContacts] = useState([]);
+  const [deals, setDeals] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const clearError = () => setError(null);
+
+  const fetchAll = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [contactsRes, dealsRes, activitiesRes, tasksRes] = await Promise.all([
+        VendeurSupabaseService.getCrmContacts(user.id),
+        VendeurSupabaseService.getCrmDeals(user.id),
+        VendeurSupabaseService.getCrmActivities(user.id, 50),
+        VendeurSupabaseService.getCrmTasks(user.id),
+      ]);
+
+      if (contactsRes.success) {
+        setContacts((contactsRes.data || []).map(normalizeContact));
+      } else {
+        setError(contactsRes.error || 'Erreur de chargement des contacts');
+      }
+
+      if (dealsRes.success) {
+        setDeals((dealsRes.data || []).map(normalizeDeal));
+      } else if (!contactsRes.error) {
+        setError(dealsRes.error || 'Erreur de chargement des offres');
+      }
+
+      if (activitiesRes.success) {
+        setActivities((activitiesRes.data || []).map(normalizeActivity));
+      }
+
+      if (tasksRes.success) {
+        setTasks(tasksRes.data || []);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   // Load initial data
   useEffect(() => {
-    fetchContacts();
-    fetchDeals();
-    fetchActivities();
-    fetchStats();
-  }, []);
+    fetchAll();
+  }, [fetchAll]);
 
-  // Handle contact form save
+  // Handle contact form save — direct Supabase write using only real
+  // crm_contacts columns (name, email, phone, company, status, score).
+  // Fields collected by ContactForm that have no real column (role,
+  // location, interests, notes, tags, source) are intentionally dropped
+  // rather than sent to a non-existent column.
   const handleSaveContact = async (formData, contactId) => {
+    if (!user?.id) return;
     try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        status: formData.status || 'prospect',
+        score: formData.score ?? 0,
+      };
+
       if (contactId) {
-        await updateContact(contactId, formData);
+        const { error: updateErr } = await supabase
+          .from('crm_contacts')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', contactId)
+          .eq('owner_id', user.id);
+        if (updateErr) throw updateErr;
       } else {
-        await addContact(formData);
+        const { error: insertErr } = await supabase
+          .from('crm_contacts')
+          .insert({ ...payload, owner_id: user.id });
+        if (insertErr) throw insertErr;
       }
       setShowContactForm(false);
       setSelectedContact(null);
-      await fetchContacts();
+      await fetchAll();
     } catch (err) {
       console.error('Error saving contact:', err);
+      setError(err.message);
     }
   };
 
-  // Handle deal form save
+  // Handle deal form save — direct Supabase write using only real
+  // crm_deals columns (title, contact_id, amount, stage). `value` from
+  // DealForm is mapped to the real `amount` column; probability,
+  // expected_close_date, description and notes have no real column and
+  // are intentionally dropped.
   const handleSaveDeal = async (formData, dealId) => {
+    if (!user?.id) return;
     try {
+      const payload = {
+        title: formData.title,
+        contact_id: formData.contact_id || null,
+        amount: formData.value ?? 0,
+        stage: formData.stage || 'Prospection',
+      };
+
       if (dealId) {
-        await updateDeal(dealId, formData);
+        const { error: updateErr } = await supabase
+          .from('crm_deals')
+          .update(payload)
+          .eq('id', dealId)
+          .eq('owner_id', user.id);
+        if (updateErr) throw updateErr;
       } else {
-        await addDeal(formData);
+        const { error: insertErr } = await supabase
+          .from('crm_deals')
+          .insert({ ...payload, owner_id: user.id });
+        if (insertErr) throw insertErr;
       }
       setShowDealForm(false);
       setSelectedDeal(null);
-      await fetchDeals();
+      await fetchAll();
     } catch (err) {
       console.error('Error saving deal:', err);
+      setError(err.message);
+    }
+  };
+
+  // Delete a contact (owner-scoped since RLS does not filter by owner_id)
+  const deleteContact = async (contactId) => {
+    if (!user?.id) return;
+    try {
+      const { error: deleteErr } = await supabase
+        .from('crm_contacts')
+        .delete()
+        .eq('id', contactId)
+        .eq('owner_id', user.id);
+      if (deleteErr) throw deleteErr;
+      setContacts((prev) => prev.filter((c) => c.id !== contactId));
+    } catch (err) {
+      console.error('Error deleting contact:', err);
+      setError(err.message);
+    }
+  };
+
+  // Move a deal to a new pipeline stage (Kanban drag & drop)
+  const moveDeal = async (dealId, newStage) => {
+    if (!user?.id) return;
+    try {
+      const { error: moveErr } = await supabase
+        .from('crm_deals')
+        .update({ stage: newStage })
+        .eq('id', dealId)
+        .eq('owner_id', user.id);
+      if (moveErr) throw moveErr;
+      setDeals((prev) =>
+        prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d))
+      );
+    } catch (err) {
+      console.error('Error moving deal:', err);
+      setError(err.message);
+    }
+  };
+
+  // Delete a deal (owner-scoped since RLS does not filter by owner_id)
+  const deleteDeal = async (dealId) => {
+    if (!user?.id) return;
+    try {
+      const { error: deleteErr } = await supabase
+        .from('crm_deals')
+        .delete()
+        .eq('id', dealId)
+        .eq('owner_id', user.id);
+      if (deleteErr) throw deleteErr;
+      setDeals((prev) => prev.filter((d) => d.id !== dealId));
+    } catch (err) {
+      console.error('Error deleting deal:', err);
+      setError(err.message);
     }
   };
 
@@ -125,11 +284,12 @@ const CRMPageNew = () => {
 
   // Handle import buyers
   const handleImportBuyers = async () => {
+    if (!user?.id) return;
     try {
       setImporting(true);
-      const result = await CRMBuyerIntegrationService.syncBuyersFromPlatform();
+      const result = await CRMBuyerIntegrationService.syncBuyersFromPlatform(user.id);
       alert(`✅ ${result?.created || 0} acheteur(s) créé(s), ${result?.updated || 0} mis à jour`);
-      await fetchContacts();
+      await fetchAll();
     } catch (error) {
       console.error('Import error:', error);
       alert('❌ Erreur lors de l\'import: ' + (error.message || 'Unknown error'));
@@ -144,11 +304,18 @@ const CRMPageNew = () => {
     contactsMap[contact.id] = contact;
   });
 
-  // Calculate pipeline total
+  // Calculate pipeline total (deal.value is aliased from the real `amount` column)
   const pipelineTotal = deals.reduce((sum, deal) => sum + (deal.value || 0), 0);
 
   // Average deal size
   const avgDealSize = deals.length > 0 ? pipelineTotal / deals.length : 0;
+
+  // Tasks due today — sourced from the real crm_tasks table (due_date),
+  // not from a fabricated activity field.
+  const todayStr = new Date().toDateString();
+  const tasksDueToday = tasks.filter(
+    (t) => t.due_date && new Date(t.due_date).toDateString() === todayStr
+  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -320,17 +487,10 @@ const CRMPageNew = () => {
                       Tâches Aujourd'hui
                     </h3>
                     <p className="text-3xl font-bold text-orange-600">
-                      {
-                        activities.filter(
-                          (a) =>
-                            a.type === 'task' &&
-                            new Date(a.scheduled_date).toDateString() ===
-                              new Date().toDateString()
-                        ).length
-                      }
+                      {tasksDueToday}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">
-                      activités planifiées
+                      {tasks.length} tâche(s) au total
                     </p>
                   </div>
                 </div>

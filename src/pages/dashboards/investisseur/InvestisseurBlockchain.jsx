@@ -1,147 +1,150 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, 
-  Lock, 
-  Key, 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
-  FileText, 
-  Download, 
-  Eye,
+import {
+  Shield,
+  Lock,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  FileText,
   Hash,
-  Layers,
   Database,
-  Zap,
-  Globe,
   Copy,
-  ExternalLink,
-  Search,
-  Filter,
-  Plus,
-  Calendar,
-  DollarSign,
-  Building,
   MapPin,
-  TrendingUp
+  Loader2
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
+// Libellés lisibles pour les statuts réels des certificats / transactions blockchain
+const STATUS_LABELS = {
+  verified: 'Validé',
+  valid: 'Validé',
+  confirmed: 'Confirmé',
+  active: 'Actif',
+  pending: 'En attente',
+  processing: 'En cours',
+  failed: 'Échoué',
+  revoked: 'Révoqué'
+};
+
 const InvestisseurBlockchain = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('certificates');
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Certificats blockchain
-  const blockchainCertificates = [
-    {
-      id: 'cert-001',
-      title: 'Résidence Les Almadies',
-      type: 'Propriété',
-      status: 'Validé',
-      blockHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
-      transactionHash: '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      timestamp: '2024-01-15T10:30:00Z',
-      value: 450000,
-      location: 'Almadies, Dakar',
-      validatedBy: 'Notaire Maître Diop',
-      validationDate: '2024-01-15',
-      gasUsed: 0.0023,
-      confirmations: 1247
-    },
-    {
-      id: 'cert-002',
-      title: 'Centre Commercial Liberté 6',
-      type: 'Investissement Commercial',
-      status: 'Validé',
-      blockHash: '0x8e0cade2d1e68b8bf77bc5fbe80cade2d1e68b8bf77bc5fbe8d3d3fc8c22a0296',
-      transactionHash: '0xb2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
-      timestamp: '2023-08-10T14:20:00Z',
-      value: 800000,
-      location: 'Liberté 6, Dakar',
-      validatedBy: 'Géomètre Expert Sy',
-      validationDate: '2023-08-10',
-      gasUsed: 0.0031,
-      confirmations: 4382
-    },
-    {
-      id: 'cert-003',
-      title: 'Lotissement Diamaguène',
-      type: 'Terrain',
-      status: 'En cours',
-      blockHash: 'Pending...',
-      transactionHash: '0xc3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
-      timestamp: '2024-12-15T09:15:00Z',
-      value: 320000,
-      location: 'Diamaguène, Sicap',
-      validatedBy: 'En attente validation',
-      validationDate: null,
-      gasUsed: 0.0019,
-      confirmations: 12
-    }
-  ];
+  // Données réelles (Supabase)
+  const [certificates, setCertificates] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [propertiesById, setPropertiesById] = useState({});
 
-  // Historique des transactions
-  const transactionHistory = [
-    {
-      id: 'tx-001',
-      type: 'Création Certificat',
-      certificateId: 'cert-001',
-      hash: '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      block: 18459372,
-      timestamp: '2024-01-15T10:30:00Z',
-      gas: 0.0023,
-      status: 'Confirmé',
-      value: 450000,
-      from: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D',
-      to: '0x8ba1f109551bD432803012645Hac189451c0078D'
-    },
-    {
-      id: 'tx-002',
-      type: 'Validation Notaire',
-      certificateId: 'cert-001',
-      hash: '0xd4e5f6789012345678901234567890abcdef1234567890abcdef1234567890ab',
-      block: 18459375,
-      timestamp: '2024-01-15T10:32:00Z',
-      gas: 0.0018,
-      status: 'Confirmé',
-      value: 0,
-      from: '0x8ba1f109551bD432803012645Hac189451c0078D',
-      to: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D'
-    },
-    {
-      id: 'tx-003',
-      type: 'Mise à jour Valeur',
-      certificateId: 'cert-002',
-      hash: '0xe5f6789012345678901234567890abcdef1234567890abcdef1234567890abcd',
-      block: 18459380,
-      timestamp: '2024-01-15T11:45:00Z',
-      gas: 0.0015,
-      status: 'Confirmé',
-      value: 920000,
-      from: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D',
-      to: '0x9cb2f210662cE543904013756Ibd290562d1089E'
-    }
-  ];
+  useEffect(() => {
+    const loadBlockchainData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
 
-  // Métriques de sécurité
-  const securityMetrics = {
-    totalCertificates: 12,
-    validatedCertificates: 10,
-    pendingValidation: 2,
-    totalValue: 2850000,
-    averageConfirmations: 2847,
-    lastUpdate: '2024-12-15T14:30:00Z',
-    networkUptime: 99.97,
-    securityScore: 96
-  };
+      try {
+        setLoading(true);
+
+        // 1. Récupérer les propriétés liées aux investissements de l'investisseur.
+        //    blockchain_certificates n'expose que property_id : on passe par
+        //    investments (investor_id = user.id) pour connaître les property_id concernés.
+        const { data: investments, error: invError } = await supabase
+          .from('investments')
+          .select('property_id, title, amount, current_value')
+          .eq('investor_id', user.id);
+
+        if (invError) throw invError;
+
+        const propertyIds = [
+          ...new Set((investments || []).map((i) => i.property_id).filter(Boolean))
+        ];
+
+        // 2. Enrichir avec les propriétés réelles (titre, localisation, valeur)
+        let propsMap = {};
+        if (propertyIds.length > 0) {
+          const { data: props, error: propsError } = await supabase
+            .from('properties')
+            .select('id, title, name, location, region, city, price, estimated_value, market_value')
+            .in('id', propertyIds);
+
+          if (propsError) throw propsError;
+          (props || []).forEach((p) => {
+            propsMap[p.id] = p;
+          });
+        }
+        // Compléter avec le titre de l'investissement si la propriété n'a pas de titre
+        (investments || []).forEach((i) => {
+          if (i.property_id && !propsMap[i.property_id]) {
+            propsMap[i.property_id] = { id: i.property_id, title: i.title, estimated_value: i.current_value ?? i.amount };
+          }
+        });
+        setPropertiesById(propsMap);
+
+        // 3. Certificats blockchain réels (filtrés sur les property_id de l'investisseur)
+        let certs = [];
+        if (propertyIds.length > 0) {
+          const { data: certData, error: certError } = await supabase
+            .from('blockchain_certificates')
+            .select('*')
+            .in('property_id', propertyIds)
+            .order('created_at', { ascending: false });
+
+          if (certError) throw certError;
+          certs = certData || [];
+        }
+        setCertificates(certs);
+
+        // 4. Transactions blockchain réelles (filtrées par user_id dans le code)
+        const { data: txData, error: txError } = await supabase
+          .from('blockchain_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (txError) throw txError;
+        setTransactions(txData || []);
+      } catch (error) {
+        console.error('Erreur chargement données blockchain:', error);
+        setCertificates([]);
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBlockchainData();
+  }, [user?.id]);
+
+  // Métriques réelles calculées à partir des données Supabase
+  const metrics = useMemo(() => {
+    const validatedStatuses = ['verified', 'valid', 'confirmed', 'active'];
+    const validatedCertificates = certificates.filter((c) =>
+      validatedStatuses.includes((c.status || '').toLowerCase())
+    ).length;
+    const pendingCertificates = certificates.length - validatedCertificates;
+    // Valeur sécurisée : somme des montants réels des transactions blockchain
+    const totalValue = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+    return {
+      totalCertificates: certificates.length,
+      validatedCertificates,
+      pendingCertificates,
+      totalTransactions: transactions.length,
+      totalValue
+    };
+  }, [certificates, transactions]);
 
   const formatCurrency = (amount) => {
+    if (amount == null) return '—';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -151,6 +154,7 @@ const InvestisseurBlockchain = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
@@ -160,35 +164,73 @@ const InvestisseurBlockchain = () => {
     });
   };
 
+  const statusLabel = (status) => STATUS_LABELS[(status || '').toLowerCase()] || status || 'Inconnu';
+
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Validé': return 'bg-green-100 text-green-800';
-      case 'En cours': return 'bg-blue-100 text-blue-800';
-      case 'Confirmé': return 'bg-green-100 text-green-800';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch ((status || '').toLowerCase()) {
+      case 'verified':
+      case 'valid':
+      case 'confirmed':
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'failed':
+      case 'revoked':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Validé': return <CheckCircle className="w-4 h-4" />;
-      case 'Confirmé': return <CheckCircle className="w-4 h-4" />;
-      case 'En cours': return <Clock className="w-4 h-4" />;
-      case 'Pending': return <AlertTriangle className="w-4 h-4" />;
-      default: return <AlertTriangle className="w-4 h-4" />;
+    switch ((status || '').toLowerCase()) {
+      case 'verified':
+      case 'valid':
+      case 'confirmed':
+      case 'active':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'pending':
+      case 'processing':
+        return <Clock className="w-4 h-4" />;
+      default:
+        return <AlertTriangle className="w-4 h-4" />;
     }
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    // Toast notification could be added here
+    if (text) navigator.clipboard.writeText(text);
   };
 
   const truncateHash = (hash) => {
-    if (!hash) return 'N/A';
+    if (!hash) return '—';
+    if (hash.length <= 18) return hash;
     return `${hash.substring(0, 8)}...${hash.substring(hash.length - 8)}`;
   };
+
+  const propertyTitle = (propertyId) => {
+    const p = propertiesById[propertyId];
+    return p?.title || p?.name || 'Propriété';
+  };
+
+  const propertyLocation = (propertyId) => {
+    const p = propertiesById[propertyId];
+    return p?.location || [p?.city, p?.region].filter(Boolean).join(', ') || null;
+  };
+
+  const propertyValue = (propertyId) => {
+    const p = propertiesById[propertyId];
+    return p?.estimated_value ?? p?.market_value ?? p?.price ?? null;
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-white p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-white p-6">
@@ -204,21 +246,17 @@ const InvestisseurBlockchain = () => {
               <Shield className="w-3 h-3 mr-1" />
               Sécurisé
             </Badge>
-            <Badge className="bg-blue-100 text-blue-800">
-              <Zap className="w-3 h-3 mr-1" />
-              Temps réel
-            </Badge>
           </div>
         </div>
 
-        {/* Métriques de sécurité */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Métriques réelles */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Certificats Totaux</p>
-                  <p className="text-2xl font-bold text-gray-900">{securityMetrics.totalCertificates}</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.totalCertificates}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <FileText className="w-6 h-6 text-blue-600" />
@@ -228,7 +266,7 @@ const InvestisseurBlockchain = () => {
                 <div className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                   <span className="text-sm text-green-600 font-medium">
-                    {securityMetrics.validatedCertificates} validés
+                    {metrics.validatedCertificates} validé{metrics.validatedCertificates > 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
@@ -241,7 +279,7 @@ const InvestisseurBlockchain = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Valeur Sécurisée</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(securityMetrics.totalValue)}
+                    {metrics.totalValue > 0 ? formatCurrency(metrics.totalValue) : '—'}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -249,7 +287,7 @@ const InvestisseurBlockchain = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-gray-600">100% protégé blockchain</span>
+                <span className="text-sm text-gray-600">Montant tracé sur la blockchain</span>
               </div>
             </CardContent>
           </Card>
@@ -258,40 +296,22 @@ const InvestisseurBlockchain = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Score Sécurité</p>
-                  <p className="text-2xl font-bold text-gray-900">{securityMetrics.securityScore}%</p>
+                  <p className="text-sm font-medium text-gray-600">Transactions</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.totalTransactions}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-purple-600" />
+                  <Database className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={securityMetrics.securityScore} className="h-2" />
-                <span className="text-sm text-green-600 mt-1">Excellent</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Uptime Réseau</p>
-                  <p className="text-2xl font-bold text-gray-900">{securityMetrics.networkUptime}%</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-sm text-gray-600">Disponibilité réseau</span>
+                <span className="text-sm text-gray-600">Enregistrées sur la chaîne</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="certificates" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Certificats
@@ -304,133 +324,95 @@ const InvestisseurBlockchain = () => {
               <Shield className="w-4 h-4" />
               Sécurité
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Analytics
-            </TabsTrigger>
           </TabsList>
 
           {/* Certificats */}
           <TabsContent value="certificates" className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Certificats Blockchain</CardTitle>
-                    <CardDescription>
-                      Vos investissements certifiés sur la blockchain
-                    </CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouveau certificat
-                  </Button>
-                </div>
+                <CardTitle>Certificats Blockchain</CardTitle>
+                <CardDescription>
+                  Vos investissements certifiés sur la blockchain
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {blockchainCertificates.map((cert) => (
-                    <motion.div
-                      key={cert.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            {getStatusIcon(cert.status)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{cert.title}</h3>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <MapPin className="w-4 h-4 mr-1" />
-                              {cert.location}
+                {certificates.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600 font-medium">Aucun certificat blockchain</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Vos certificats apparaîtront ici dès qu'un investissement sera certifié.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {certificates.map((cert) => {
+                      const value = propertyValue(cert.property_id);
+                      const location = propertyLocation(cert.property_id);
+                      return (
+                        <motion.div
+                          key={cert.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                {getStatusIcon(cert.status)}
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">
+                                  {propertyTitle(cert.property_id)}
+                                </h3>
+                                {location && (
+                                  <div className="flex items-center text-sm text-gray-600">
+                                    <MapPin className="w-4 h-4 mr-1" />
+                                    {location}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge className={getStatusColor(cert.status)}>
+                                {statusLabel(cert.status)}
+                              </Badge>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(cert.status)}>
-                            {cert.status}
-                          </Badge>
-                          <p className="text-sm text-gray-500 mt-1">{cert.type}</p>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Valeur</p>
-                          <p className="font-semibold">{formatCurrency(cert.value)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Confirmations</p>
-                          <p className="font-semibold text-green-600">{cert.confirmations}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Gas utilisé</p>
-                          <p className="font-semibold">{cert.gasUsed} ETH</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Date création</p>
-                          <p className="font-semibold">{formatDate(cert.timestamp)}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Hash Transaction:</span>
-                          <div className="flex items-center space-x-2">
-                            <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              {truncateHash(cert.transactionHash)}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(cert.transactionHash)}
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-xs text-gray-500">Valeur</p>
+                              <p className="font-semibold">{value != null ? formatCurrency(value) : '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Date création</p>
+                              <p className="font-semibold">{formatDate(cert.created_at)}</p>
+                            </div>
                           </div>
-                        </div>
-                        {cert.blockHash !== 'Pending...' && (
+
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Hash Block:</span>
+                            <span className="text-xs text-gray-500">Hash certificat:</span>
                             <div className="flex items-center space-x-2">
                               <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {truncateHash(cert.blockHash)}
+                                {truncateHash(cert.certificate_hash)}
                               </code>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => copyToClipboard(cert.blockHash)}
-                              >
-                                <Copy className="w-3 h-3" />
-                              </Button>
+                              {cert.certificate_hash && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(cert.certificate_hash)}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
                           </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600">
-                          {cert.validatedBy && (
-                            <span>Validé par: <strong>{cert.validatedBy}</strong></span>
-                          )}
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-2" />
-                            Détails
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Explorer
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -445,139 +427,125 @@ const InvestisseurBlockchain = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {transactionHistory.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Hash className="w-5 h-5 text-blue-600" />
+                {transactions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600 font-medium">Aucune transaction blockchain</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Vos transactions certifiées apparaîtront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Hash className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {propertyTitle(tx.property_id)}
+                            </p>
+                            {tx.block_number != null && (
+                              <p className="text-sm text-gray-600">Block #{tx.block_number}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                                {truncateHash(tx.transaction_hash)}
+                              </code>
+                              {tx.transaction_hash && (
+                                <button
+                                  onClick={() => copyToClipboard(tx.transaction_hash)}
+                                  className="text-gray-400 hover:text-gray-700"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">{formatDate(tx.created_at)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{tx.type}</p>
-                          <p className="text-sm text-gray-600">Block #{tx.block}</p>
-                          <p className="text-xs text-gray-500">{formatDate(tx.timestamp)}</p>
+                        <div className="text-right">
+                          <Badge className={getStatusColor(tx.status)}>
+                            {statusLabel(tx.status)}
+                          </Badge>
+                          {Number(tx.amount) > 0 && (
+                            <p className="text-sm font-medium text-green-600 mt-1">
+                              {formatCurrency(Number(tx.amount))}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(tx.status)}>
-                          {tx.status}
-                        </Badge>
-                        {tx.value > 0 && (
-                          <p className="text-sm font-medium text-green-600 mt-1">
-                            {formatCurrency(tx.value)}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500">Gas: {tx.gas} ETH</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Sécurité */}
           <TabsContent value="security" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audit de Sécurité</CardTitle>
-                  <CardDescription>
-                    État de la sécurité de vos actifs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-sm">Certificats validés</span>
-                      </div>
-                      <span className="text-sm font-semibold">{securityMetrics.validatedCertificates}/{securityMetrics.totalCertificates}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Shield className="w-5 h-5 text-blue-500" />
-                        <span className="text-sm">Chiffrement actif</span>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Lock className="w-5 h-5 text-purple-500" />
-                        <span className="text-sm">Multi-signature</span>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Configuré</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Key className="w-5 h-5 text-orange-500" />
-                        <span className="text-sm">Clés privées</span>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Sécurisées</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Métriques Réseau</CardTitle>
-                  <CardDescription>
-                    Performance du réseau blockchain
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm">Uptime réseau</span>
-                        <span className="text-sm font-semibold">{securityMetrics.networkUptime}%</span>
-                      </div>
-                      <Progress value={securityMetrics.networkUptime} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm">Confirmations moyennes</span>
-                        <span className="text-sm font-semibold">{securityMetrics.averageConfirmations}</span>
-                      </div>
-                      <Progress value={85} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm">Score sécurité</span>
-                        <span className="text-sm font-semibold">{securityMetrics.securityScore}%</span>
-                      </div>
-                      <Progress value={securityMetrics.securityScore} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Analytics */}
-          <TabsContent value="analytics" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Analytics Blockchain</CardTitle>
+                <CardTitle>Audit de Sécurité</CardTitle>
                 <CardDescription>
-                  Analyse des performances et utilisation
+                  État de la certification de vos actifs
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">156</p>
-                    <p className="text-sm text-gray-600">Transactions totales</p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-sm">Certificats validés</span>
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {metrics.validatedCertificates}/{metrics.totalCertificates}
+                    </span>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">0.147</p>
-                    <p className="text-sm text-gray-600">ETH économisé</p>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm">Taux de certification</span>
+                      <span className="text-sm font-semibold">
+                        {metrics.totalCertificates > 0
+                          ? Math.round((metrics.validatedCertificates / metrics.totalCertificates) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        metrics.totalCertificates > 0
+                          ? (metrics.validatedCertificates / metrics.totalCertificates) * 100
+                          : 0
+                      }
+                      className="h-2"
+                    />
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">24s</p>
-                    <p className="text-sm text-gray-600">Temps moyen validation</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-5 h-5 text-blue-500" />
+                      <span className="text-sm">En attente de validation</span>
+                    </div>
+                    <span className="text-sm font-semibold">{metrics.pendingCertificates}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Database className="w-5 h-5 text-purple-500" />
+                      <span className="text-sm">Transactions enregistrées</span>
+                    </div>
+                    <span className="text-sm font-semibold">{metrics.totalTransactions}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-100 flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Métriques réseau</p>
+                    <p className="text-sm text-gray-500">
+                      Les indicateurs de performance réseau (uptime, temps de validation) seront disponibles prochainement.
+                    </p>
                   </div>
                 </div>
               </CardContent>

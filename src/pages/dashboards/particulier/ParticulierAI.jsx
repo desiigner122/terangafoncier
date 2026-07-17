@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Brain,
   Sparkles,
   MessageSquare,
@@ -26,7 +26,9 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Lightbulb
+  Lightbulb,
+  Info,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,19 +37,29 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 const ParticulierAI = () => {
+  const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('chat');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  // Suggestions de l'IA pour particuliers
+  // Données réelles
+  const [chatMessages, setChatMessages] = useState([]); // ai_chat_history (role, content, created_at)
+  const [aiAnalyses, setAiAnalyses] = useState([]);      // ai_analyses (result jsonb, created_at, property)
+
+  // Suggestions IA : cartes d'action de navigation (pas de données fabriquées, contenu statique assumé)
   const aiSuggestions = [
     {
       id: 1,
       title: "Estimation automatique",
-      description: "Estimez la valeur de votre bien en quelques clics",
+      description: "Estimez la valeur d'un bien à partir du score IA et de la valeur estimée de la plateforme",
       icon: Calculator,
-      action: "Estimer mon bien",
+      action: "Estimer un bien",
       category: "Évaluation"
     },
     {
@@ -76,67 +88,92 @@ const ParticulierAI = () => {
     }
   ];
 
-  // Conversations récentes avec l'IA
-  const recentChats = [
-    {
-      id: 1,
-      title: "Estimation appartement Dakar",
-      preview: "Basé sur les données du marché, votre appartement...",
-      timestamp: "Il y a 2 heures",
-      status: "completed"
-    },
-    {
-      id: 2,
-      title: "Recherche villa avec jardin",
-      preview: "Je vous ai trouvé 15 propriétés correspondant...",
-      timestamp: "Hier",
-      status: "completed"
-    },
-    {
-      id: 3,
-      title: "Analyse quartier Almadies",
-      preview: "Le quartier des Almadies présente...",
-      timestamp: "Il y a 3 jours",
-      status: "pending"
+  useEffect(() => {
+    if (user?.id) {
+      loadAIData();
+    } else {
+      setLoading(false);
     }
-  ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
-  // Insights IA
-  const aiInsights = [
-    {
-      type: "opportunity",
-      title: "Opportunité détectée",
-      message: "Le marché dans votre zone de recherche a baissé de 5% ce mois-ci",
-      action: "Voir les biens",
-      icon: TrendingDown,
-      color: "text-green-600",
-      bg: "bg-green-50"
-    },
-    {
-      type: "recommendation",
-      title: "Recommandation IA",
-      message: "3 nouveaux biens correspondent parfaitement à vos critères",
-      action: "Consulter",
-      icon: Target,
-      color: "text-blue-600",
-      bg: "bg-blue-50"
-    },
-    {
-      type: "alert",
-      title: "Alerte prix",
-      message: "Un bien de votre liste de favoris a baissé son prix de 10%",
-      action: "Voir l'offre",
-      icon: DollarSign,
-      color: "text-orange-600",
-      bg: "bg-orange-50"
+  const loadAIData = async () => {
+    setLoading(true);
+    try {
+      // Historique conversationnel réel (ai_chat_history : role, content, confidence, created_at)
+      // Pas de colonne session_id : on charge tout l'historique de l'utilisateur.
+      const { data: chatData, error: chatError } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      if (chatError) throw chatError;
+      setChatMessages(chatData || []);
+
+      // Analyses IA réelles (ai_analyses : result jsonb, created_at) + propriété liée si présente
+      const { data: analysesData, error: analysesError } = await supabase
+        .from('ai_analyses')
+        .select('*, property:properties(id, title, name, location, region, ai_score, estimated_value, market_value, price)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (analysesError) throw analysesError;
+      setAiAnalyses(analysesData || []);
+    } catch (error) {
+      console.error('Erreur chargement données IA:', error);
+      setChatMessages([]);
+      setAiAnalyses([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Logic pour envoyer le message à l'IA
-      console.log('Message envoyé:', message);
+  const handleSendMessage = async () => {
+    const content = message.trim();
+    if (!content) return;
+    if (!user?.id) {
+      toast.error('Vous devez être connecté pour utiliser l\'assistant.');
+      return;
+    }
+
+    setSending(true);
+    try {
+      // On enregistre RÉELLEMENT le message de l'utilisateur dans ai_chat_history.
+      // Aucune intégration OpenAI n'est câblée : on NE fabrique PAS de réponse IA.
+      const { data, error } = await supabase
+        .from('ai_chat_history')
+        .insert({ user_id: user.id, role: 'user', content })
+        .select()
+        .single();
+      if (error) throw error;
+
+      setChatMessages(prev => [...prev, data]);
       setMessage('');
+      toast('Message enregistré. La réponse automatique de l\'assistant sera disponible prochainement.', { icon: 'ℹ️' });
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      toast.error('Impossible d\'enregistrer votre message.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Extraction sûre des champs d'une analyse (result jsonb de forme variable)
+  const readAnalysis = (analysis) => {
+    const r = analysis?.result || {};
+    const prop = analysis?.property;
+    const title = r.title || r.type || (prop ? `Analyse : ${prop.title || prop.name}` : 'Analyse IA');
+    const messageText = r.summary || r.message || r.recommendation || r.description || null;
+    const score = typeof r.score === 'number' ? r.score
+      : (typeof prop?.ai_score === 'number' ? prop.ai_score : null);
+    return { title, messageText, score, prop };
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
     }
   };
 
@@ -153,7 +190,10 @@ const ParticulierAI = () => {
             <Sparkles className="w-3 h-3 mr-1" />
             IA PRO Activée
           </Badge>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+          <Button
+            onClick={() => setActiveTab('chat')}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+          >
             <Brain className="w-4 h-4 mr-2" />
             Nouvelle conversation
           </Button>
@@ -199,16 +239,42 @@ const ParticulierAI = () => {
                   <div className="flex-1 p-6 overflow-y-auto">
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
                           <Bot className="w-4 h-4 text-white" />
                         </div>
                         <div className="bg-slate-100 rounded-2xl p-4 max-w-sm">
-                          <p className="text-sm text-slate-800">Bonjour ! Je suis votre assistant IA immobilier. Comment puis-je vous aider aujourd'hui ?</p>
+                          <p className="text-sm text-slate-800">Bonjour ! Je suis votre assistant IA immobilier. Vos messages sont enregistrés ; la réponse automatique arrive prochainement.</p>
                         </div>
                       </div>
+
+                      {loading ? (
+                        <div className="flex items-center gap-2 text-slate-400 text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Chargement de la conversation...
+                        </div>
+                      ) : (
+                        chatMessages.map((msg) => (
+                          msg.role === 'user' ? (
+                            <div key={msg.id} className="flex items-start gap-3 justify-end">
+                              <div className="bg-purple-600 text-white rounded-2xl p-4 max-w-sm">
+                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={msg.id} className="flex items-start gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Bot className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="bg-slate-100 rounded-2xl p-4 max-w-sm">
+                                <p className="text-sm text-slate-800 whitespace-pre-wrap">{msg.content}</p>
+                              </div>
+                            </div>
+                          )
+                        ))
+                      )}
                     </div>
                   </div>
-                  
+
                   {/* Input de chat */}
                   <div className="border-t p-4">
                     <div className="flex items-center gap-2">
@@ -221,24 +287,34 @@ const ParticulierAI = () => {
                           rows={2}
                         />
                         <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled>
                             <Mic className="w-3 h-3" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled>
                             <Image className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
-                      <Button 
+                      <Button
                         onClick={handleSendMessage}
+                        disabled={sending || !message.trim()}
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                       >
-                        <Send className="w-4 h-4" />
+                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Note honnête : pas d'intégration conversationnelle temps réel */}
+              <div className="mt-3 flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                <span>
+                  L'assistant conversationnel automatique n'est pas encore connecté. Vos messages sont enregistrés dans votre historique.
+                  Les analyses IA déjà calculées par la plateforme (score IA, valeur estimée) sont consultables dans l'onglet « Insights ».
+                </span>
+              </div>
             </div>
 
             {/* Quick Actions */}
@@ -248,19 +324,19 @@ const ParticulierAI = () => {
                   <CardTitle className="text-lg">Actions rapides</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab('insights')}>
                     <Calculator className="w-4 h-4 mr-2" />
                     Estimer un bien
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab('suggestions')}>
                     <Search className="w-4 h-4 mr-2" />
                     Recherche intelligente
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab('insights')}>
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Analyse de marché
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab('suggestions')}>
                     <MapPin className="w-4 h-4 mr-2" />
                     Conseils quartier
                   </Button>
@@ -302,68 +378,112 @@ const ParticulierAI = () => {
         </TabsContent>
 
         <TabsContent value="insights" className="space-y-6">
-          <div className="space-y-4">
-            {aiInsights.map((insight, index) => {
-              const Icon = insight.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="hover:shadow-md transition-shadow duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Chargement des analyses IA...
+            </div>
+          ) : aiAnalyses.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <BarChart3 className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                <h3 className="font-semibold text-lg text-slate-700 mb-1">Aucune analyse IA pour le moment</h3>
+                <p className="text-slate-500 text-sm max-w-md mx-auto">
+                  Les analyses générées à partir du score IA et de la valeur estimée des biens que vous consultez apparaîtront ici.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {aiAnalyses.map((analysis, index) => {
+                const { title, messageText, score, prop } = readAnalysis(analysis);
+                return (
+                  <motion.div
+                    key={analysis.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="hover:shadow-md transition-shadow duration-200">
+                      <CardContent className="p-6">
                         <div className="flex items-start gap-4">
-                          <div className={`p-3 rounded-xl ${insight.bg}`}>
-                            <Icon className={`w-5 h-5 ${insight.color}`} />
+                          <div className="p-3 rounded-xl bg-purple-50">
+                            <Brain className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1">{insight.title}</h3>
-                            <p className="text-slate-600 mb-3">{insight.message}</p>
-                            <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                              {insight.action}
-                            </Button>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="font-semibold text-lg">{title}</h3>
+                              {score != null && (
+                                <Badge className="bg-purple-100 text-purple-800">Score IA {score}/100</Badge>
+                              )}
+                            </div>
+                            {messageText ? (
+                              <p className="text-slate-600 mb-2">{messageText}</p>
+                            ) : (
+                              <p className="text-slate-400 italic mb-2 text-sm">Analyse enregistrée (détails non structurés).</p>
+                            )}
+                            {prop && (
+                              <div className="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
+                                {(prop.location || prop.region) && (
+                                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{prop.location || prop.region}</span>
+                                )}
+                                {prop.estimated_value != null && (
+                                  <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />Valeur estimée {Math.round(prop.estimated_value).toLocaleString('fr-FR')} FCFA</span>
+                                )}
+                              </div>
+                            )}
+                            <span className="text-xs text-slate-400 mt-2 block">{formatDate(analysis.created_at)}</span>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="history" className="space-y-6">
-          <div className="space-y-4">
-            {recentChats.map((chat) => (
-              <Card key={chat.id} className="cursor-pointer hover:shadow-md transition-shadow duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{chat.title}</h3>
-                        <Badge className={
-                          chat.status === 'completed' 
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }>
-                          {chat.status === 'completed' ? 'Terminé' : 'En cours'}
-                        </Badge>
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Chargement de l'historique...
+            </div>
+          ) : chatMessages.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Clock className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                <h3 className="font-semibold text-lg text-slate-700 mb-1">Aucune conversation enregistrée</h3>
+                <p className="text-slate-500 text-sm">Vos échanges avec l'assistant IA apparaîtront ici.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {[...chatMessages].reverse().map((chat) => (
+                <Card key={chat.id} className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold">{chat.role === 'user' ? 'Vous' : 'Assistant IA'}</h3>
+                          <Badge className={
+                            chat.role === 'user'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }>
+                            {chat.role === 'user' ? 'Question' : 'Réponse'}
+                          </Badge>
+                        </div>
+                        <p className="text-slate-600 text-sm mb-2 line-clamp-2 whitespace-pre-wrap">{chat.content}</p>
+                        <span className="text-xs text-slate-500">{formatDate(chat.created_at)}</span>
                       </div>
-                      <p className="text-slate-600 text-sm mb-2">{chat.preview}</p>
-                      <span className="text-xs text-slate-500">{chat.timestamp}</span>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

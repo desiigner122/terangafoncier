@@ -1,180 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Building2, 
-  TrendingUp, 
-  DollarSign, 
-  Star, 
-  Search, 
-  Filter, 
-  Plus, 
-  Phone, 
-  Mail, 
-  MapPin, 
+import {
+  Users,
+  Building2,
+  Search,
+  Plus,
+  Phone,
+  Mail,
   Calendar,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Target,
   Activity,
   FileText,
-  Briefcase,
   Home,
-  Landmark,
-  TreePine,
   UserCheck,
-  Archive,
-  Download,
-  Share2
+  Loader2
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const MairieCRM = ({ dashboardStats }) => {
+  const { user } = useAuth();
+  const ownerId = user?.id;
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [selectedContact, setSelectedContact] = useState(null);
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données CRM simulées pour la mairie
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: 'Association Les Verts',
-      type: 'association',
-      email: 'contact@lesverts-commune.org',
-      phone: '+221 77 123 45 67',
-      score: 85,
-      status: 'active',
-      lastContact: '2024-01-15',
-      projects: ['Aménagement Parc Central', 'Zone Verte Quartier Nord'],
-      value: 0, // Associations n'ont pas de valeur commerciale
-      priority: 'high',
-      avatar: null,
-      address: 'Quartier Résidentiel Nord',
-      notes: 'Très actifs dans les projets environnementaux communaux'
-    },
-    {
-      id: 2,
-      name: 'Entreprise BTP Sénégal',
-      type: 'entreprise',
-      email: 'direction@btpsenegal.com',
-      phone: '+221 33 987 65 43',
-      score: 92,
-      status: 'active',
-      lastContact: '2024-01-20',
-      projects: ['Construction École Primaire', 'Rénovation Mairie'],
-      value: 45000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Zone Industrielle',
-      notes: 'Partenaire privilégié pour les grands travaux communaux'
-    },
-    {
-      id: 3,
-      name: 'M. Amadou Diallo',
-      type: 'citoyen',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 76 654 32 10',
-      score: 68,
-      status: 'prospect',
-      lastContact: '2024-01-10',
-      projects: ['Demande Parcelle Résidentielle'],
-      value: 8500000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Quartier Centre-Ville',
-      notes: 'Citoyen exemplaire, membre conseil de quartier'
-    },
-    {
-      id: 4,
-      name: 'Coopérative Agricole Locale',
-      type: 'cooperative',
-      email: 'info@coopagri-locale.sn',
-      phone: '+221 77 456 78 90',
-      score: 76,
-      status: 'active',
-      lastContact: '2024-01-18',
-      projects: ['Extension Zone Agricole', 'Marché Hebdomadaire'],
-      value: 12000000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Zone Agricole Communale',
-      notes: 'Important pour le développement économique local'
-    },
-    {
-      id: 5,
-      name: 'Mme Fatou Sow',
-      type: 'citoyen',
-      email: 'fatou.sow@gmail.com',
-      phone: '+221 78 123 45 67',
-      score: 72,
-      status: 'active',
-      lastContact: '2024-01-12',
-      projects: ['Autorisation Commerce Local'],
-      value: 3500000, // CFA
-      priority: 'low',
-      avatar: null,
-      address: 'Quartier Marché',
-      notes: 'Commerçante locale, très impliquée communauté'
-    }
-  ]);
+  // Chargement des contacts réels depuis crm_contacts (owner_id = mairie connectée)
+  useEffect(() => {
+    if (!ownerId) return;
+    let active = true;
 
-  const [crmStats, setCrmStats] = useState({
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('crm_contacts')
+          .select('id, name, email, phone, company, status, created_at')
+          .eq('owner_id', ownerId)
+          .order('created_at', { ascending: false });
+
+        if (!active) return;
+        if (error) {
+          console.error('Erreur chargement crm_contacts:', error);
+          setContacts([]);
+        } else {
+          setContacts(data || []);
+        }
+      } catch (err) {
+        if (active) {
+          console.error('Erreur chargement crm_contacts:', err);
+          setContacts([]);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [ownerId]);
+
+  // Statistiques dérivées des vraies données
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const crmStats = {
     totalContacts: contacts.length,
-    activeProjects: 12,
-    monthlyInteractions: 89,
-    conversionRate: 78,
-    citizenSatisfaction: 85,
-    pendingRequests: 15
-  });
+    activeContacts: contacts.filter((c) => (c.status || '').toLowerCase() === 'active').length,
+    prospects: contacts.filter((c) => (c.status || '').toLowerCase() === 'prospect').length,
+    newThisMonth: contacts.filter((c) => {
+      if (!c.created_at) return false;
+      const d = new Date(c.created_at);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }).length
+  };
 
-  // Filtrage des contacts
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         contact.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || contact.type === filterType;
+  // Filtrage des contacts (recherche + statut réel)
+  const filteredContacts = contacts.filter((contact) => {
+    const name = (contact.name || '').toLowerCase();
+    const email = (contact.email || '').toLowerCase();
+    const company = (contact.company || '').toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = name.includes(term) || email.includes(term) || company.includes(term);
+    const matchesFilter =
+      filterStatus === 'all' || (contact.status || '').toLowerCase() === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'entreprise': return Building2;
-      case 'association': return Users;
-      case 'cooperative': return TreePine;
-      case 'citoyen': return Home;
-      default: return Users;
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'entreprise': return 'bg-blue-100 text-blue-800';
-      case 'association': return 'bg-green-100 text-green-800';
-      case 'cooperative': return 'bg-purple-100 text-purple-800';
-      case 'citoyen': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (status) => {
+    switch ((status || '').toLowerCase()) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'prospect': return 'bg-blue-100 text-blue-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-yellow-100 text-yellow-800';
     }
   };
 
   const ContactCard = ({ contact, onClick }) => {
-    const TypeIcon = getTypeIcon(contact.type);
-    
+    const Icon = contact.company ? Building2 : Home;
+
     return (
       <motion.div
         whileHover={{ scale: 1.02 }}
@@ -187,78 +121,47 @@ const MairieCRM = ({ dashboardStats }) => {
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
                 <div className="bg-teal-100 p-2 rounded-lg">
-                  <TypeIcon className="h-5 w-5 text-teal-600" />
+                  <Icon className="h-5 w-5 text-teal-600" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-semibold text-gray-900">
-                    {contact.name}
+                    {contact.name || 'Sans nom'}
                   </CardTitle>
-                  <CardDescription className="flex items-center space-x-2 mt-1">
-                    <Badge className={`text-xs ${getTypeColor(contact.type)}`}>
-                      {contact.type}
-                    </Badge>
-                    <Badge className={`text-xs ${getPriorityColor(contact.priority)}`}>
-                      {contact.priority}
-                    </Badge>
-                  </CardDescription>
+                  {contact.company && (
+                    <CardDescription className="mt-1">
+                      {contact.company}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-gray-900">
-                  Score: {contact.score}%
-                </div>
-                <Progress value={contact.score} className="w-16 h-2 mt-1" />
-              </div>
+              <Badge className={`text-xs ${getStatusColor(contact.status)}`}>
+                {contact.status || '—'}
+              </Badge>
             </div>
           </CardHeader>
 
           <CardContent className="pt-0">
             <div className="space-y-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Mail className="h-4 w-4" />
-                <span className="truncate">{contact.email}</span>
-              </div>
-              
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Phone className="h-4 w-4" />
-                <span>{contact.phone}</span>
-              </div>
-
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <MapPin className="h-4 w-4" />
-                <span className="truncate">{contact.address}</span>
-              </div>
-
-              <div className="pt-2 border-t">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Projets actifs:</span>
-                  <Badge variant="outline" className="text-xs">
-                    {contact.projects.length}
-                  </Badge>
+              {contact.email && (
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Mail className="h-4 w-4" />
+                  <span className="truncate">{contact.email}</span>
                 </div>
-                
-                {contact.value > 0 && (
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-600">Valeur:</span>
-                    <span className="font-semibold text-green-600">
-                      {(contact.value / 1000000).toFixed(1)}M CFA
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
 
-              <div className="flex items-center justify-between pt-2">
+              {contact.phone && (
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Phone className="h-4 w-4" />
+                  <span>{contact.phone}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t">
                 <span className="text-xs text-gray-500">
-                  Dernier contact: {new Date(contact.lastContact).toLocaleDateString('fr-FR')}
+                  {contact.created_at
+                    ? `Ajouté le ${new Date(contact.created_at).toLocaleDateString('fr-FR')}`
+                    : '—'}
                 </span>
-                <Badge 
-                  className={`text-xs ${
-                    contact.status === 'active' ? 'bg-green-100 text-green-800' : 
-                    'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {contact.status}
-                </Badge>
               </div>
             </div>
           </CardContent>
@@ -269,7 +172,7 @@ const MairieCRM = ({ dashboardStats }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header avec statistiques CRM */}
+      {/* Header avec statistiques CRM (dérivées des vraies données) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -281,7 +184,9 @@ const MairieCRM = ({ dashboardStats }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Total Contacts</p>
-                  <p className="text-2xl font-bold text-blue-900">{crmStats.totalContacts}</p>
+                  <p className="text-2xl font-bold text-blue-900">
+                    {loading ? '—' : crmStats.totalContacts}
+                  </p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
@@ -298,10 +203,12 @@ const MairieCRM = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Projets Actifs</p>
-                  <p className="text-2xl font-bold text-green-900">{crmStats.activeProjects}</p>
+                  <p className="text-green-600 text-sm font-medium">Contacts Actifs</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {loading ? '—' : crmStats.activeContacts}
+                  </p>
                 </div>
-                <Target className="h-8 w-8 text-green-600" />
+                <UserCheck className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -316,10 +223,12 @@ const MairieCRM = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 text-sm font-medium">Satisfaction Citoyens</p>
-                  <p className="text-2xl font-bold text-purple-900">{crmStats.citizenSatisfaction}%</p>
+                  <p className="text-purple-600 text-sm font-medium">Prospects</p>
+                  <p className="text-2xl font-bold text-purple-900">
+                    {loading ? '—' : crmStats.prospects}
+                  </p>
                 </div>
-                <Star className="h-8 w-8 text-purple-600" />
+                <Activity className="h-8 w-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -334,10 +243,12 @@ const MairieCRM = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-600 text-sm font-medium">Interactions/Mois</p>
-                  <p className="text-2xl font-bold text-orange-900">{crmStats.monthlyInteractions}</p>
+                  <p className="text-orange-600 text-sm font-medium">Nouveaux ce mois</p>
+                  <p className="text-2xl font-bold text-orange-900">
+                    {loading ? '—' : crmStats.newThisMonth}
+                  </p>
                 </div>
-                <Activity className="h-8 w-8 text-orange-600" />
+                <Calendar className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -352,7 +263,7 @@ const MairieCRM = ({ dashboardStats }) => {
             <span>Gestion des Relations Communales</span>
           </CardTitle>
           <CardDescription>
-            Gérez les relations avec citoyens, entreprises, associations et coopératives
+            Gérez les relations avec citoyens, entreprises et administrés
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -369,62 +280,68 @@ const MairieCRM = ({ dashboardStats }) => {
 
             <div className="flex space-x-2">
               <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterType('all')}
+                variant={filterStatus === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterStatus('all')}
                 size="sm"
               >
                 Tous
               </Button>
               <Button
-                variant={filterType === 'citoyen' ? 'default' : 'outline'}
-                onClick={() => setFilterType('citoyen')}
+                variant={filterStatus === 'active' ? 'default' : 'outline'}
+                onClick={() => setFilterStatus('active')}
                 size="sm"
               >
-                Citoyens
+                Actifs
               </Button>
               <Button
-                variant={filterType === 'entreprise' ? 'default' : 'outline'}
-                onClick={() => setFilterType('entreprise')}
+                variant={filterStatus === 'prospect' ? 'default' : 'outline'}
+                onClick={() => setFilterStatus('prospect')}
                 size="sm"
               >
-                Entreprises
+                Prospects
               </Button>
               <Button
-                variant={filterType === 'association' ? 'default' : 'outline'}
-                onClick={() => setFilterType('association')}
+                variant={filterStatus === 'inactive' ? 'default' : 'outline'}
+                onClick={() => setFilterStatus('inactive')}
                 size="sm"
               >
-                Associations
-              </Button>
-              <Button
-                variant={filterType === 'cooperative' ? 'default' : 'outline'}
-                onClick={() => setFilterType('cooperative')}
-                size="sm"
-              >
-                Coopératives
+                Inactifs
               </Button>
             </div>
           </div>
 
           {/* Liste des contacts */}
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            layout
-          >
-            {filteredContacts.map((contact) => (
-              <ContactCard
-                key={contact.id}
-                contact={contact}
-                onClick={setSelectedContact}
-              />
-            ))}
-          </motion.div>
-
-          {filteredContacts.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Aucun contact trouvé</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-gray-500">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Chargement des contacts...</span>
             </div>
+          ) : (
+            <>
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                layout
+              >
+                {filteredContacts.map((contact) => (
+                  <ContactCard
+                    key={contact.id}
+                    contact={contact}
+                    onClick={setSelectedContact}
+                  />
+                ))}
+              </motion.div>
+
+              {filteredContacts.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    {contacts.length === 0
+                      ? 'Aucun contact enregistré pour le moment'
+                      : 'Aucun contact ne correspond à votre recherche'}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

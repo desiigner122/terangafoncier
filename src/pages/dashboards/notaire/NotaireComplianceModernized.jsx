@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Shield, CheckCircle, AlertTriangle, XCircle, TrendingUp,
   FileText, Calendar, User, Target, Award, Activity,
   BarChart3, PieChart, Clock, AlertCircle, Filter, Search,
@@ -15,14 +15,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
-import { NotaireSupabaseService } from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 import { LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 /**
  * NotaireComplianceModernized.jsx
- * Tableau de bord conformité réglementaire avec données Supabase réelles
- * Remplace NotaireCompliance.jsx (mock data)
+ * Tableau de bord conformité réglementaire — données Supabase réelles.
+ * Source : table compliance_checks (colonnes réelles : id, notaire_id, act_id,
+ * check_type, compliance_score, status ['pending'|'passed'|'failed'], details jsonb, created_at).
+ * Aucun score inventé : valeurs réelles ou état vide honnête.
  */
+
+const TYPE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16', '#f97316'];
+
+// Libellés lisibles pour les types de contrôle connus ; sinon on affiche la valeur brute.
+const TYPE_LABELS = {
+  regulatory: 'Réglementaire',
+  reglementaire: 'Réglementaire',
+  quality: 'Qualité',
+  qualite: 'Qualité',
+  security: 'Sécurité',
+  securite: 'Sécurité',
+  aml: 'Anti-blanchiment',
+  kyc: 'KYC / Identité',
+  fiscal: 'Fiscal',
+  document: 'Documentaire'
+};
 
 export default function NotaireComplianceModernized() {
   const { user } = useAuth();
@@ -34,18 +52,13 @@ export default function NotaireComplianceModernized() {
   const [selectedCheck, setSelectedCheck] = useState(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // États statistiques
-  const [globalScore, setGlobalScore] = useState(0);
-  const [pendingActions, setPendingActions] = useState(0);
-  const [criticalIssues, setCriticalIssues] = useState(0);
-
   // États de filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
   /**
-   * 🔄 CHARGEMENT DONNÉES SUPABASE
+   * 🔄 CHARGEMENT DONNÉES SUPABASE (colonnes réelles uniquement)
    */
   useEffect(() => {
     if (user?.id) {
@@ -56,47 +69,57 @@ export default function NotaireComplianceModernized() {
   const loadCompliance = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getComplianceChecks(user.id);
+      const { data, error } = await supabase
+        .from('compliance_checks')
+        .select(`
+          id,
+          check_type,
+          status,
+          compliance_score,
+          details,
+          created_at,
+          act:notarial_acts(reference, client_name, act_type)
+        `)
+        .eq('notaire_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (result.success) {
-        setChecks(result.data);
-        setFilteredChecks(result.data);
+      if (error) throw error;
 
-        // Calculer statistiques
-        const avgScore = result.data.length > 0
-          ? result.data.reduce((sum, c) => sum + (c.compliance_score || 0), 0) / result.data.length
-          : 100;
-        setGlobalScore(Math.round(avgScore));
-
-        const pending = result.data.reduce((count, check) => {
-          if (check.corrective_actions) {
-            const actions = typeof check.corrective_actions === 'string' 
-              ? JSON.parse(check.corrective_actions) 
-              : check.corrective_actions;
-            return count + (actions.filter(a => a.status !== 'completed').length || 0);
-          }
-          return count;
-        }, 0);
-        setPendingActions(pending);
-
-        const critical = result.data.filter(c => 
-          c.check_status === 'failed' && c.compliance_score < 60
-        ).length;
-        setCriticalIssues(critical);
-
-      } else {
-        window.safeGlobalToast?.({
-          title: "Erreur de chargement",
-          description: result.error || "Impossible de charger les données de conformité",
-          variant: "destructive"
-        });
-      }
+      setChecks(data || []);
+      setFilteredChecks(data || []);
     } catch (error) {
       console.error('Erreur chargement conformité:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur de chargement",
+        description: error.message || "Impossible de charger les données de conformité",
+        variant: "destructive"
+      });
+      setChecks([]);
+      setFilteredChecks([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  /**
+   * 📊 STATISTIQUES DÉRIVÉES (calculées sur les données réelles, jamais fabriquées)
+   */
+  const passedCount = checks.filter(c => c.status === 'passed').length;
+  const pendingCount = checks.filter(c => c.status === 'pending').length;
+  const failedChecks = checks.filter(c => c.status === 'failed');
+  // Actions correctives = contrôles échoués nécessitant une correction (donnée réelle)
+  const pendingActions = failedChecks.length;
+  // Problèmes critiques = contrôles échoués avec un score faible
+  const criticalIssues = failedChecks.filter(c => (c.compliance_score || 0) < 60).length;
+  const hasData = checks.length > 0;
+  // Score global = moyenne réelle des compliance_score ; null si aucune donnée (pas de valeur inventée)
+  const globalScore = hasData
+    ? Math.round(checks.reduce((sum, c) => sum + (c.compliance_score || 0), 0) / checks.length)
+    : null;
+  const successRate = hasData ? Math.round((passedCount / checks.length) * 100) : null;
+
+  // Types de contrôle réellement présents (pour le filtre dynamique)
+  const availableTypes = [...new Set(checks.map(c => c.check_type).filter(Boolean))];
 
   /**
    * 🔍 FILTRAGE
@@ -107,13 +130,14 @@ export default function NotaireComplianceModernized() {
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(c =>
-        c.check_number?.toLowerCase().includes(search) ||
-        c.check_type?.toLowerCase().includes(search)
+        c.check_type?.toLowerCase().includes(search) ||
+        c.act?.reference?.toLowerCase().includes(search) ||
+        c.act?.client_name?.toLowerCase().includes(search)
       );
     }
 
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(c => c.check_status === statusFilter);
+      filtered = filtered.filter(c => c.status === statusFilter);
     }
 
     if (typeFilter !== 'all') {
@@ -124,47 +148,43 @@ export default function NotaireComplianceModernized() {
   }, [searchTerm, statusFilter, typeFilter, checks]);
 
   /**
-   * 📊 DONNÉES GRAPHIQUES
+   * 📊 DONNÉES GRAPHIQUES (dérivées des données réelles)
    */
-  const trendData = checks
-    .sort((a, b) => new Date(a.check_date) - new Date(b.check_date))
-    .slice(-6)
+  const trendData = [...checks]
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .slice(-12)
     .map(c => ({
-      date: new Date(c.check_date).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      date: new Date(c.created_at).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
       score: c.compliance_score || 0
     }));
 
-  const typeDistribution = [
-    { name: 'Réglementaire', value: checks.filter(c => c.check_type === 'regulatory').length, color: '#3b82f6' },
-    { name: 'Qualité', value: checks.filter(c => c.check_type === 'quality').length, color: '#10b981' },
-    { name: 'Sécurité', value: checks.filter(c => c.check_type === 'security').length, color: '#f59e0b' }
-  ];
-
-  const statusDistribution = [
-    { name: 'Réussi', value: checks.filter(c => c.check_status === 'completed').length, color: '#10b981' },
-    { name: 'En attente', value: checks.filter(c => c.check_status === 'pending').length, color: '#f59e0b' },
-    { name: 'Échoué', value: checks.filter(c => c.check_status === 'failed').length, color: '#ef4444' }
-  ];
+  const typeDistribution = Object.entries(
+    checks.reduce((acc, c) => {
+      const t = c.check_type || 'autre';
+      acc[t] = (acc[t] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([type, value], index) => ({
+    name: getTypeLabel(type),
+    value,
+    color: TYPE_COLORS[index % TYPE_COLORS.length]
+  }));
 
   /**
    * 🎨 FONCTIONS D'AFFICHAGE
    */
+  function getTypeLabel(type) {
+    if (!type) return 'Autre';
+    return TYPE_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  }
+
   const getStatusConfig = (status) => {
     const configs = {
-      completed: { label: 'Réussi', color: 'bg-green-500', icon: CheckCircle, textColor: 'text-green-700' },
+      passed: { label: 'Conforme', color: 'bg-green-500', icon: CheckCircle, textColor: 'text-green-700' },
       pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock, textColor: 'text-yellow-700' },
-      failed: { label: 'Échoué', color: 'bg-red-500', icon: XCircle, textColor: 'text-red-700' }
+      failed: { label: 'Non conforme', color: 'bg-red-500', icon: XCircle, textColor: 'text-red-700' }
     };
     return configs[status] || configs.pending;
-  };
-
-  const getTypeLabel = (type) => {
-    const types = {
-      regulatory: 'Réglementaire',
-      quality: 'Qualité',
-      security: 'Sécurité'
-    };
-    return types[type] || type;
   };
 
   const getScoreColor = (score) => {
@@ -179,13 +199,44 @@ export default function NotaireComplianceModernized() {
     return 'bg-red-100 text-red-700';
   };
 
+  // Référence lisible d'un contrôle (pas de "check_number" en base : on dérive de l'acte lié)
+  const getCheckRef = (check) => {
+    if (check.act?.reference) return check.act.reference;
+    return `Contrôle ${getTypeLabel(check.check_type)}`;
+  };
+
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const renderDetails = (details) => {
+    if (!details) return null;
+    if (typeof details === 'string') return details;
+    if (Array.isArray(details)) {
+      return (
+        <ul className="list-disc pl-5 space-y-1">
+          {details.map((d, i) => (
+            <li key={i}>{typeof d === 'string' ? d : JSON.stringify(d)}</li>
+          ))}
+        </ul>
+      );
+    }
+    // Objet jsonb : afficher les paires clé/valeur
+    return (
+      <div className="space-y-1">
+        {Object.entries(details).map(([k, v]) => (
+          <div key={k} className="flex gap-2">
+            <span className="font-medium capitalize">{k.replace(/_/g, ' ')}:</span>
+            <span>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -203,7 +254,7 @@ export default function NotaireComplianceModernized() {
               Conformité Réglementaire
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Suivi de la conformité notariale • Données temps réel
+              Suivi de la conformité notariale
             </p>
           </div>
           <Button>
@@ -221,26 +272,37 @@ export default function NotaireComplianceModernized() {
                   Score de Conformité Global
                 </h3>
                 <div className="flex items-baseline gap-3">
-                  <span className={`text-5xl font-bold ${getScoreColor(globalScore)}`}>
-                    {globalScore}%
-                  </span>
-                  {globalScore >= 90 ? (
-                    <Badge className="bg-green-100 text-green-700">Excellent</Badge>
-                  ) : globalScore >= 70 ? (
-                    <Badge className="bg-yellow-100 text-yellow-700">Satisfaisant</Badge>
+                  {hasData ? (
+                    <>
+                      <span className={`text-5xl font-bold ${getScoreColor(globalScore)}`}>
+                        {globalScore}%
+                      </span>
+                      {globalScore >= 90 ? (
+                        <Badge className="bg-green-100 text-green-700">Excellent</Badge>
+                      ) : globalScore >= 70 ? (
+                        <Badge className="bg-yellow-100 text-yellow-700">Satisfaisant</Badge>
+                      ) : (
+                        <Badge className="bg-red-100 text-red-700">À améliorer</Badge>
+                      )}
+                    </>
                   ) : (
-                    <Badge className="bg-red-100 text-red-700">À améliorer</Badge>
+                    <span className="text-5xl font-bold text-gray-400">—</span>
                   )}
                 </div>
-                <Progress value={globalScore} className="h-3 mt-4" />
+                <Progress value={globalScore || 0} className="h-3 mt-4" />
+                {!hasData && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Aucune vérification de conformité enregistrée pour le moment.
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-3 gap-6 ml-8">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-green-600">{checks.filter(c => c.check_status === 'completed').length}</p>
-                  <p className="text-sm text-gray-600">Réussis</p>
+                  <p className="text-3xl font-bold text-green-600">{passedCount}</p>
+                  <p className="text-sm text-gray-600">Conformes</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-yellow-600">{checks.filter(c => c.check_status === 'pending').length}</p>
+                  <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
                   <p className="text-sm text-gray-600">En attente</p>
                 </div>
                 <div className="text-center">
@@ -296,9 +358,7 @@ export default function NotaireComplianceModernized() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Taux de réussite</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {checks.length > 0 
-                      ? Math.round((checks.filter(c => c.check_status === 'completed').length / checks.length) * 100)
-                      : 0}%
+                    {successRate !== null ? `${successRate}%` : '—'}
                   </p>
                 </div>
                 <Award className="h-8 w-8 text-green-500" />
@@ -336,9 +396,9 @@ export default function NotaireComplianceModernized() {
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">Tous les statuts</option>
-                <option value="completed">Réussi</option>
+                <option value="passed">Conforme</option>
                 <option value="pending">En attente</option>
-                <option value="failed">Échoué</option>
+                <option value="failed">Non conforme</option>
               </select>
 
               <select
@@ -347,9 +407,9 @@ export default function NotaireComplianceModernized() {
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">Tous les types</option>
-                <option value="regulatory">Réglementaire</option>
-                <option value="quality">Qualité</option>
-                <option value="security">Sécurité</option>
+                {availableTypes.map(type => (
+                  <option key={type} value={type}>{getTypeLabel(type)}</option>
+                ))}
               </select>
             </div>
           </Card>
@@ -363,12 +423,16 @@ export default function NotaireComplianceModernized() {
             <Card className="p-12 text-center">
               <Shield className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucune vérification</h3>
-              <p className="text-gray-500">Modifiez vos filtres ou lancez une nouvelle vérification</p>
+              <p className="text-gray-500">
+                {checks.length === 0
+                  ? "Aucune vérification de conformité n'a encore été enregistrée."
+                  : "Aucun résultat ne correspond à vos filtres."}
+              </p>
             </Card>
           ) : (
             <div className="space-y-3">
               {filteredChecks.map((check, index) => {
-                const statusConfig = getStatusConfig(check.check_status);
+                const statusConfig = getStatusConfig(check.status);
                 const StatusIcon = statusConfig.icon;
 
                 return (
@@ -393,22 +457,24 @@ export default function NotaireComplianceModernized() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-1">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
-                                  {check.check_number}
+                                  {getCheckRef(check)}
                                 </h3>
                                 <Badge variant="outline">{getTypeLabel(check.check_type)}</Badge>
-                                <Badge className={getScoreBadgeColor(check.compliance_score)}>
-                                  Score: {check.compliance_score}%
-                                </Badge>
+                                {check.compliance_score != null && (
+                                  <Badge className={getScoreBadgeColor(check.compliance_score)}>
+                                    Score: {check.compliance_score}%
+                                  </Badge>
+                                )}
                               </div>
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {formatDate(check.check_date)}
+                                  {formatDate(check.created_at)}
                                 </span>
-                                {check.completed_date && (
+                                {check.act?.client_name && (
                                   <span className="flex items-center gap-1">
-                                    <CheckCheck className="h-3 w-3" />
-                                    Complété: {formatDate(check.completed_date)}
+                                    <User className="h-3 w-3" />
+                                    {check.act.client_name}
                                   </span>
                                 )}
                               </div>
@@ -417,7 +483,7 @@ export default function NotaireComplianceModernized() {
 
                           <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <Progress value={check.compliance_score} className="h-2 w-32 mb-1" />
+                              <Progress value={check.compliance_score || 0} className="h-2 w-32 mb-1" />
                               <p className={`text-sm font-semibold ${statusConfig.textColor}`}>
                                 {statusConfig.label}
                               </p>
@@ -444,16 +510,22 @@ export default function NotaireComplianceModernized() {
                 <CardTitle>Évolution du Score de Conformité</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={2} name="Score" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {trendData.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                    Aucune donnée à afficher
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={trendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={2} name="Score" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
@@ -462,25 +534,31 @@ export default function NotaireComplianceModernized() {
                 <CardTitle>Répartition par Type</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={typeDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.name}: ${entry.value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {typeDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
+                {typeDistribution.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                    Aucune donnée à afficher
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={typeDistribution}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) => `${entry.name}: ${entry.value}`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {typeDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -495,40 +573,41 @@ export default function NotaireComplianceModernized() {
                 Actions Correctives en Cours
               </CardTitle>
               <CardDescription>
-                {pendingActions} actions en attente de traitement
+                {pendingActions} contrôle(s) non conforme(s) nécessitant une correction
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {checks
-                .filter(c => c.corrective_actions)
-                .map(check => {
-                  const actions = typeof check.corrective_actions === 'string' 
-                    ? JSON.parse(check.corrective_actions) 
-                    : check.corrective_actions;
-                  
-                  return actions?.map((action, idx) => (
-                    <div key={`${check.id}-${idx}`} className="p-4 mb-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                            {action.title || action.description}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            Check: {check.check_number}
-                          </p>
-                          {action.dueDate && (
-                            <p className="text-xs text-gray-500">
-                              Échéance: {formatDate(action.dueDate)}
-                            </p>
-                          )}
-                        </div>
-                        <Badge className={action.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
-                          {action.status === 'completed' ? 'Complété' : 'En cours'}
-                        </Badge>
+              {failedChecks.length === 0 ? (
+                <div className="py-8 text-center text-gray-500">
+                  <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-3" />
+                  Aucune action corrective en attente.
+                </div>
+              ) : (
+                failedChecks.map(check => (
+                  <div key={check.id} className="p-4 mb-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                          {getCheckRef(check)}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          {getTypeLabel(check.check_type)}
+                          {check.compliance_score != null && ` • Score ${check.compliance_score}%`}
+                          {' • '}{formatDate(check.created_at)}
+                        </p>
+                        {check.details && (
+                          <div className="text-xs text-gray-500">
+                            {renderDetails(check.details)}
+                          </div>
+                        )}
                       </div>
+                      <Badge className="bg-red-100 text-red-700 whitespace-nowrap">
+                        Non conforme
+                      </Badge>
                     </div>
-                  ));
-                })}
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -543,7 +622,7 @@ export default function NotaireComplianceModernized() {
               Détails de la vérification
             </DialogTitle>
             <DialogDescription>
-              {selectedCheck?.check_number}
+              {selectedCheck && getCheckRef(selectedCheck)}
             </DialogDescription>
           </DialogHeader>
 
@@ -553,39 +632,56 @@ export default function NotaireComplianceModernized() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-sm text-gray-500 mb-1">Score de conformité</p>
-                    <div className="flex items-center gap-2">
-                      <Progress value={selectedCheck.compliance_score} className="h-2 flex-1" />
-                      <span className={`text-2xl font-bold ${getScoreColor(selectedCheck.compliance_score)}`}>
-                        {selectedCheck.compliance_score}%
-                      </span>
-                    </div>
+                    {selectedCheck.compliance_score != null ? (
+                      <div className="flex items-center gap-2">
+                        <Progress value={selectedCheck.compliance_score} className="h-2 flex-1" />
+                        <span className={`text-2xl font-bold ${getScoreColor(selectedCheck.compliance_score)}`}>
+                          {selectedCheck.compliance_score}%
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-bold text-gray-400">—</span>
+                    )}
                   </div>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-sm text-gray-500 mb-1">Statut</p>
-                    <Badge className={getStatusConfig(selectedCheck.check_status).color}>
-                      {getStatusConfig(selectedCheck.check_status).label}
+                    <Badge className={getStatusConfig(selectedCheck.status).color}>
+                      {getStatusConfig(selectedCheck.status).label}
                     </Badge>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-sm text-gray-500 mb-1">Type de contrôle</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{getTypeLabel(selectedCheck.check_type)}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-sm text-gray-500 mb-1">Date</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(selectedCheck.created_at)}</p>
                   </div>
                 </div>
 
-                {selectedCheck.findings && (
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Anomalies détectées
-                    </h4>
-                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                      {typeof selectedCheck.findings === 'string' 
-                        ? selectedCheck.findings 
-                        : JSON.stringify(selectedCheck.findings, null, 2)}
-                    </div>
+                {selectedCheck.act?.client_name && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 className="font-semibold mb-1">Acte lié</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedCheck.act.reference ? `${selectedCheck.act.reference} — ` : ''}
+                      {selectedCheck.act.client_name}
+                    </p>
                   </div>
                 )}
 
-                {selectedCheck.notes && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <h4 className="font-semibold mb-2">Notes</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedCheck.notes}</p>
+                {selectedCheck.details ? (
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Détails du contrôle
+                    </h4>
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {renderDetails(selectedCheck.details)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm text-gray-500">
+                    Aucun détail complémentaire enregistré pour ce contrôle.
                   </div>
                 )}
               </div>

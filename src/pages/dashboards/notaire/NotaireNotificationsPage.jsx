@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Bell, 
-  Check, 
-  X, 
-  Archive, 
-  Settings, 
-  Mail, 
+import {
+  Bell,
+  Check,
+  X,
+  Settings,
+  Mail,
   MessageSquare,
   AlertCircle,
   CheckCircle,
@@ -16,6 +15,7 @@ import {
   VolumeX
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const NotaireNotificationsPage = () => {
@@ -104,34 +104,47 @@ const NotaireNotificationsPage = () => {
     }
   };
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n => 
+  // ✅ Marquage réel : colonne notifications.read (bool)
+  const markAsRead = async (id) => {
+    setNotifications(prev => prev.map(n =>
       n.id === id ? { ...n, read: true } : n
     ));
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+    if (error) console.error('Erreur markAsRead:', error);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    const hadUnread = notifications.some(n => !n.read);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (!hadUnread || !user) return;
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    if (error) console.error('Erreur markAllAsRead:', error);
   };
 
-  const archiveNotification = (id) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, archived: true } : n
-    ));
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  // ✅ Suppression réelle de la ligne notifications
+  const deleteNotification = async (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+    if (error) console.error('Erreur deleteNotification:', error);
   };
 
   const filteredNotifications = notifications.filter(n => {
-    if (n.archived) return false;
     if (filterType === 'all') return true;
     if (filterType === 'unread') return !n.read;
     return n.type === filterType;
   });
 
-  const unreadCount = notifications.filter(n => !n.read && !n.archived).length;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
@@ -205,7 +218,12 @@ const NotaireNotificationsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Liste des notifications */}
         <div className="lg:col-span-2 space-y-4">
-          {filteredNotifications.length === 0 ? (
+          {isLoading ? (
+            <div className="bg-white rounded-xl p-12 text-center shadow-md border border-slate-200">
+              <Bell size={64} className="text-slate-300 mx-auto mb-4 animate-pulse" />
+              <p className="text-slate-500">Chargement des notifications…</p>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center shadow-md border border-slate-200">
               <Bell size={64} className="text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-600 mb-2">
@@ -217,7 +235,7 @@ const NotaireNotificationsPage = () => {
             </div>
           ) : (
             filteredNotifications.map((notification, index) => {
-              const config = typeConfig[notification.type];
+              const config = typeConfig[notification.type] || typeConfig.info;
               const Icon = config.icon;
               
               return (
@@ -247,7 +265,9 @@ const NotaireNotificationsPage = () => {
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-xs text-slate-500 flex items-center gap-1">
                           <Clock size={14} />
-                          {new Date(notification.timestamp).toLocaleString('fr-FR')}
+                          {notification.created_at
+                            ? new Date(notification.created_at).toLocaleString('fr-FR')
+                            : '—'}
                         </span>
                         <div className="flex gap-2">
                           {!notification.read && (
@@ -258,12 +278,6 @@ const NotaireNotificationsPage = () => {
                               Marquer comme lu
                             </button>
                           )}
-                          <button
-                            onClick={() => archiveNotification(notification.id)}
-                            className="text-slate-600 hover:text-slate-800"
-                          >
-                            <Archive size={16} />
-                          </button>
                           <button
                             onClick={() => deleteNotification(notification.id)}
                             className="text-red-600 hover:text-red-800"
@@ -389,9 +403,16 @@ const NotaireNotificationsPage = () => {
               </div>
             </div>
 
-            <button className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+            <button
+              disabled
+              title="La synchronisation des préférences sera bientôt disponible"
+              className="w-full mt-6 bg-slate-300 text-slate-600 py-3 rounded-lg font-semibold cursor-not-allowed"
+            >
               Enregistrer les préférences
             </button>
+            <p className="text-xs text-slate-400 text-center mt-2">
+              Synchronisation des préférences bientôt disponible
+            </p>
           </motion.div>
         </div>
       </div>

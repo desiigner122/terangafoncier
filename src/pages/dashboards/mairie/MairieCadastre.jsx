@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Map,
   Layers,
   Search,
@@ -33,29 +33,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Formatte une valeur FCFA (nombre) en libellé lisible
+const formatFCFA = (value) => {
+  if (value === null || value === undefined || isNaN(Number(value))) return '—';
+  const v = Number(value);
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M FCFA`;
+  return `${v.toLocaleString('fr-FR')} FCFA`;
+};
 
 // Composant Carte Interactive pour le Cadastre
 const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
   const [mapView, setMapView] = useState('satellite');
   const [showParcels, setShowParcels] = useState(true);
   const [showZones, setShowZones] = useState(true);
-  
+
   return (
     <div className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden border">
       {/* Contrôles de la carte */}
@@ -85,7 +95,7 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
             </Button>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-2">
           <div className="flex flex-col space-y-2">
             <label className="flex items-center space-x-2 text-sm">
@@ -139,8 +149,8 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
           </svg>
         </div>
 
-        {/* Parcelles interactives avec style moderne */}
-        {showParcels && (
+        {/* Aperçu schématique des parcelles réelles (disposition indicative, non géoréférencée) */}
+        {showParcels && parcels.length > 0 && (
           <div className="absolute inset-0">
             {parcels.slice(0, 6).map((parcel, index) => {
               const positions = [
@@ -151,25 +161,25 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
                 { top: '60%', left: '50%', width: '95px', height: '85px' },
                 { top: '70%', left: '75%', width: '105px', height: '75px' }
               ];
-              
+
               const position = positions[index] || positions[0];
               const isSelected = selectedParcel?.id === parcel.id;
-              
+
               const getParcelColor = (status) => {
                 switch(status) {
-                  case 'Disponible': return 'bg-green-200 border-green-400 hover:bg-green-300';
-                  case 'Occupée': return 'bg-amber-200 border-amber-400 hover:bg-amber-300';
+                  case 'Régularisé': return 'bg-green-200 border-green-400 hover:bg-green-300';
+                  case 'En Révision': return 'bg-amber-200 border-amber-400 hover:bg-amber-300';
                   case 'Vendue': return 'bg-blue-200 border-blue-400 hover:bg-blue-300';
                   default: return 'bg-gray-200 border-gray-400 hover:bg-gray-300';
                 }
               };
-              
+
               return (
                 <div
                   key={parcel.id}
                   className={`absolute rounded-lg cursor-pointer transition-all duration-200 ${
-                    isSelected 
-                      ? 'bg-blue-300 border-blue-600 shadow-lg scale-105 z-10' 
+                    isSelected
+                      ? 'bg-blue-300 border-blue-600 shadow-lg scale-105 z-10'
                       : getParcelColor(parcel.status)
                   } border-2 shadow-md`}
                   style={position}
@@ -184,11 +194,7 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
                         {parcel.surface}
                       </div>
                     </div>
-                    <div className={`text-xs font-medium ${
-                      parcel.status === 'Disponible' ? 'text-green-700' :
-                      parcel.status === 'Occupée' ? 'text-amber-700' :
-                      'text-blue-700'
-                    }`}>
+                    <div className="text-xs font-medium text-gray-700">
                       {parcel.status}
                     </div>
                   </div>
@@ -198,7 +204,15 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
           </div>
         )}
 
-        {/* Zones cadastrales modernes */}
+        {showParcels && parcels.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white/80 rounded-lg px-4 py-3 text-center text-sm text-gray-500">
+              Aucune parcelle géolocalisée à afficher
+            </div>
+          </div>
+        )}
+
+        {/* Zones cadastrales modernes (repères indicatifs) */}
         {showZones && (
           <div className="absolute inset-0">
             {/* Zone résidentielle */}
@@ -209,7 +223,7 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
                 Zone Résidentielle
               </div>
             </div>
-            
+
             {/* Zone commerciale */}
             <div className="absolute border-4 border-orange-400 border-dashed rounded-xl opacity-40"
                  style={{ top: '5%', left: '55%', width: '40%', height: '40%' }}>
@@ -218,7 +232,7 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
                 Zone Commerciale
               </div>
             </div>
-            
+
             {/* Zone agricole */}
             <div className="absolute border-4 border-green-400 border-dashed rounded-xl opacity-40"
                  style={{ top: '50%', left: '10%', width: '35%', height: '40%' }}>
@@ -227,7 +241,7 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
                 Zone Agricole
               </div>
             </div>
-            
+
             {/* Zone industrielle */}
             <div className="absolute border-4 border-gray-400 border-dashed rounded-xl opacity-40"
                  style={{ top: '50%', left: '55%', width: '40%', height: '40%' }}>
@@ -255,15 +269,11 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-xs">Disponible</span>
+              <span className="text-xs">Régularisé</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-amber-500 rounded"></div>
-              <span className="text-xs">Occupée</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
-              <span className="text-xs">Litige</span>
+              <span className="text-xs">En révision</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-blue-500 rounded"></div>
@@ -273,12 +283,18 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
         </div>
       </div>
 
-      {/* Coordonnées */}
+      {/* Coordonnées de la parcelle sélectionnée */}
       <div className="absolute bottom-4 right-4 z-10">
         <div className="bg-white rounded-lg shadow-md p-2">
           <div className="text-xs text-gray-600">
-            <div>Lat: 14.6928°N</div>
-            <div>Lon: 17.4467°W</div>
+            {selectedParcel?.coordinates?.lat && selectedParcel?.coordinates?.lng ? (
+              <>
+                <div>Lat: {Number(selectedParcel.coordinates.lat).toFixed(4)}</div>
+                <div>Lon: {Number(selectedParcel.coordinates.lng).toFixed(4)}</div>
+              </>
+            ) : (
+              <div>Coordonnées : —</div>
+            )}
           </div>
         </div>
       </div>
@@ -287,116 +303,26 @@ const InteractiveMap = ({ parcels, onParcelSelect, selectedParcel }) => {
 };
 
 const MairieCadastre = ({ dashboardStats }) => {
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('cadastre');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [filterZone, setFilterZone] = useState('all');
 
-  // Données cadastrales
-  const cadastralParcels = [
-    {
-      id: 'CAD-2024-001',
-      parcelNumber: 'P-154/2024',
-      title: 'TF 5647/R',
-      area: '1200m²',
-      zone: 'Zone Résidentielle Nord',
-      owner: 'Amadou Diallo',
-      ownerType: 'Privé',
-      status: 'Régularisé',
-      lastSurvey: '2024-01-15',
-      coordinates: {
-        lat: 14.6937,
-        lng: -17.4441
-      },
-      boundaries: 'Délimitées par bornes',
-      landUse: 'Résidentiel',
-      restrictions: ['Servitude passage', 'Zone non aedificandi'],
-      value: '85M FCFA',
-      taxStatus: 'À jour',
-      blockchainHash: '0x7a8b9c...def456',
-      nftStatus: 'Tokenisé'
-    },
-    {
-      id: 'CAD-2024-002',
-      parcelNumber: 'P-289/2024',
-      title: 'TF 3421/R',
-      area: '800m²',
-      zone: 'Zone Commerciale Centre',
-      owner: 'Fatou Seck Entreprise',
-      ownerType: 'Entreprise',
-      status: 'En Révision',
-      lastSurvey: '2023-12-20',
-      coordinates: {
-        lat: 14.6955,
-        lng: -17.4425
-      },
-      boundaries: 'En cours de bornage',
-      landUse: 'Commercial',
-      restrictions: ['Hauteur limitée', 'Parking obligatoire'],
-      value: '120M FCFA',
-      taxStatus: 'En attente',
-      blockchainHash: '0x2f3e4d...abc123',
-      nftStatus: 'En cours'
-    },
-    {
-      id: 'CAD-2024-003',
-      parcelNumber: 'P-067/2024',
-      title: 'TF 8934/R',
-      area: '2500m²',
-      zone: 'Zone Agricole Est',
-      owner: 'Coopérative Agricole',
-      ownerType: 'Coopérative',
-      status: 'Régularisé',
-      lastSurvey: '2024-01-10',
-      coordinates: {
-        lat: 14.6882,
-        lng: -17.4387
-      },
-      boundaries: 'Délimitées par bornes',
-      landUse: 'Agricole',
-      restrictions: ['Protection sols', 'Usage agricole exclusif'],
-      value: '45M FCFA',
-      taxStatus: 'Exonéré',
-      blockchainHash: '0x9g8h7i...789xyz',
-      nftStatus: 'Tokenisé'
-    }
-  ];
+  // Données réelles chargées depuis Supabase
+  const [loading, setLoading] = useState(true);
+  const [cadastralParcels, setCadastralParcels] = useState([]);
+  const [cadastralZones, setCadastralZones] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    titled: 0,
+    geolocated: 0,
+    totalSurface: 0,
+    certificates: 0
+  });
 
-  // Données des zones cadastrales
-  const cadastralZones = [
-    {
-      id: 'zone-cad-1',
-      name: 'Secteur Résidentiel Nord',
-      totalParcels: 1247,
-      titledParcels: 1098,
-      pendingParcels: 149,
-      area: '3.2km²',
-      averageParcelSize: '850m²',
-      completionRate: 88
-    },
-    {
-      id: 'zone-cad-2',
-      name: 'Secteur Commercial Centre',
-      totalParcels: 456,
-      titledParcels: 421,
-      pendingParcels: 35,
-      area: '1.8km²',
-      averageParcelSize: '600m²',
-      completionRate: 92
-    },
-    {
-      id: 'zone-cad-3',
-      name: 'Secteur Agricole Est',
-      totalParcels: 324,
-      titledParcels: 289,
-      pendingParcels: 35,
-      area: '5.1km²',
-      averageParcelSize: '1850m²',
-      completionRate: 89
-    }
-  ];
-
-  // Services cadastraux
+  // Services cadastraux : catalogue statique (offre de services communaux, tarifs indicatifs).
+  // Ce ne sont pas des données mesurées — aucune table de tarification n'existe dans le schéma.
   const cadastralServices = [
     {
       id: 'service-1',
@@ -427,22 +353,147 @@ const MairieCadastre = ({ dashboardStats }) => {
     }
   ];
 
+  useEffect(() => {
+    const fetchCadastre = async () => {
+      setLoading(true);
+      try {
+        // Une mairie gère les parcelles de SA commune si connue, sinon toutes
+        const commune = profile?.city || profile?.region || null;
+
+        let propsQuery = supabase
+          .from('properties')
+          .select('id, owner_id, title, name, type, price, surface, location, region, city, latitude, longitude, status, verification_status, estimated_value, created_at')
+          .order('created_at', { ascending: false });
+        if (commune) {
+          propsQuery = propsQuery.or(`city.eq.${commune},region.eq.${commune}`);
+        }
+
+        const { data: propsData, error: propsError } = await propsQuery;
+        if (propsError) throw propsError;
+        const properties = propsData || [];
+
+        const propIds = properties.map((p) => p.id);
+        const ownerIds = [...new Set(properties.map((p) => p.owner_id).filter(Boolean))];
+
+        const [photosRes, ownersRes, certsRes] = await Promise.all([
+          propIds.length
+            ? supabase
+                .from('property_photos')
+                .select('property_id, gps_latitude, gps_longitude, is_primary')
+                .in('property_id', propIds)
+            : Promise.resolve({ data: [] }),
+          ownerIds.length
+            ? supabase.from('profiles').select('id, full_name, first_name, last_name').in('id', ownerIds)
+            : Promise.resolve({ data: [] }),
+          supabase.from('blockchain_certificates').select('id', { count: 'exact', head: true })
+        ]);
+
+        const photos = photosRes.data || [];
+        const owners = ownersRes.data || [];
+        const certificatesCount = certsRes.count || 0;
+
+        // Index GPS par property (préférence à la photo primaire)
+        const gpsByProp = {};
+        photos.forEach((ph) => {
+          if (ph.gps_latitude == null || ph.gps_longitude == null) return;
+          if (!gpsByProp[ph.property_id] || ph.is_primary) {
+            gpsByProp[ph.property_id] = { lat: ph.gps_latitude, lng: ph.gps_longitude };
+          }
+        });
+
+        // Index noms propriétaires
+        const ownerName = {};
+        owners.forEach((o) => {
+          const name = o.full_name || [o.first_name, o.last_name].filter(Boolean).join(' ');
+          if (name) ownerName[o.id] = name;
+        });
+
+        // Construction des parcelles à partir des vraies colonnes
+        const parcels = properties.map((p) => {
+          const gps = gpsByProp[p.id] || (
+            p.latitude != null && p.longitude != null
+              ? { lat: p.latitude, lng: p.longitude }
+              : null
+          );
+          const isTitled = p.verification_status === 'verified';
+          return {
+            id: p.id,
+            parcelNumber: p.name || `P-${String(p.id).slice(0, 8)}`,
+            reference: p.name || p.title || `P-${String(p.id).slice(0, 8)}`,
+            title: p.title || p.name || '—',
+            area: p.surface ? `${Number(p.surface).toLocaleString('fr-FR')}m²` : '—',
+            surface: p.surface ? `${Number(p.surface).toLocaleString('fr-FR')}m²` : '—',
+            zone: p.region || p.city || p.location || '—',
+            owner: ownerName[p.owner_id] || (p.owner_id ? 'Propriétaire enregistré' : '—'),
+            ownerType: p.type || '—',
+            status: isTitled ? 'Régularisé' : 'En Révision',
+            lastSurvey: p.created_at,
+            coordinates: gps,
+            hasGps: !!gps,
+            boundaries: gps ? 'Coordonnées GPS enregistrées' : 'Non géolocalisée',
+            landUse: p.type || '—',
+            value: formatFCFA(p.estimated_value ?? p.price),
+            nftStatus: 'Non tokenisé',
+            blockchainHash: '—'
+          };
+        });
+
+        setCadastralParcels(parcels);
+
+        // Agrégats des cartes
+        const titled = properties.filter((p) => p.verification_status === 'verified').length;
+        const geolocated = parcels.filter((p) => p.hasGps).length;
+        const totalSurface = properties.reduce((sum, p) => sum + (Number(p.surface) || 0), 0);
+        setStats({
+          total: properties.length,
+          titled,
+          geolocated,
+          totalSurface,
+          certificates: certificatesCount
+        });
+
+        // Zones cadastrales agrégées par région/ville réelle
+        const zoneMap = {};
+        properties.forEach((p) => {
+          const key = p.region || p.city || 'Zone non renseignée';
+          if (!zoneMap[key]) {
+            zoneMap[key] = { name: key, total: 0, titled: 0, pending: 0, surface: 0 };
+          }
+          zoneMap[key].total += 1;
+          if (p.verification_status === 'verified') zoneMap[key].titled += 1;
+          else zoneMap[key].pending += 1;
+          zoneMap[key].surface += Number(p.surface) || 0;
+        });
+        const zones = Object.values(zoneMap).map((z, i) => ({
+          id: `zone-${i}`,
+          name: z.name,
+          totalParcels: z.total,
+          titledParcels: z.titled,
+          pendingParcels: z.pending,
+          area: z.surface ? `${(z.surface / 1_000_000).toFixed(2)}km²` : '—',
+          averageParcelSize: z.total ? `${Math.round(z.surface / z.total).toLocaleString('fr-FR')}m²` : '—',
+          completionRate: z.total ? Math.round((z.titled / z.total) * 100) : 0
+        }));
+        setCadastralZones(zones);
+      } catch (err) {
+        console.error('Erreur chargement cadastre:', err);
+        setCadastralParcels([]);
+        setCadastralZones([]);
+        setStats({ total: 0, titled: 0, geolocated: 0, totalSurface: 0, certificates: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCadastre();
+  }, [profile]);
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Régularisé': return 'bg-green-100 text-green-800';
       case 'En Révision': return 'bg-yellow-100 text-yellow-800';
       case 'Suspendu': return 'bg-red-100 text-red-800';
       case 'En Attente': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getTaxStatusColor = (status) => {
-    switch (status) {
-      case 'À jour': return 'bg-green-100 text-green-800';
-      case 'En attente': return 'bg-yellow-100 text-yellow-800';
-      case 'En retard': return 'bg-red-100 text-red-800';
-      case 'Exonéré': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -456,12 +507,15 @@ const MairieCadastre = ({ dashboardStats }) => {
     }
   };
 
+  // Options de zones dérivées des vraies parcelles
+  const zoneOptions = [...new Set(cadastralParcels.map((p) => p.zone).filter((z) => z && z !== '—'))];
+
   const filteredParcels = cadastralParcels.filter(parcel => {
     const matchesSearch = parcel.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          parcel.parcelNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          parcel.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesZone = filterZone === 'all' || parcel.zone === filterZone;
-    
+
     return matchesSearch && matchesZone;
   });
 
@@ -475,7 +529,7 @@ const MairieCadastre = ({ dashboardStats }) => {
             Gestion numérique du cadastre et des titres fonciers
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
@@ -499,43 +553,51 @@ const MairieCadastre = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Parcelles</p>
-                <p className="text-2xl font-bold text-gray-900">2,027</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? '—' : stats.total.toLocaleString('fr-FR')}
+                </p>
               </div>
               <Building className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Titrées</p>
-                <p className="text-2xl font-bold text-green-600">1,808</p>
+                <p className="text-sm text-gray-600">Titrées / Vérifiées</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {loading ? '—' : stats.titled.toLocaleString('fr-FR')}
+                </p>
               </div>
               <Target className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">NFT Tokenisées</p>
-                <p className="text-2xl font-bold text-purple-600">1,245</p>
+                <p className="text-sm text-gray-600">Géolocalisées (GPS)</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {loading ? '—' : stats.geolocated.toLocaleString('fr-FR')}
+                </p>
               </div>
-              <Zap className="h-8 w-8 text-purple-600" />
+              <MapPin className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Surface Totale</p>
-                <p className="text-2xl font-bold text-orange-600">10.1km²</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {loading ? '—' : `${(stats.totalSurface / 1_000_000).toFixed(2)}km²`}
+                </p>
               </div>
               <Map className="h-8 w-8 text-orange-600" />
             </div>
@@ -562,11 +624,12 @@ const MairieCadastre = ({ dashboardStats }) => {
                 Cadastre Numérique Interactif
               </CardTitle>
               <CardDescription>
-                Visualisation et gestion interactive des parcelles municipales
+                Aperçu schématique des parcelles municipales (disposition indicative). La cartographie
+                géoréférencée avancée sera bientôt disponible.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <InteractiveMap 
+              <InteractiveMap
                 parcels={cadastralParcels}
                 onParcelSelect={setSelectedParcel}
                 selectedParcel={selectedParcel}
@@ -587,7 +650,7 @@ const MairieCadastre = ({ dashboardStats }) => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -599,7 +662,7 @@ const MairieCadastre = ({ dashboardStats }) => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -634,7 +697,7 @@ const MairieCadastre = ({ dashboardStats }) => {
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">Statut</span>
-                    <Badge className={selectedParcel.status === 'Disponible' ? 'bg-green-100 text-green-800' : selectedParcel.status === 'Occupée' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}>
+                    <Badge className={getStatusColor(selectedParcel.status)}>
                       {selectedParcel.status}
                     </Badge>
                   </div>
@@ -647,10 +710,6 @@ const MairieCadastre = ({ dashboardStats }) => {
                   <Button size="sm" variant="outline">
                     <Eye className="h-3 w-3 mr-1" />
                     Détails
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Tokeniser NFT
                   </Button>
                 </div>
               </CardContent>
@@ -675,16 +734,16 @@ const MairieCadastre = ({ dashboardStats }) => {
                     />
                   </div>
                 </div>
-                
+
                 <Select value={filterZone} onValueChange={setFilterZone}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Filtrer par zone" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toutes les zones</SelectItem>
-                    <SelectItem value="Zone Résidentielle Nord">Résidentielle Nord</SelectItem>
-                    <SelectItem value="Zone Commerciale Centre">Commerciale Centre</SelectItem>
-                    <SelectItem value="Zone Agricole Est">Agricole Est</SelectItem>
+                    {zoneOptions.map((zone) => (
+                      <SelectItem key={zone} value={zone}>{zone}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -713,55 +772,69 @@ const MairieCadastre = ({ dashboardStats }) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredParcels.map((parcel) => (
-                    <TableRow key={parcel.id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-gray-900">{parcel.parcelNumber}</div>
-                          <div className="text-sm text-gray-600">{parcel.title}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-gray-900">{parcel.owner}</div>
-                          <div className="text-sm text-gray-600">{parcel.ownerType}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-gray-900">{parcel.zone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium text-gray-900">{parcel.area}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(parcel.status)}>
-                          {parcel.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getNFTStatusColor(parcel.nftStatus)}>
-                          {parcel.nftStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium text-gray-900">{parcel.value}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setSelectedParcel(parcel)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-10 text-gray-500">
+                        Chargement des parcelles...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : filteredParcels.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-10 text-gray-500">
+                        Aucune parcelle enregistrée
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredParcels.map((parcel) => (
+                      <TableRow key={parcel.id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-gray-900">{parcel.parcelNumber}</div>
+                            <div className="text-sm text-gray-600">{parcel.title}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-gray-900">{parcel.owner}</div>
+                            <div className="text-sm text-gray-600">{parcel.ownerType}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-gray-900">{parcel.zone}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium text-gray-900">{parcel.area}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(parcel.status)}>
+                            {parcel.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getNFTStatusColor(parcel.nftStatus)}>
+                            {parcel.nftStatus}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium text-gray-900">{parcel.value}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedParcel(parcel)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -770,57 +843,66 @@ const MairieCadastre = ({ dashboardStats }) => {
 
         {/* Zones Cadastrales */}
         <TabsContent value="zones" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {cadastralZones.map((zone) => (
-              <Card key={zone.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Map className="h-5 w-5 text-blue-600 mr-2" />
-                    {zone.name}
-                  </CardTitle>
-                  <CardDescription>Surface: {zone.area}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Total parcelles</span>
-                      <p className="font-medium text-gray-900">{zone.totalParcels}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Titrées</span>
-                      <p className="font-medium text-green-600">{zone.titledParcels}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">En attente</span>
-                      <p className="font-medium text-orange-600">{zone.pendingParcels}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Taille moyenne</span>
-                      <p className="font-medium text-gray-900">{zone.averageParcelSize}</p>
-                    </div>
-                  </div>
+          {loading ? (
+            <Card><CardContent className="p-10 text-center text-gray-500">Chargement des zones...</CardContent></Card>
+          ) : cadastralZones.length === 0 ? (
+            <Card><CardContent className="p-10 text-center text-gray-500">Aucune zone cadastrale à afficher</CardContent></Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {cadastralZones.map((zone) => (
+                <Card key={zone.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Map className="h-5 w-5 text-blue-600 mr-2" />
+                      {zone.name}
+                    </CardTitle>
+                    <CardDescription>Surface: {zone.area}</CardDescription>
+                  </CardHeader>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Complétude</span>
-                      <span className="text-sm font-medium text-gray-900">{zone.completionRate}%</span>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Total parcelles</span>
+                        <p className="font-medium text-gray-900">{zone.totalParcels}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Titrées</span>
+                        <p className="font-medium text-green-600">{zone.titledParcels}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">En attente</span>
+                        <p className="font-medium text-orange-600">{zone.pendingParcels}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Taille moyenne</span>
+                        <p className="font-medium text-gray-900">{zone.averageParcelSize}</p>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${zone.completionRate}%` }}
-                      />
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Complétude</span>
+                        <span className="text-sm font-medium text-gray-900">{zone.completionRate}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${zone.completionRate}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Services Cadastraux */}
         <TabsContent value="services" className="space-y-6">
+          <p className="text-sm text-gray-500">
+            Catalogue indicatif des services communaux. Les tarifs et délais sont fournis à titre informatif.
+          </p>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {cadastralServices.map((service) => (
               <Card key={service.id}>
@@ -828,13 +910,13 @@ const MairieCadastre = ({ dashboardStats }) => {
                   <CardTitle className="text-lg">{service.name}</CardTitle>
                   <CardDescription>{service.description}</CardDescription>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Prix</span>
                     <span className="font-medium text-gray-900">{service.price}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Délai</span>
                     <span className="font-medium text-gray-900">{service.processingTime}</span>
@@ -878,7 +960,7 @@ const MairieCadastre = ({ dashboardStats }) => {
                 Tokenisation NFT et authentification blockchain
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent>
               <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 text-center">
                 <Zap className="h-16 w-16 text-purple-600 mx-auto mb-4" />
@@ -886,19 +968,22 @@ const MairieCadastre = ({ dashboardStats }) => {
                   TerangaChain Integration
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Tous les titres fonciers sont automatiquement tokenisés en NFT sur la blockchain TerangaChain
+                  Suivi des certificats blockchain émis. La tokenisation NFT des titres fonciers
+                  sera bientôt disponible.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="bg-white p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">1,245</div>
-                    <div className="text-gray-600">NFT Tokenisés</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {loading ? '—' : stats.certificates.toLocaleString('fr-FR')}
+                    </div>
+                    <div className="text-gray-600">Certificats émis</div>
                   </div>
                   <div className="bg-white p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">456</div>
+                    <div className="text-2xl font-bold text-blue-600">—</div>
                     <div className="text-gray-600">En Cours</div>
                   </div>
                   <div className="bg-white p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">99.8%</div>
+                    <div className="text-2xl font-bold text-green-600">—</div>
                     <div className="text-gray-600">Fiabilité</div>
                   </div>
                 </div>
@@ -920,8 +1005,8 @@ const MairieCadastre = ({ dashboardStats }) => {
               <h3 className="text-2xl font-bold text-gray-900">
                 Parcelle {selectedParcel.parcelNumber}
               </h3>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedParcel(null)}
                 className="text-gray-600"
               >
@@ -959,31 +1044,39 @@ const MairieCadastre = ({ dashboardStats }) => {
                 </CardContent>
               </Card>
 
-              {/* Blockchain & NFT */}
+              {/* Géolocalisation & Statut */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Blockchain & NFT</CardTitle>
+                  <CardTitle>Géolocalisation & Statut</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <span className="text-sm text-gray-600">Hash Blockchain</span>
-                    <p className="font-mono text-sm text-gray-900">{selectedParcel.blockchainHash}</p>
+                    <span className="text-sm text-gray-600">Statut cadastral</span>
+                    <div className="mt-1">
+                      <Badge className={getStatusColor(selectedParcel.status)}>
+                        {selectedParcel.status}
+                      </Badge>
+                    </div>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Statut NFT</span>
-                    <Badge className={getNFTStatusColor(selectedParcel.nftStatus)}>
-                      {selectedParcel.nftStatus}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Coordonnées</span>
+                    <span className="text-sm text-gray-600">Coordonnées GPS</span>
                     <p className="text-sm text-gray-900">
-                      {selectedParcel.coordinates.lat}, {selectedParcel.coordinates.lng}
+                      {selectedParcel.coordinates?.lat && selectedParcel.coordinates?.lng
+                        ? `${Number(selectedParcel.coordinates.lat).toFixed(6)}, ${Number(selectedParcel.coordinates.lng).toFixed(6)}`
+                        : '—'}
                     </p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">Bornage</span>
                     <p className="text-sm text-gray-900">{selectedParcel.boundaries}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Statut NFT</span>
+                    <div className="mt-1">
+                      <Badge className={getNFTStatusColor(selectedParcel.nftStatus)}>
+                        {selectedParcel.nftStatus}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

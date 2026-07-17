@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
 const DashboardParticulierHome = () => {
   const navigate = useNavigate();
@@ -51,114 +52,105 @@ const DashboardParticulierHome = () => {
   });
   
   const [recentActivity, setRecentActivity] = useState([]);
-  const [quickActions, setQuickActions] = useState([]);
+  const [goals, setGoals] = useState({
+    profil: 0,
+    documentsValides: 0,
+    demandesActives: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
-  }, [user]);
+  }, [user, profile]);
+
+  // Calcule la complétude du profil à partir des vrais champs remplis
+  const computeProfileCompletion = (p) => {
+    if (!p) return 0;
+    const fields = ['full_name', 'phone', 'email', 'address', 'city', 'region', 'profession', 'avatar_url'];
+    const filled = fields.filter((f) => p[f] && String(p[f]).trim() !== '').length;
+    return Math.round((filled / fields.length) * 100);
+  };
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       if (!user?.id) {
-        // Mode fallback avec données de démo
-        setStats({
-          messages: 4,
-          notifications: 2,
-          tickets: 1,
-          demandes: 3,
-          documents: 8,
-          favoris: 5
-        });
-        
-        setRecentActivity([
-          {
-            id: 1,
-            type: 'message',
-            title: 'Nouveau message administratif',
-            description: 'Mise à jour sur votre dossier DT-2025-001',
-            time: new Date().toISOString(),
-            status: 'nouveau',
-            icon: MessageSquare,
-            color: 'blue'
-          },
-          {
-            id: 2,
-            type: 'ticket',
-            title: 'Ticket résolu',
-            description: 'Problème de connexion résolu par le support',
-            time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            status: 'resolu',
-            icon: Ticket,
-            color: 'green'
-          },
-          {
-            id: 3,
-            type: 'demande',
-            title: 'Demande terrain en cours',
-            description: 'Votre demande pour Parcelles Assainies est en traitement',
-            time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            status: 'en_cours',
-            icon: MapPin,
-            color: 'orange'
-          }
-        ]);
-        
+        // Aucune donnée fabriquée : on affiche des états vides honnêtes
+        setStats({ messages: 0, notifications: 0, tickets: 0, demandes: 0, documents: 0, favoris: 0 });
+        setRecentActivity([]);
+        setGoals({ profil: 0, documentsValides: 0, demandesActives: 0 });
         return;
       }
 
-      // Charger les vraies données
-      const [
-        messagesResult,
-        notificationsResult,
-        ticketsResult,
-        demandesResult,
-        documentsResult,
-        favorisResult
-      ] = await Promise.allSettled([
-  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
-  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  // use the 'favorites' table (English) which is the correct table used across the app
-  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
-  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
+      // Compteurs agrégés réels (favoris, notifications non lues, demandes communales...)
+      const overviewRes = await ParticulierSupabaseService.getOverviewStats(user.id);
+      const overview = overviewRes?.data || {};
+
+      // Données détaillées réelles (documents, tickets, demandes, notifications, messagerie)
+      const [documentsRes, ticketsRes, communalRes, notifsRes, participationsRes] = await Promise.all([
+        ParticulierSupabaseService.getDocuments(user.id),
+        ParticulierSupabaseService.getSupportTickets(user.id),
+        ParticulierSupabaseService.getCommunalRequests(user.id),
+        ParticulierSupabaseService.getNotifications(user.id),
+        supabase.from('conversation_participants').select('conversation_id').eq('user_id', user.id)
       ]);
 
-      setStats({
-        messages: messagesResult.value?.count || 0,
-        notifications: notificationsResult.value?.count || 0,
-        tickets: ticketsResult.value?.count || 0,
-        demandes: demandesResult.value?.count || 0,
-        documents: documentsResult.value?.count || 0,
-        favoris: favorisResult.value?.count || 0
-      });
+      const documents = documentsRes?.data || [];
+      const tickets = ticketsRes?.data || [];
+      const communalRequests = communalRes?.data || [];
+      const notifications = notifsRes?.data || [];
 
-      // Charger activité récente
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
+      // Tickets ouverts (statuts actifs, tolérant aux différentes conventions)
+      const openStatuses = ['nouveau', 'en_cours', 'open', 'pending', 'in_progress'];
+      const openTickets = tickets.filter((t) => openStatuses.includes((t.status || '').toLowerCase()));
 
-      if (messages) {
-        const messageActivity = messages.map(msg => ({
-          id: msg.id,
-          type: 'message',
-          title: msg.subject,
-          description: msg.message.substring(0, 100) + '...',
-          time: msg.created_at,
-          status: msg.read_at ? 'lu' : 'nouveau',
-          icon: MessageSquare,
-          color: 'blue'
-        }));
-        setRecentActivity(messageActivity);
+      // Messages non lus reçus (dans les conversations de l'utilisateur, non émis par lui)
+      let messagesCount = 0;
+      const conversationIds = (participationsRes?.data || []).map((p) => p.conversation_id);
+      if (conversationIds.length > 0) {
+        const { count } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', conversationIds)
+          .eq('read', false)
+          .neq('sender_id', user.id);
+        messagesCount = count || 0;
       }
 
+      setStats({
+        messages: messagesCount,
+        notifications: overview.unreadNotifications || 0,
+        tickets: openTickets.length,
+        demandes: overview.communalRequests ?? communalRequests.length,
+        documents: documents.length,
+        favoris: overview.favorites || 0
+      });
+
+      // Activité récente réelle : dernières notifications de l'utilisateur
+      const activity = notifications.slice(0, 5).map((n) => ({
+        id: n.id,
+        type: n.type || 'notification',
+        title: n.title || 'Notification',
+        description: n.message || '',
+        time: n.created_at,
+        status: n.read ? 'lu' : 'nouveau',
+        icon: Bell,
+        color: 'blue'
+      }));
+      setRecentActivity(activity);
+
+      // Objectifs calculés à partir de vraies données (jamais fabriqués)
+      const validatedStatuses = ['validated', 'verified', 'valid', 'approved', 'valide', 'vérifié', 'verifie'];
+      const validatedDocs = documents.filter((d) => validatedStatuses.includes((d.status || '').toLowerCase()));
+      const closedStatuses = ['completed', 'rejected', 'refuse', 'refusée', 'termine', 'terminé', 'annule', 'cancelled', 'closed'];
+      const activeRequests = communalRequests.filter((r) => !closedStatuses.includes((r.status || '').toLowerCase()));
+
+      setGoals({
+        profil: computeProfileCompletion(profile),
+        documentsValides: documents.length > 0 ? Math.round((validatedDocs.length / documents.length) * 100) : 0,
+        demandesActives: communalRequests.length > 0 ? Math.round((activeRequests.length / communalRequests.length) * 100) : 0
+      });
     } catch (error) {
       console.error('Erreur chargement dashboard:', error);
     } finally {
@@ -166,11 +158,13 @@ const DashboardParticulierHome = () => {
     }
   };
 
+  const memberSince = profile?.created_at ? new Date(profile.created_at).getFullYear() : null;
+
   const statsCards = [
     {
       title: 'Messages',
       value: stats.messages,
-      change: '+2 aujourd\'hui',
+      change: stats.messages > 0 ? `${stats.messages} non lu${stats.messages > 1 ? 's' : ''}` : 'Aucun message non lu',
       icon: MessageSquare,
       color: 'blue',
       path: '/acheteur/messages'
@@ -178,7 +172,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Notifications',
       value: stats.notifications,
-      change: 'Dernière il y a 2h',
+      change: stats.notifications > 0 ? `${stats.notifications} non lue${stats.notifications > 1 ? 's' : ''}` : 'Tout est à jour',
       icon: Bell,
       color: 'yellow',
       path: '/acheteur/notifications'
@@ -186,7 +180,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Tickets Support',
       value: stats.tickets,
-      change: '1 en cours',
+      change: stats.tickets > 0 ? `${stats.tickets} en cours` : 'Aucun ticket ouvert',
       icon: Ticket,
       color: 'red',
       path: '/acheteur/tickets'
@@ -194,7 +188,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Demandes',
       value: stats.demandes,
-      change: '2 en traitement',
+      change: stats.demandes > 0 ? 'Demandes de terrains communaux' : 'Aucune demande',
       icon: FileText,
       color: 'green',
       path: '/acheteur/demandes-terrains'
@@ -202,7 +196,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Documents',
       value: stats.documents,
-      change: '100% vérifiés',
+      change: stats.documents > 0 ? `${stats.documents} document${stats.documents > 1 ? 's' : ''}` : 'Aucun document',
       icon: FileText,
       color: 'purple',
       path: '/acheteur/documents'
@@ -210,7 +204,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Favoris',
       value: stats.favoris,
-      change: '+1 cette semaine',
+      change: stats.favoris > 0 ? `${stats.favoris} bien${stats.favoris > 1 ? 's' : ''} sauvegardé${stats.favoris > 1 ? 's' : ''}` : 'Aucun favori',
       icon: Star,
       color: 'orange',
       path: '/acheteur/favoris'
@@ -310,14 +304,18 @@ const DashboardParticulierHome = () => {
               Gérez vos dossiers immobiliers en toute simplicité
             </p>
             <div className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-300" />
-                <span className="text-sm">Compte vérifié</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-sm">Membre depuis 2025</span>
-              </div>
+              {profile?.is_verified && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-300" />
+                  <span className="text-sm">Compte vérifié</span>
+                </div>
+              )}
+              {memberSince && (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-yellow-300" />
+                  <span className="text-sm">Membre depuis {memberSince}</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="hidden lg:block">
@@ -488,30 +486,30 @@ const DashboardParticulierHome = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Profil complet</span>
-                <span className="text-sm text-slate-500">85%</span>
+                <span className="text-sm text-slate-500">{goals.profil}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${goals.profil}%` }}></div>
               </div>
             </div>
-            
+
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Documents validés</span>
-                <span className="text-sm text-slate-500">60%</span>
+                <span className="text-sm text-slate-500">{goals.documentsValides}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+                <div className="bg-green-600 h-2 rounded-full transition-all" style={{ width: `${goals.documentsValides}%` }}></div>
               </div>
             </div>
-            
+
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Demandes actives</span>
-                <span className="text-sm text-slate-500">75%</span>
+                <span className="text-sm text-slate-500">{goals.demandesActives}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+                <div className="bg-orange-600 h-2 rounded-full transition-all" style={{ width: `${goals.demandesActives}%` }}></div>
               </div>
             </div>
 

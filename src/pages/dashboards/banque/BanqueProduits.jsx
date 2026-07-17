@@ -50,190 +50,84 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const BanqueProduits = () => {
+  const { user } = useAuth();
   const [produits, setProduits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Simulation des produits bancaires
+  // Produits bancaires réels (bank_products filtré par bank_id)
   useEffect(() => {
-    const mockProduits = [
-      {
-        id: 1,
-        name: 'Crédit Immobilier Teranga',
-        category: 'immobilier',
-        type: 'Crédit',
-        description: 'Crédit immobilier spécialisé pour l\'acquisition de terrains et biens fonciers',
-        taux: 8.5,
-        dureeMax: 25,
-        montantMin: 5000000,
-        montantMax: 100000000,
-        clientsActifs: 145,
-        revenusGeneres: 2500000000,
-        status: 'active',
-        performance: 92,
-        risqueLevel: 'faible',
-        dateCreation: new Date('2024-01-15'),
-        features: ['Taux préférentiel diaspora', 'Garantie TerangaChain', 'Évaluation IA'],
-        conditions: {
-          apportPersonnel: 20,
-          revenuMinimal: 500000,
-          ageMax: 65
-        }
-      },
-      {
-        id: 2,
-        name: 'Compte Épargne Digital',
-        category: 'epargne',
-        type: 'Épargne',
-        description: 'Compte d\'épargne numérique avec taux avantageux',
-        taux: 5.2,
-        montantMin: 50000,
-        montantMax: 50000000,
-        clientsActifs: 2340,
-        revenusGeneres: 180000000,
-        status: 'active',
-        performance: 88,
-        risqueLevel: 'très faible',
-        dateCreation: new Date('2023-11-10'),
-        features: ['Mobile Banking', 'Taux progressif', 'Virement instantané'],
-        conditions: {
-          depotMinimal: 50000,
-          fraisTenue: 0,
-          retraitGratuit: 5
-        }
-      },
-      {
-        id: 3,
-        name: 'Prêt Auto Flex',
-        category: 'automobile',
-        type: 'Crédit',
-        description: 'Financement automobile avec conditions flexibles',
-        taux: 9.8,
-        dureeMax: 7,
-        montantMin: 2000000,
-        montantMax: 25000000,
-        clientsActifs: 89,
-        revenusGeneres: 450000000,
-        status: 'active',
-        performance: 85,
-        risqueLevel: 'moyen',
-        dateCreation: new Date('2024-03-20'),
-        features: ['Assurance incluse', 'Report paiement', 'Remboursement anticipé'],
-        conditions: {
-          apportPersonnel: 15,
-          ageVehicule: 5,
-          assuranceObligatoire: true
-        }
-      },
-      {
-        id: 4,
-        name: 'Crédit Entrepreneur',
-        category: 'professionnel',
-        type: 'Crédit',
-        description: 'Financement pour entrepreneurs et PME',
-        taux: 11.5,
-        dureeMax: 10,
-        montantMin: 1000000,
-        montantMax: 50000000,
-        clientsActifs: 67,
-        revenusGeneres: 890000000,
-        status: 'active',
-        performance: 78,
-        risqueLevel: 'élevé',
-        dateCreation: new Date('2024-02-05'),
-        features: ['Période grâce', 'Conseil business', 'Suivi personnalisé'],
-        conditions: {
-          businessPlan: true,
-          garantie: 'réelle',
-          experienceMin: 2
-        }
-      },
-      {
-        id: 5,
-        name: 'Bourse Étudiant',
-        category: 'education',
-        type: 'Crédit',
-        description: 'Prêt étudiant pour financer les études supérieures',
-        taux: 4.5,
-        dureeMax: 15,
-        montantMin: 500000,
-        montantMax: 10000000,
-        clientsActifs: 234,
-        revenusGeneres: 120000000,
-        status: 'active',
-        performance: 95,
-        risqueLevel: 'faible',
-        dateCreation: new Date('2023-09-01'),
-        features: ['Taux étudiant', 'Report après diplôme', 'Bourse partenaires'],
-        conditions: {
-          ageMax: 30,
-          inscription: 'required',
-          cautionParentale: true
-        }
-      },
-      {
-        id: 6,
-        name: 'Carte Gold Diaspora',
-        category: 'cartes',
-        type: 'Carte',
-        description: 'Carte bancaire premium pour la diaspora africaine',
-        taux: 0,
-        fraisAnnuel: 25000,
-        clientsActifs: 456,
-        revenusGeneres: 340000000,
-        status: 'active',
-        performance: 90,
-        risqueLevel: 'faible',
-        dateCreation: new Date('2024-01-01'),
-        features: ['Sans frais international', 'Assurance voyage', 'Conciergerie'],
-        conditions: {
-          revenuMinimal: 1000000,
-          depotGarantie: 0,
-          residence: 'diaspora'
-        }
+    if (!user?.id) return;
+    let cancelled = false;
+
+    const fetchProduits = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('bank_products')
+          .select('id, name, type, description, interest_rate, min_amount, max_amount, duration_months, status, created_at')
+          .eq('bank_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        const mapped = (data || []).map((p) => ({
+          id: p.id,
+          name: p.name || 'Produit sans nom',
+          // Pas de colonne 'category' dans bank_products : on dérive la catégorie du type
+          category: (p.type || '').toLowerCase(),
+          type: p.type || '—',
+          description: p.description || '',
+          taux: p.interest_rate ?? null,
+          dureeMax: p.duration_months ?? null,
+          montantMin: p.min_amount ?? null,
+          montantMax: p.max_amount ?? null,
+          status: p.status || 'active',
+          dateCreation: p.created_at ? new Date(p.created_at) : null
+        }));
+
+        if (!cancelled) setProduits(mapped);
+      } catch (e) {
+        console.error('Erreur chargement bank_products:', e);
+        if (!cancelled) setProduits([]);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    ];
-    setProduits(mockProduits);
-  }, []);
+    };
+
+    fetchProduits();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const getCategoryIcon = (category) => {
-    const icons = {
-      immobilier: Home,
-      epargne: Wallet,
-      automobile: Car,
-      professionnel: Briefcase,
-      education: GraduationCap,
-      cartes: CreditCard
-    };
-    return icons[category] || Package;
+    const c = (category || '').toLowerCase();
+    if (c.includes('immo')) return Home;
+    if (c.includes('epargne') || c.includes('épargne')) return Wallet;
+    if (c.includes('auto')) return Car;
+    if (c.includes('pro') || c.includes('entrep')) return Briefcase;
+    if (c.includes('edu') || c.includes('étud') || c.includes('etud')) return GraduationCap;
+    if (c.includes('carte')) return CreditCard;
+    return Package;
   };
 
   const getCategoryColor = (category) => {
-    const colors = {
-      immobilier: 'bg-blue-100 text-blue-800',
-      epargne: 'bg-green-100 text-green-800',
-      automobile: 'bg-purple-100 text-purple-800',
-      professionnel: 'bg-orange-100 text-orange-800',
-      education: 'bg-indigo-100 text-indigo-800',
-      cartes: 'bg-pink-100 text-pink-800'
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getRisqueColor = (risque) => {
-    const colors = {
-      'très faible': 'text-green-600',
-      'faible': 'text-blue-600',
-      'moyen': 'text-yellow-600',
-      'élevé': 'text-red-600'
-    };
-    return colors[risque] || 'text-gray-600';
+    const c = (category || '').toLowerCase();
+    if (c.includes('immo')) return 'bg-blue-100 text-blue-800';
+    if (c.includes('epargne') || c.includes('épargne')) return 'bg-green-100 text-green-800';
+    if (c.includes('auto')) return 'bg-purple-100 text-purple-800';
+    if (c.includes('pro') || c.includes('entrep')) return 'bg-orange-100 text-orange-800';
+    if (c.includes('edu') || c.includes('étud') || c.includes('etud')) return 'bg-indigo-100 text-indigo-800';
+    if (c.includes('carte')) return 'bg-pink-100 text-pink-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const formatMontant = (montant) => {
+    if (montant === null || montant === undefined) return '—';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -241,17 +135,28 @@ const BanqueProduits = () => {
     }).format(montant);
   };
 
+  // Catégories réellement présentes dans les données (dérivées du type)
+  const categories = Array.from(
+    new Set(produits.map((p) => p.category).filter(Boolean))
+  );
+
   const filteredProduits = produits.filter(produit => {
     const matchesSearch = produit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          produit.description.toLowerCase().includes(searchTerm.toLowerCase());
+                          (produit.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || produit.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Statistiques générales
-  const totalClients = produits.reduce((sum, p) => sum + p.clientsActifs, 0);
-  const totalRevenus = produits.reduce((sum, p) => sum + p.revenusGeneres, 0);
-  const performanceMoyenne = produits.reduce((sum, p) => sum + p.performance, 0) / produits.length;
+  // Statistiques réelles dérivées de bank_products
+  const produitsActifs = produits.filter((p) => p.status === 'active').length;
+  const tauxValues = produits.map((p) => p.taux).filter((t) => t !== null && t !== undefined);
+  const tauxMoyen = tauxValues.length
+    ? tauxValues.reduce((sum, t) => sum + Number(t), 0) / tauxValues.length
+    : null;
+  const montantMaxGlobal = produits.reduce(
+    (max, p) => (p.montantMax != null && p.montantMax > max ? p.montantMax : max),
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -285,7 +190,7 @@ const BanqueProduits = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Produits Actifs</p>
+                <p className="text-sm text-gray-600">Produits Total</p>
                 <p className="text-2xl font-bold text-gray-900">{produits.length}</p>
               </div>
               <Package className="h-8 w-8 text-blue-600" />
@@ -297,10 +202,10 @@ const BanqueProduits = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Clients Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalClients.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Produits Actifs</p>
+                <p className="text-2xl font-bold text-gray-900">{produitsActifs}</p>
               </div>
-              <Users className="h-8 w-8 text-green-600" />
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -309,10 +214,12 @@ const BanqueProduits = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Revenus Générés</p>
-                <p className="text-2xl font-bold text-gray-900">{formatMontant(totalRevenus)}</p>
+                <p className="text-sm text-gray-600">Taux Moyen</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {tauxMoyen !== null ? `${tauxMoyen.toFixed(1)}%` : '—'}
+                </p>
               </div>
-              <DollarSign className="h-8 w-8 text-purple-600" />
+              <Percent className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -321,8 +228,10 @@ const BanqueProduits = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Performance Moy.</p>
-                <p className="text-2xl font-bold text-gray-900">{performanceMoyenne.toFixed(1)}%</p>
+                <p className="text-sm text-gray-600">Montant Max</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {montantMaxGlobal > 0 ? formatMontant(montantMaxGlobal) : '—'}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-600" />
             </div>
@@ -341,12 +250,11 @@ const BanqueProduits = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les catégories</SelectItem>
-                  <SelectItem value="immobilier">Immobilier</SelectItem>
-                  <SelectItem value="epargne">Épargne</SelectItem>
-                  <SelectItem value="automobile">Automobile</SelectItem>
-                  <SelectItem value="professionnel">Professionnel</SelectItem>
-                  <SelectItem value="education">Éducation</SelectItem>
-                  <SelectItem value="cartes">Cartes</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -400,35 +308,24 @@ const BanqueProduits = () => {
                     {produit.description}
                   </p>
                   
-                  {/* Métriques clés */}
+                  {/* Métriques clés (colonnes réelles de bank_products) */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Taux</p>
                       <p className="font-medium">
-                        {produit.taux ? `${produit.taux}%` : formatMontant(produit.fraisAnnuel)}
+                        {produit.taux !== null ? `${produit.taux}%` : '—'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Clients</p>
-                      <p className="font-medium">{produit.clientsActifs}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Performance</p>
-                      <div className="flex items-center space-x-2">
-                        <Progress value={produit.performance} className="h-2 flex-1" />
-                        <span className="font-medium">{produit.performance}%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Risque</p>
-                      <p className={`font-medium ${getRisqueColor(produit.risqueLevel)}`}>
-                        {produit.risqueLevel}
+                      <p className="text-gray-500">Durée</p>
+                      <p className="font-medium">
+                        {produit.dureeMax !== null ? `${produit.dureeMax} mois` : '—'}
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Montants */}
-                  {produit.montantMin && (
+                  {(produit.montantMin !== null || produit.montantMax !== null) && (
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-xs text-gray-500 mb-1">Plage de financement</p>
                       <p className="text-sm font-medium">
@@ -436,21 +333,7 @@ const BanqueProduits = () => {
                       </p>
                     </div>
                   )}
-                  
-                  {/* Features principales */}
-                  <div className="flex flex-wrap gap-1">
-                    {produit.features.slice(0, 3).map((feature, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {produit.features.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{produit.features.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                  
+
                   {/* Actions */}
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div className="flex items-center space-x-2">
@@ -466,7 +349,9 @@ const BanqueProduits = () => {
                     </div>
                     
                     <div className="text-xs text-gray-500">
-                      Créé le {produit.dateCreation.toLocaleDateString('fr-FR')}
+                      {produit.dateCreation
+                        ? `Créé le ${produit.dateCreation.toLocaleDateString('fr-FR')}`
+                        : ''}
                     </div>
                   </div>
                 </CardContent>
@@ -476,13 +361,23 @@ const BanqueProduits = () => {
         })}
       </div>
 
-      {filteredProduits.length === 0 && (
+      {loading && (
+        <Card>
+          <CardContent className="p-8 text-center text-gray-500">
+            Chargement des produits...
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && filteredProduits.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun produit trouvé</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? 'Aucun produit ne correspond à votre recherche.' : 'Commencez par créer votre premier produit bancaire.'}
+              {searchTerm || selectedCategory !== 'all'
+                ? 'Aucun produit ne correspond à votre recherche.'
+                : 'Commencez par créer votre premier produit bancaire.'}
             </p>
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="h-4 w-4 mr-2" />

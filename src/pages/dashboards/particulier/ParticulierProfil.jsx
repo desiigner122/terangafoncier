@@ -34,6 +34,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'react-hot-toast';
 
 const ParticulierProfil = () => {
@@ -43,14 +44,24 @@ const ParticulierProfil = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [editMode, setEditMode] = useState({});
   
+  // Champs mappés sur les VRAIES colonnes de la table `profiles`
+  // (pas de date_of_birth / bio : ces colonnes n'existent pas dans le schéma réel)
   const [profileData, setProfileData] = useState({
     full_name: '',
     email: '',
     phone: '',
     address: '',
-    date_of_birth: '',
-    bio: '',
+    city: '',
+    region: '',
+    profession: '',
     avatar_url: ''
+  });
+
+  // Statistiques réelles du compte (aucun chiffre fabriqué)
+  const [accountStats, setAccountStats] = useState({
+    demandes: 0,
+    offres: 0,
+    joursActivite: 0
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -81,12 +92,43 @@ const ParticulierProfil = () => {
         email: user?.email || '',
         phone: profile.phone || '',
         address: profile.address || '',
-        date_of_birth: profile.date_of_birth || '',
-        bio: profile.bio || '',
+        city: profile.city || '',
+        region: profile.region || '',
+        profession: profile.profession || '',
         avatar_url: profile.avatar_url || ''
       });
     }
   }, [profile, user]);
+
+  // Chargement des statistiques réelles du compte
+  useEffect(() => {
+    const loadStats = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await ParticulierSupabaseService.getOverviewStats(user.id);
+        const s = res?.data || {};
+        const demandes =
+          (s.communalRequests || 0) +
+          (s.constructionRequests || 0) +
+          (s.financingRequests || 0);
+        const joursActivite = user?.created_at
+          ? Math.max(
+              0,
+              Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86400000)
+            )
+          : 0;
+        setAccountStats({
+          demandes,
+          offres: s.offers || 0,
+          joursActivite
+        });
+      } catch (err) {
+        console.error('Erreur chargement statistiques compte:', err);
+        setAccountStats({ demandes: 0, offres: 0, joursActivite: 0 });
+      }
+    };
+    loadStats();
+  }, [user]);
 
   const toggleEditMode = (field) => {
     setEditMode(prev => ({
@@ -158,26 +200,11 @@ const ParticulierProfil = () => {
     }
   };
 
-  const handlePreferenceUpdate = async (key, value) => {
-    try {
-      setPreferences(prev => ({ ...prev, [key]: value }));
-      
-      // Sauvegarder dans Supabase
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          preferences: { ...preferences, [key]: value }
-        });
-
-      if (error) throw error;
-
-      toast.success('Préférences mises à jour');
-
-    } catch (error) {
-      console.error('Erreur mise à jour préférences:', error);
-      toast.error('Erreur lors de la mise à jour des préférences');
-    }
+  // Aucune table de préférences dédiée n'existe dans le schéma réel
+  // (pas de `user_preferences`). Les préférences restent donc locales à la
+  // session : on ne prétend PAS d'une persistance serveur.
+  const handlePreferenceUpdate = (key, value) => {
+    setPreferences(prev => ({ ...prev, [key]: value }));
   };
 
   const handleAvatarUpload = async (event) => {
@@ -224,12 +251,11 @@ const ParticulierProfil = () => {
       setLoading(true);
 
       // Marquer le compte comme supprimé
+      // (la table `profiles` n'a pas de colonne `deleted_at` : on n'utilise
+      // que la colonne réelle `status`)
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          status: 'deleted'
-        })
+        .update({ status: 'deleted' })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -334,10 +360,17 @@ const ParticulierProfil = () => {
         </div>
         
         <div className="flex items-center space-x-3">
-          <Badge variant="outline" className="flex items-center">
-            <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-            Compte vérifié
-          </Badge>
+          {profile?.is_verified ? (
+            <Badge variant="outline" className="flex items-center">
+              <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+              Compte vérifié
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="flex items-center">
+              <AlertCircle className="h-4 w-4 mr-1 text-amber-500" />
+              Compte non vérifié
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -434,19 +467,23 @@ const ParticulierProfil = () => {
                 field="address"
                 value={profileData.address}
               />
-              
+
               <ProfileField
-                label="Date de naissance"
-                field="date_of_birth"
-                value={profileData.date_of_birth}
-                type="date"
+                label="Ville"
+                field="city"
+                value={profileData.city}
               />
-              
+
               <ProfileField
-                label="Biographie"
-                field="bio"
-                value={profileData.bio}
-                multiline
+                label="Région"
+                field="region"
+                value={profileData.region}
+              />
+
+              <ProfileField
+                label="Profession"
+                field="profession"
+                value={profileData.profession}
               />
             </CardContent>
           </Card>
@@ -534,6 +571,10 @@ const ParticulierProfil = () => {
                 <Bell className="h-5 w-5 mr-2" />
                 Notifications
               </CardTitle>
+              <CardDescription>
+                Ces préférences s'appliquent à votre session en cours. La
+                synchronisation permanente sera bientôt disponible.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
@@ -646,15 +687,15 @@ const ParticulierProfil = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">12</div>
+                  <div className="text-2xl font-bold text-blue-600">{accountStats.demandes}</div>
                   <div className="text-sm text-slate-600">Demandes soumises</div>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">5</div>
-                  <div className="text-sm text-slate-600">Demandes approuvées</div>
+                  <div className="text-2xl font-bold text-green-600">{accountStats.offres}</div>
+                  <div className="text-sm text-slate-600">Offres soumises</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">28</div>
+                  <div className="text-2xl font-bold text-purple-600">{accountStats.joursActivite}</div>
                   <div className="text-sm text-slate-600">Jours d'activité</div>
                 </div>
               </div>
@@ -685,13 +726,15 @@ const ParticulierProfil = () => {
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                 <span className="text-sm font-medium text-slate-700">Dernière connexion</span>
                 <span className="text-sm text-slate-900">
-                  {new Date().toLocaleDateString('fr-FR')}
+                  {user?.last_sign_in_at
+                    ? new Date(user.last_sign_in_at).toLocaleDateString('fr-FR')
+                    : '—'}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                 <span className="text-sm font-medium text-slate-700">Type de compte</span>
-                <Badge>Particulier</Badge>
+                <Badge>{profile?.account_type || 'Particulier'}</Badge>
               </div>
             </CardContent>
           </Card>

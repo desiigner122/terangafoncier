@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Bell, 
-  Check, 
-  X,
-  Filter,
-  Search,
+import {
+  Bell,
+  Check,
   AlertTriangle,
   Info,
   CheckCircle,
@@ -15,116 +12,80 @@ import {
   Clock,
   Settings,
   Trash2,
-  MailOpen,
   Archive
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Mapping type de notification -> icône + couleur (métadonnée d'affichage, pas de donnée fabriquée)
+const TYPE_META = {
+  investment: { icon: TrendingUp, color: 'green' },
+  investissement: { icon: TrendingUp, color: 'green' },
+  portfolio: { icon: DollarSign, color: 'blue' },
+  portefeuille: { icon: DollarSign, color: 'blue' },
+  legal: { icon: CheckCircle, color: 'purple' },
+  juridique: { icon: CheckCircle, color: 'purple' },
+  alert: { icon: AlertTriangle, color: 'orange' },
+  alerte: { icon: AlertTriangle, color: 'orange' },
+  financing: { icon: Building, color: 'green' },
+  financement: { icon: Building, color: 'green' },
+  system: { icon: Info, color: 'gray' },
+  systeme: { icon: Info, color: 'gray' }
+};
 
 const InvestisseurNotifications = () => {
+  const { user } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'investment',
-      title: 'Nouvelle opportunité d\'investissement',
-      message: 'Un nouveau projet résidentiel premium est disponible à Saly avec un ROI estimé à 22%',
-      timestamp: '2024-01-20T15:30:00Z',
-      read: false,
-      priority: 'high',
-      action: 'Voir l\'opportunité',
-      icon: TrendingUp,
-      color: 'green'
-    },
-    {
-      id: 2,
-      type: 'portfolio',
-      title: 'Mise à jour de portfolio',
-      message: 'La valeur de votre investissement "Résidence Les Palmiers" a augmenté de 15%',
-      timestamp: '2024-01-20T12:15:00Z',
-      read: false,
-      priority: 'medium',
-      action: 'Voir les détails',
-      icon: DollarSign,
-      color: 'blue'
-    },
-    {
-      id: 3,
-      type: 'legal',
-      title: 'Document signé',
-      message: 'L\'acte de propriété pour votre terrain à Thiès a été validé par le notaire',
-      timestamp: '2024-01-20T10:45:00Z',
-      read: true,
-      priority: 'high',
-      action: 'Télécharger',
-      icon: CheckCircle,
-      color: 'purple'
-    },
-    {
-      id: 4,
-      type: 'alert',
-      title: 'Alerte marché',
-      message: 'Les prix dans la zone d\'Almadies ont augmenté de 8% ce mois-ci',
-      timestamp: '2024-01-19T16:20:00Z',
-      read: true,
-      priority: 'medium',
-      action: 'Analyser',
-      icon: AlertTriangle,
-      color: 'orange'
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'Rapport mensuel disponible',
-      message: 'Votre rapport de performance mensuel est prêt à être consulté',
-      timestamp: '2024-01-19T09:00:00Z',
-      read: true,
-      priority: 'low',
-      action: 'Consulter',
-      icon: Info,
-      color: 'gray'
-    },
-    {
-      id: 6,
-      type: 'investment',
-      title: 'Financement approuvé',
-      message: 'Votre demande de financement de 250M XOF a été approuvée par la Banque Atlantique',
-      timestamp: '2024-01-18T14:30:00Z',
-      read: true,
-      priority: 'high',
-      action: 'Voir les termes',
-      icon: Building,
-      color: 'green'
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 300);
-  }, []); 
+    const loadNotifications = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('id, user_id, title, message, type, read, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setNotifications(data || []);
+      } catch (err) {
+        console.error('Erreur chargement notifications:', err);
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotifications();
+  }, [user?.id]);
 
   const getTypeLabel = (type) => {
     const labels = {
       investment: 'Investissement',
+      investissement: 'Investissement',
       portfolio: 'Portfolio',
+      portefeuille: 'Portfolio',
       legal: 'Juridique',
+      juridique: 'Juridique',
       alert: 'Alerte',
-      system: 'Système'
+      alerte: 'Alerte',
+      financing: 'Financement',
+      financement: 'Financement',
+      system: 'Système',
+      systeme: 'Système'
     };
-    return labels[type] || type;
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      high: 'bg-red-100 text-red-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-gray-100 text-gray-800'
-    };
-    return colors[priority] || 'bg-gray-100 text-gray-800';
+    return labels[type] || type || 'Notification';
   };
 
   const getIconColor = (color) => {
@@ -138,11 +99,14 @@ const InvestisseurNotifications = () => {
     return colors[color] || 'text-gray-600';
   };
 
+  const getTypeMeta = (type) => TYPE_META[type] || { icon: Info, color: 'gray' };
+
   const formatTime = (timestamp) => {
+    if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 1) return 'À l\'instant';
     if (diffInHours < 24) return `${Math.floor(diffInHours)}h`;
     if (diffInHours < 48) return 'Hier';
@@ -152,23 +116,48 @@ const InvestisseurNotifications = () => {
   const filteredNotifications = notifications.filter(notification => {
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'unread') return !notification.read;
-    if (selectedFilter === 'high') return notification.priority === 'high';
     return notification.type === selectedFilter;
   });
 
-  const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notif => 
+  const markAsRead = async (id) => {
+    setNotifications(prev =>
+      prev.map(notif =>
         notif.id === id ? { ...notif, read: true } : notif
       )
     );
+    try {
+      await supabase.from('notifications').update({ read: true }).eq('id', id);
+    } catch (err) {
+      console.error('Erreur mise à jour notification:', err);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
+  const markAllAsRead = async () => {
+    setNotifications(prev =>
       prev.map(notif => ({ ...notif, read: true }))
     );
+    if (!user?.id) return;
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+    } catch (err) {
+      console.error('Erreur mise à jour notifications:', err);
+    }
   };
+
+  const deleteNotification = async (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    try {
+      await supabase.from('notifications').delete().eq('id', id);
+    } catch (err) {
+      console.error('Erreur suppression notification:', err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (loading) {
     return (
@@ -197,11 +186,11 @@ const InvestisseurNotifications = () => {
               Notifications
             </h1>
             <p className="text-gray-600">
-              {notifications.filter(n => !n.read).length} notification{notifications.filter(n => !n.read).length !== 1 ? 's' : ''} non lue{notifications.filter(n => !n.read).length !== 1 ? 's' : ''}
+              {unreadCount} notification{unreadCount !== 1 ? 's' : ''} non lue{unreadCount !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm" onClick={markAllAsRead}>
+            <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
               <Check className="h-4 w-4 mr-2" />
               Tout marquer comme lu
             </Button>
@@ -226,14 +215,7 @@ const InvestisseurNotifications = () => {
             size="sm"
             onClick={() => setSelectedFilter('unread')}
           >
-            Non lues ({notifications.filter(n => !n.read).length})
-          </Button>
-          <Button
-            variant={selectedFilter === 'high' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedFilter('high')}
-          >
-            Priorité haute ({notifications.filter(n => n.priority === 'high').length})
+            Non lues ({unreadCount})
           </Button>
           <Button
             variant={selectedFilter === 'investment' ? 'default' : 'outline'}
@@ -253,19 +235,22 @@ const InvestisseurNotifications = () => {
 
         {/* Liste des notifications */}
         <div className="space-y-4">
-          {filteredNotifications.map((notification, index) => (
+          {filteredNotifications.map((notification, index) => {
+            const meta = getTypeMeta(notification.type);
+            const Icon = meta.icon;
+            return (
             <motion.div
               key={notification.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card className={`${!notification.read ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''} hover:shadow-md transition-shadow`}>
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-4">
                     {/* Icône */}
                     <div className={`w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0`}>
-                      <notification.icon className={`h-5 w-5 ${getIconColor(notification.color)}`} />
+                      <Icon className={`h-5 w-5 ${getIconColor(meta.color)}`} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -279,9 +264,6 @@ const InvestisseurNotifications = () => {
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge className={getPriorityColor(notification.priority)}>
-                            {notification.priority}
-                          </Badge>
                           <Badge variant="outline">
                             {getTypeLabel(notification.type)}
                           </Badge>
@@ -295,15 +277,10 @@ const InvestisseurNotifications = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-sm text-gray-500">
                           <Clock className="h-4 w-4" />
-                          <span>{formatTime(notification.timestamp)}</span>
+                          <span>{formatTime(notification.created_at)}</span>
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          {notification.action && (
-                            <Button variant="outline" size="sm">
-                              {notification.action}
-                            </Button>
-                          )}
                           {!notification.read && (
                             <Button
                               variant="ghost"
@@ -313,10 +290,11 @@ const InvestisseurNotifications = () => {
                               <Check className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm">
-                            <Archive className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteNotification(notification.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -326,10 +304,11 @@ const InvestisseurNotifications = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Paramètres de notifications */}
+        {/* Paramètres de notifications (préférences locales — persistance à venir) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -386,7 +365,11 @@ const InvestisseurNotifications = () => {
           <div className="text-center py-12">
             <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune notification</h3>
-            <p className="text-gray-600">Vous n'avez aucune notification pour ce filtre</p>
+            <p className="text-gray-600">
+              {notifications.length === 0
+                ? "Vous n'avez aucune notification pour le moment"
+                : 'Vous n\'avez aucune notification pour ce filtre'}
+            </p>
           </div>
         )}
       </motion.div>

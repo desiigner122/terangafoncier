@@ -1,18 +1,33 @@
-﻿
-import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, 
+import {
+  ShieldCheck,
   ArrowRight
 } from 'lucide-react';
-import { sampleParcels } from '@/data/sampleData';
-// import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
+import PropertyService from '@/services/PropertyService';
 import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 
 const VerifiedParcelsSection = () => {
-    const verifiedParcels = sampleParcels.filter(p => p.verified).slice(0, 3);
+    const [verifiedParcels, setVerifiedParcels] = useState([]);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+        PropertyService.getProperties({ verifiedOnly: true, limit: 3 }).then((result) => {
+            if (!active) return;
+            const cards = (result.properties || []).map(p => PropertyService.normalizeForCard(p));
+            setVerifiedParcels(cards);
+            setLoaded(true);
+        });
+        return () => { active = false; };
+    }, []);
+
+    // Ne rien afficher tant qu'aucun terrain vérifié n'est disponible
+    if (loaded && verifiedParcels.length === 0) {
+        return null;
+    }
 
     const sectionVariants = {
         hidden: { opacity: 0, y: 30 },

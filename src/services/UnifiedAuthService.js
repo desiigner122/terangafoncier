@@ -200,41 +200,57 @@ class UnifiedAuthService {
   }
 
   // Obtenir les comptes de test disponibles
+  // ⚠️ SÉCURITÉ : aucun identifiant n'est codé en dur ici. Les comptes de test ne
+  // sont exposés qu'en mode développement et leurs identifiants proviennent de
+  // variables d'environnement (jamais committées). En production : liste vide.
   getTestAccounts() {
-    return [
+    if (!import.meta.env.DEV) {
+      return [];
+    }
+
+    const accounts = [
       {
-        email: 'admin@teranga.com',
-        password: 'admin123',
+        email: import.meta.env.VITE_TEST_ADMIN_EMAIL,
+        password: import.meta.env.VITE_TEST_ADMIN_PASSWORD,
         role: 'admin',
         name: 'Admin Teranga'
       },
       {
-        email: 'vendeur@teranga.com', 
-        password: 'vendeur123',
+        email: import.meta.env.VITE_TEST_VENDEUR_EMAIL,
+        password: import.meta.env.VITE_TEST_VENDEUR_PASSWORD,
         role: 'vendeur',
-        name: 'Moussa Diop'
+        name: 'Vendeur Test'
       },
       {
-        email: 'acheteur@teranga.com',
-        password: 'acheteur123',
-        role: 'particulier', 
-        name: 'Fatou Sall'
+        email: import.meta.env.VITE_TEST_ACHETEUR_EMAIL,
+        password: import.meta.env.VITE_TEST_ACHETEUR_PASSWORD,
+        role: 'particulier',
+        name: 'Acheteur Test'
       }
-    ];
+    ].filter(acc => acc.email && acc.password);
+
+    if (accounts.length === 0) {
+      console.warn(
+        'ℹ️ Aucun compte de test configuré. Définissez VITE_TEST_*_EMAIL / ' +
+        'VITE_TEST_*_PASSWORD dans votre .env de développement pour les activer.'
+      );
+    }
+
+    return accounts;
   }
 
   // Basculer entre auth locale et Supabase (pour compatibilité)
+  // ⚠️ SÉCURITÉ : le mode local (LocalAuthService, mots de passe en clair) est
+  // strictement interdit en production — il ne peut être activé qu'en dev.
   setLocalMode(enabled) {
-    this.isLocalMode = enabled;
-    console.log(`🔄 Mode auth changé: ${enabled ? 'Local' : 'Supabase'}`);
-    
-    if (enabled) {
-      // Si on active le mode local, utiliser LocalAuthService
-      console.log('⚠️ Mode local activé - utilisation LocalAuthService');
-    } else {
-      // Mode Supabase par défaut
-      console.log('✅ Mode Supabase activé');
+    if (enabled && !import.meta.env.DEV) {
+      console.error('⛔ Mode auth local interdit en production. Ignoré.');
+      this.isLocalMode = false;
+      return;
     }
+
+    this.isLocalMode = enabled;
+    console.log(`🔄 Mode auth changé: ${enabled ? 'Local (DEV)' : 'Supabase'}`);
   }
 
   // Obtenir l'utilisateur actuel

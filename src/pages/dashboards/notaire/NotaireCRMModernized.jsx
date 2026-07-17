@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Building, 
-  MessageSquare, 
-  Phone, 
-  Video, 
-  Calendar, 
-  FileText, 
-  DollarSign, 
-  TrendingUp, 
-  Star, 
-  Clock, 
-  MapPin, 
-  Filter, 
-  Search, 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Eye, 
+import {
+  Users,
+  Building,
+  MessageSquare,
+  Phone,
+  Video,
+  Calendar,
+  FileText,
+  DollarSign,
+  TrendingUp,
+  Star,
+  Clock,
+  MapPin,
+  Filter,
+  Search,
+  Plus,
+  Edit,
+  Edit3,
+  Trash2,
+  Eye,
   Send,
   Mail,
   ChevronRight,
@@ -36,7 +37,8 @@ import {
   BarChart3,
   PieChart,
   Hash,
-  AtSign
+  AtSign,
+  Archive
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,66 +54,156 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
 import CreateClientDialog from '@/components/notaire/CreateClientDialog';
+
+// Statuts d'actes considérés comme "actifs" / "finalisés"
+const ACTIVE_STATUSES = ['draft', 'in_progress'];
+const COMPLETED_STATUSES = ['signed', 'completed'];
+
+const formatFCFA = (value) => {
+  const n = Number(value) || 0;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M FCFA`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}k FCFA`;
+  return `${n.toLocaleString('fr-FR')} FCFA`;
+};
 
 const NotaireCRMModernized = () => {
   const { dashboardStats } = useOutletContext();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState('clients');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [selectedPartner, setSelectedPartner] = useState(null);
-  const [messageText, setMessageText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
-  
+
   // États pour les données réelles
   const [clients, setClients] = useState([]);
-  const [bankingPartners, setBankingPartners] = useState([]);
+  const [acts, setActs] = useState([]);
   const [crmStats, setCrmStats] = useState({
     totalClients: 0,
     activeFiles: 0,
     completedTransactions: 0,
-    averageProcessingTime: '0 jours',
-    bankPartners: 0,
-    monthlyRevenue: '0 FCFA',
-    satisfactionScore: 0,
-    pendingSignatures: 0
+    monthlyRevenue: 0,
+    avgSatisfaction: null,
+    retentionRate: null
   });
 
   // Chargement des données réelles depuis Supabase
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadCRMData();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const loadCRMData = async () => {
     setIsLoading(true);
     try {
-      const [clientsResult, partnersResult, statsResult] = await Promise.all([
-        NotaireSupabaseService.getClients(user.id),
-        NotaireSupabaseService.getBankingPartners(user.id),
-        NotaireSupabaseService.getCRMStats(user.id)
-      ]);
+      // 1. Clients notariaux réels (clients_notaire : id, notaire_id, client_id, name, status, created_at)
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients_notaire')
+        .select('id, notaire_id, client_id, name, status, created_at')
+        .eq('notaire_id', user.id)
+        .order('created_at', { ascending: false });
+      if (clientsError) throw clientsError;
 
-      if (clientsResult.success) {
-        setClients(clientsResult.data || []);
-        if (clientsResult.data.length > 0 && !selectedClient) {
-          setSelectedClient(clientsResult.data[0]);
-        }
+      // 2. Actes notariaux réels (pour agréger transactions/revenus par client)
+      const { data: actsData, error: actsError } = await supabase
+        .from('notarial_acts')
+        .select('id, client_id, client_name, act_type, reference, status, notary_fees, amount, client_satisfaction, signed_at, created_at')
+        .eq('notaire_id', user.id)
+        .order('created_at', { ascending: false });
+      if (actsError) throw actsError;
+      const allActs = actsData || [];
+      setActs(allActs);
+
+      // 3. Profils des clients (email / téléphone / localisation) via client_id -> profiles.id
+      const clientProfileIds = (clientsData || []).map(c => c.client_id).filter(Boolean);
+      const profilesById = {};
+      if (clientProfileIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, email, phone, city, region, full_name')
+          .in('id', clientProfileIds);
+        (profilesData || []).forEach(p => { profilesById[p.id] = p; });
       }
-      if (partnersResult.success) {
-        setBankingPartners(partnersResult.data || []);
-      }
-      if (statsResult.success) {
-        setCrmStats(prev => ({ ...prev, ...statsResult.data }));
-      }
+
+      // Agrégation des actes par client
+      const actsByClient = {};
+      allActs.forEach(a => {
+        if (!a.client_id) return;
+        (actsByClient[a.client_id] = actsByClient[a.client_id] || []).push(a);
+      });
+
+      const enrichedClients = (clientsData || []).map(c => {
+        const clientActs = actsByClient[c.client_id] || [];
+        const activeActs = clientActs.filter(a => ACTIVE_STATUSES.includes(a.status));
+        const completedActs = clientActs.filter(a => COMPLETED_STATUSES.includes(a.status));
+        const totalRevenue = clientActs.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+        const satVals = clientActs.map(a => a.client_satisfaction).filter(v => v != null);
+        const avgSat = satVals.length
+          ? Math.round(satVals.reduce((s, v) => s + Number(v), 0) / satVals.length)
+          : null;
+        const p = profilesById[c.client_id] || {};
+        return {
+          ...c,
+          client_status: c.status,
+          email: p.email || null,
+          phone: p.phone || null,
+          city: p.city || null,
+          region: p.region || null,
+          total_acts: clientActs.length,
+          active_acts: activeActs.length,
+          completed_acts: completedActs.length,
+          total_revenue: totalRevenue,
+          avg_act_value: clientActs.length ? Math.round(totalRevenue / clientActs.length) : 0,
+          satisfaction_score: avgSat,
+          acts: clientActs
+        };
+      });
+
+      setClients(enrichedClients);
+      setSelectedClient(prev => {
+        if (!prev) return prev;
+        // Rafraîchir la sélection courante avec les données ré-agrégées
+        return enrichedClients.find(c => c.id === prev.id) || prev;
+      });
+
+      // Statistiques globales réelles
+      const activeFiles = allActs.filter(a => ACTIVE_STATUSES.includes(a.status)).length;
+      const completedTransactions = allActs.filter(a => COMPLETED_STATUSES.includes(a.status)).length;
+
+      const now = new Date();
+      const monthlyRevenue = allActs
+        .filter(a => {
+          const d = a.signed_at ? new Date(a.signed_at) : new Date(a.created_at);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((s, a) => s + (Number(a.amount) || 0), 0);
+
+      const globalSatVals = allActs.map(a => a.client_satisfaction).filter(v => v != null);
+      const avgSatisfaction = globalSatVals.length
+        ? Math.round(globalSatVals.reduce((s, v) => s + Number(v), 0) / globalSatVals.length)
+        : null;
+
+      const clientsWithActs = enrichedClients.filter(c => c.total_acts > 0).length;
+      const loyalClients = enrichedClients.filter(c => c.total_acts >= 2).length;
+      const retentionRate = clientsWithActs > 0
+        ? Math.round((loyalClients / clientsWithActs) * 100)
+        : null;
+
+      setCrmStats({
+        totalClients: enrichedClients.length,
+        activeFiles,
+        completedTransactions,
+        monthlyRevenue,
+        avgSatisfaction,
+        retentionRate
+      });
     } catch (error) {
       console.error('Erreur chargement données CRM:', error);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: "Impossible de charger les données CRM",
         variant: "destructive"
@@ -121,23 +213,17 @@ const NotaireCRMModernized = () => {
     }
   };
 
-  const handleAddClient = async () => {
+  const handleAddClient = () => {
     setShowCreateClientDialog(true);
   };
 
-  const handleClientCreated = (newClient) => {
-    // Ajouter le nouveau client à la liste
-    setClients(prev => [newClient, ...prev]);
-    
-    // Sélectionner le nouveau client
-    setSelectedClient(newClient);
-    
-    // Recharger les stats CRM
+  const handleClientCreated = () => {
+    // Recharger la liste et les stats depuis la source réelle
     loadCRMData();
   };
 
   const handleContactClient = (client, method) => {
-    window.safeGlobalToast({
+    window.safeGlobalToast?.({
       title: `Contact ${method}`,
       description: `Contacter ${client.name || 'le client'} par ${method}`,
       variant: "info"
@@ -152,11 +238,8 @@ const NotaireCRMModernized = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Filtrage des partenaires bancaires
-  const filteredPartners = bankingPartners.filter(partner => {
-    return partner.bank_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           partner.contact_person?.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // Actes actifs réels (onglet Dossiers)
+  const activeActs = acts.filter(a => ACTIVE_STATUSES.includes(a.status));
 
   if (isLoading) {
     return (
@@ -172,7 +255,7 @@ const NotaireCRMModernized = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">CRM Notarial</h2>
-          <p className="text-gray-600">Gestion des clients et partenaires bancaires</p>
+          <p className="text-gray-600">Gestion des clients et de leurs dossiers</p>
         </div>
         <Button onClick={handleAddClient} className="bg-amber-600 hover:bg-amber-700">
           <UserPlus className="h-4 w-4 mr-2" />
@@ -187,7 +270,7 @@ const NotaireCRMModernized = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                <p className="text-2xl font-bold text-gray-900">{crmStats.totalClients || clients.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{crmStats.totalClients}</p>
               </div>
               <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="h-6 w-6 text-blue-600" />
@@ -201,7 +284,7 @@ const NotaireCRMModernized = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Dossiers Actifs</p>
-                <p className="text-2xl font-bold text-gray-900">{crmStats.activeFiles || dashboardStats?.activeCases || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{crmStats.activeFiles}</p>
               </div>
               <div className="h-12 w-12 bg-amber-100 rounded-lg flex items-center justify-center">
                 <FileText className="h-6 w-6 text-amber-600" />
@@ -214,11 +297,11 @@ const NotaireCRMModernized = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Partenaires Banques</p>
-                <p className="text-2xl font-bold text-gray-900">{bankingPartners.length}</p>
+                <p className="text-sm font-medium text-gray-600">Dossiers Finalisés</p>
+                <p className="text-2xl font-bold text-gray-900">{crmStats.completedTransactions}</p>
               </div>
               <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Building className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -228,8 +311,10 @@ const NotaireCRMModernized = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Revenus Mensuels</p>
-                <p className="text-2xl font-bold text-gray-900">{(dashboardStats?.monthlyRevenue / 1000000).toFixed(1)}M</p>
+                <p className="text-sm font-medium text-gray-600">Revenus du mois</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {crmStats.monthlyRevenue > 0 ? formatFCFA(crmStats.monthlyRevenue) : '—'}
+                </p>
               </div>
               <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="h-6 w-6 text-purple-600" />
@@ -241,10 +326,9 @@ const NotaireCRMModernized = () => {
 
       {/* Contenu principal avec onglets */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="clients">Clients ({filteredClients.length})</TabsTrigger>
-          <TabsTrigger value="banks">Banques ({filteredPartners.length})</TabsTrigger>
-          <TabsTrigger value="files">Dossiers Actifs</TabsTrigger>
+          <TabsTrigger value="files">Dossiers Actifs ({activeActs.length})</TabsTrigger>
           <TabsTrigger value="analytics">Analyses</TabsTrigger>
         </TabsList>
 
@@ -269,7 +353,6 @@ const NotaireCRMModernized = () => {
               <option value="active">Actifs</option>
               <option value="inactive">Inactifs</option>
               <option value="prospect">Prospects</option>
-              <option value="vip">VIP</option>
             </select>
           )}
         </div>
@@ -282,7 +365,7 @@ const NotaireCRMModernized = () => {
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
                 <p className="text-gray-600 mb-4">
-                  {clients.length === 0 
+                  {clients.length === 0
                     ? "Vous n'avez pas encore de clients dans votre base de données."
                     : "Aucun client ne correspond à vos critères de recherche."
                   }
@@ -318,16 +401,13 @@ const NotaireCRMModernized = () => {
                               {client.name || 'Client'}
                             </CardTitle>
                             <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {client.client_type || 'Particulier'}
-                              </Badge>
                               <Badge className={
                                 client.client_status === 'active' ? 'bg-green-100 text-green-800' :
                                 client.client_status === 'prospect' ? 'bg-blue-100 text-blue-800' :
-                                client.client_status === 'vip' ? 'bg-purple-100 text-purple-800' :
+                                client.client_status === 'inactive' ? 'bg-gray-100 text-gray-800' :
                                 'bg-gray-100 text-gray-800'
                               }>
-                                {client.client_status || 'Actif'}
+                                {client.client_status || 'actif'}
                               </Badge>
                             </div>
                           </div>
@@ -335,7 +415,9 @@ const NotaireCRMModernized = () => {
                         <div className="text-right">
                           <div className="flex items-center space-x-1 mb-1">
                             <Star className="h-3 w-3 text-yellow-500" />
-                            <span className="text-sm font-medium">{client.satisfaction_score || 0}</span>
+                            <span className="text-sm font-medium">
+                              {client.satisfaction_score != null ? `${client.satisfaction_score}%` : '—'}
+                            </span>
                           </div>
                           <div className="text-xs text-gray-500">
                             {client.total_acts || 0} transaction(s)
@@ -346,33 +428,13 @@ const NotaireCRMModernized = () => {
 
                     <CardContent className="pt-0">
                       <div className="space-y-3">
-                        {/* Transaction actuelle simulée */}
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-900">
-                              Dossier en cours
-                            </span>
-                            <span className="text-sm font-bold text-green-600">
-                              {client.avg_act_value ? `${(client.avg_act_value / 1000000).toFixed(1)}M FCFA` : 'N/A'}
-                            </span>
+                        {/* Localisation client (profil) */}
+                        {(client.city || client.region) && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            {[client.city, client.region].filter(Boolean).join(', ')}
                           </div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div className="flex items-center space-x-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>Localisation en cours</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Building className="h-3 w-3" />
-                              <span>Partenaire bancaire</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span>Étape: {client.active_acts > 0 ? 'En cours' : 'Aucune'}</span>
-                              <Badge className="text-xs bg-blue-100 text-blue-800">
-                                REF-{client.id?.substring(0, 8)}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
+                        )}
 
                         {/* Informations de contact */}
                         <div className="space-y-2">
@@ -388,13 +450,18 @@ const NotaireCRMModernized = () => {
                               {client.phone}
                             </div>
                           )}
+                          {!client.email && !client.phone && (
+                            <div className="text-sm text-gray-400">Contact non renseigné</div>
+                          )}
                         </div>
 
-                        {/* Relation bancaire */}
+                        {/* Synthèse dossiers */}
                         <div className="border-t pt-3">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Revenus totaux:</span>
-                            <span className="font-medium">{client.total_revenue ? `${(client.total_revenue / 1000000).toFixed(1)}M FCFA` : '0 FCFA'}</span>
+                            <span className="text-gray-600">Revenus générés:</span>
+                            <span className="font-medium">
+                              {client.total_revenue > 0 ? formatFCFA(client.total_revenue) : '—'}
+                            </span>
                           </div>
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Dossiers actifs:</span>
@@ -406,10 +473,10 @@ const NotaireCRMModernized = () => {
 
                         {/* Actions */}
                         <div className="flex space-x-2 pt-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1" 
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleContactClient(client, 'téléphone');
@@ -418,22 +485,8 @@ const NotaireCRMModernized = () => {
                             <Phone className="h-3 w-3 mr-1" />
                             Appeler
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.safeGlobalToast({
-                                title: "Rendez-vous programmé",
-                                description: "Le rendez-vous a été ajouté au calendrier",
-                                variant: "success"
-                              });
-                            }}
-                          >
-                            <Calendar className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -452,253 +505,18 @@ const NotaireCRMModernized = () => {
           )}
         </TabsContent>
 
-        {/* Onglet Banques */}
-        <TabsContent value="banks" className="space-y-6">
-          {filteredPartners.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun partenaire bancaire</h3>
-                <p className="text-gray-600 mb-4">
-                  Vous n'avez pas encore de partenaires bancaires enregistrés.
-                </p>
-                <Button className="bg-amber-600 hover:bg-amber-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une banque
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredPartners.map((partner) => (
-                <Card key={partner.id} className="hover:shadow-md transition-all duration-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg font-semibold text-gray-900">
-                          {partner.bank_name}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600">{partner.contact_person}</p>
-                      </div>
-                      <Badge className={
-                        partner.success_rate >= 90 ? 'bg-green-100 text-green-800' :
-                        partner.success_rate >= 75 ? 'bg-blue-100 text-blue-800' :
-                        partner.success_rate >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }>
-                        {partner.success_rate >= 90 ? 'Excellente' :
-                         partner.success_rate >= 75 ? 'Très bonne' :
-                         partner.success_rate >= 60 ? 'Bonne' : 'Moyenne'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Dossiers actifs:</span>
-                          <div className="font-semibold text-blue-600">{partner.total_referrals || 0}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Finalisés ce mois:</span>
-                          <div className="font-semibold text-green-600">{partner.successful_loans || 0}</div>
-                        </div>
-                      </div>
-
-                      <div className="text-sm">
-                        <span className="text-gray-600">Temps moyen:</span>
-                        <div className="font-semibold">{partner.avg_processing_days || 12} jours</div>
-                      </div>
-
-                      <div className="text-sm">
-                        <span className="text-gray-600">Spécialités:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {partner.services_offered?.slice(0, 2).map((service, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {service}
-                            </Badge>
-                          )) || (
-                            <>
-                              <Badge variant="outline" className="text-xs">Crédits particuliers</Badge>
-                              <Badge variant="outline" className="text-xs">Investissement</Badge>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Informations de contact */}
-                      <div className="space-y-1">
-                        {partner.contact_email && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Mail className="h-3 w-3 mr-2" />
-                            {partner.contact_email}
-                          </div>
-                        )}
-                        {partner.contact_phone && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Phone className="h-3 w-3 mr-2" />
-                            {partner.contact_phone}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Statistiques de performance */}
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="text-gray-600">Taux de succès:</span>
-                            <div className="font-semibold text-green-600">{partner.success_rate || 85}%</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Commission totale:</span>
-                            <div className="font-semibold text-purple-600">
-                              {partner.total_commission ? `${(partner.total_commission / 1000000).toFixed(1)}M` : '2.4M'} FCFA
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 pt-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => window.safeGlobalToast({
-                            title: "Contact banque",
-                            description: `Contact avec ${partner.bank_name}`,
-                            variant: "info"
-                          })}
-                        >
-                          <Phone className="h-3 w-3 mr-1" />
-                          Appeler
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => window.safeGlobalToast({
-                            title: "E-mail envoyé",
-                            description: `E-mail envoyé à ${partner.contact_person}`,
-                            variant: "success"
-                          })}
-                        >
-                          <Mail className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
         {/* Onglet Dossiers Actifs */}
         <TabsContent value="files" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Dossiers en Cours avec Intégration Bancaire</CardTitle>
+              <CardTitle>Dossiers en Cours</CardTitle>
               <CardDescription>
-                Suivi des dossiers actifs avec partenaires bancaires
+                Actes notariaux actuellement en préparation ou en cours de traitement
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Dossier fictif basé sur les clients actifs */}
-                {clients.filter(client => client.active_acts > 0).slice(0, 5).map((client, index) => (
-                  <Card key={client.id} className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{client.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            Type: {client.client_type === 'particulier' ? 'Vente Terrain' : 'Achat Villa'}
-                          </p>
-                        </div>
-                        <Badge className={
-                          index % 3 === 0 ? 'bg-red-100 text-red-800' :
-                          index % 3 === 1 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }>
-                          {index % 3 === 0 ? 'Haute' : index % 3 === 1 ? 'Moyenne' : 'Basse'}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                        <div>
-                          <span className="text-sm text-gray-600">Valeur:</span>
-                          <p className="font-semibold text-green-600">
-                            {client.avg_act_value ? `${(client.avg_act_value / 1000000).toFixed(1)}M FCFA` : '85M FCFA'}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-600">Localisation:</span>
-                          <p className="font-medium">
-                            {index % 3 === 0 ? 'Almadies' : index % 3 === 1 ? 'Mermoz' : 'Plateau'}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-600">Étape:</span>
-                          <p className="font-medium">
-                            {index % 3 === 0 ? 'Signature' : index % 3 === 1 ? 'Vérification' : 'Documentation'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">Partenaire Bancaire</span>
-                          <Badge variant="outline">
-                            {index % 3 === 0 ? 'Banque Atlantique' : index % 3 === 1 ? 'CBAO' : 'UBA Sénégal'}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Conseiller:</span>
-                            <p className="font-medium">
-                              {index % 3 === 0 ? 'Mme Fatou Sarr' : index % 3 === 1 ? 'M. Omar Ba' : 'Mlle Aida Ndiaye'}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Statut crédit:</span>
-                            <Badge className={
-                              index % 3 === 0 ? 'bg-green-100 text-green-800' :
-                              index % 3 === 1 ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-blue-100 text-blue-800'
-                            }>
-                              {index % 3 === 0 ? 'Approuvé' : index % 3 === 1 ? 'En cours' : 'Pré-approbation'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-sm">
-                            <span className="text-gray-600">Progression:</span>
-                            <span className="ml-2 font-medium">{85 - (index * 10)}%</span>
-                          </div>
-                          <Progress value={85 - (index * 10)} className="w-32 h-2" />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-3 w-3 mr-1" />
-                            Voir
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            Contact
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {clients.filter(client => client.active_acts > 0).length === 0 && (
+                {activeActs.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun dossier actif</h3>
@@ -706,6 +524,62 @@ const NotaireCRMModernized = () => {
                       Tous vos dossiers sont à jour ou aucun dossier n'est en cours.
                     </p>
                   </div>
+                ) : (
+                  activeActs.map((act) => (
+                    <Card key={act.id} className="border-l-4 border-l-blue-500">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {act.client_name || 'Client'}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              Type: {act.act_type || 'Acte notarial'}
+                            </p>
+                          </div>
+                          <Badge className={
+                            act.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }>
+                            {act.status === 'in_progress' ? 'En cours' : 'Brouillon'}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                          <div>
+                            <span className="text-sm text-gray-600">Montant:</span>
+                            <p className="font-semibold text-green-600">
+                              {act.amount ? formatFCFA(act.amount) : '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Émoluments:</span>
+                            <p className="font-medium">
+                              {act.notary_fees ? formatFCFA(act.notary_fees) : '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Référence:</span>
+                            <p className="font-medium">
+                              {act.reference || `REF-${act.id?.toString().substring(0, 8)}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">
+                            Créé le {new Date(act.created_at).toLocaleDateString('fr-FR')}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-3 w-3 mr-1" />
+                              Voir
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
                 )}
               </div>
             </CardContent>
@@ -724,37 +598,56 @@ const NotaireCRMModernized = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Taux de fidélisation</span>
-                    <span className="font-medium">85%</span>
+                    <span className="font-medium">
+                      {crmStats.retentionRate != null ? `${crmStats.retentionRate}%` : '—'}
+                    </span>
                   </div>
-                  <Progress value={85} className="h-2" />
-                  
-                  <div className="flex items-center justify-between">
+                  <Progress value={crmStats.retentionRate || 0} className="h-2" />
+                  <p className="text-xs text-gray-500">
+                    Part des clients ayant au moins deux dossiers.
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-gray-600">Satisfaction moyenne</span>
-                    <span className="font-medium">4.7/5</span>
+                    <span className="font-medium">
+                      {crmStats.avgSatisfaction != null ? `${crmStats.avgSatisfaction}%` : '—'}
+                    </span>
                   </div>
-                  <Progress value={94} className="h-2" />
+                  <Progress value={crmStats.avgSatisfaction || 0} className="h-2" />
+                  <p className="text-xs text-gray-500">
+                    Moyenne de satisfaction sur les actes notariaux.
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Efficacité Bancaire</CardTitle>
-                <CardDescription>Performance des partenaires</CardDescription>
+                <CardTitle>Activité des Dossiers</CardTitle>
+                <CardDescription>Répartition des actes notariaux</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Taux d'approbation</span>
-                    <span className="font-medium">78%</span>
+                    <span className="text-sm text-gray-600">Dossiers actifs</span>
+                    <span className="font-medium">{crmStats.activeFiles}</span>
                   </div>
-                  <Progress value={78} className="h-2" />
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Délai moyen</span>
-                    <span className="font-medium">12 jours</span>
+                  <Progress
+                    value={acts.length ? Math.round((crmStats.activeFiles / acts.length) * 100) : 0}
+                    className="h-2"
+                  />
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-sm text-gray-600">Dossiers finalisés</span>
+                    <span className="font-medium">{crmStats.completedTransactions}</span>
                   </div>
-                  <Progress value={65} className="h-2" />
+                  <Progress
+                    value={acts.length ? Math.round((crmStats.completedTransactions / acts.length) * 100) : 0}
+                    className="h-2"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Total des actes: {acts.length}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -777,18 +670,19 @@ const NotaireCRMModernized = () => {
                   <div>
                     <DialogTitle className="text-2xl">{selectedClient.name || 'Client'}</DialogTitle>
                     <DialogDescription className="flex items-center space-x-2">
-                      <Badge variant="outline">{selectedClient.client_type || 'Particulier'}</Badge>
                       <Badge className={
                         selectedClient.client_status === 'active' ? 'bg-green-100 text-green-800' :
-                        selectedClient.client_status === 'vip' ? 'bg-purple-100 text-purple-800' :
+                        selectedClient.client_status === 'prospect' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }>
-                        {selectedClient.client_status || 'Actif'}
+                        {selectedClient.client_status || 'actif'}
                       </Badge>
-                      <div className="flex items-center space-x-1">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span>{selectedClient.satisfaction_score || 0}/5</span>
-                      </div>
+                      {selectedClient.satisfaction_score != null && (
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span>{selectedClient.satisfaction_score}%</span>
+                        </div>
+                      )}
                     </DialogDescription>
                   </div>
                 </div>
@@ -808,7 +702,7 @@ const NotaireCRMModernized = () => {
                 </div>
               </div>
             </DialogHeader>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Colonne gauche - Informations personnelles */}
               <div className="lg:col-span-1 space-y-4">
@@ -832,132 +726,101 @@ const NotaireCRMModernized = () => {
                       </p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Adresse</Label>
+                      <Label className="text-sm font-medium text-gray-600">Localisation</Label>
                       <p className="flex items-start space-x-2">
                         <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                        <span>{selectedClient.address || 'Dakar, Sénégal'}</span>
+                        <span>
+                          {[selectedClient.city, selectedClient.region].filter(Boolean).join(', ') || 'Non renseignée'}
+                        </span>
                       </p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Date d'inscription</Label>
+                      <Label className="text-sm font-medium text-gray-600">Date d'ajout</Label>
                       <p className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <span>{new Date(selectedClient.created_at).toLocaleDateString('fr-FR')}</span>
+                        <span>
+                          {selectedClient.created_at
+                            ? new Date(selectedClient.created_at).toLocaleDateString('fr-FR')
+                            : '—'}
+                        </span>
                       </p>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Conseiller assigné */}
+                {/* Notaire en charge */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Conseiller assigné</CardTitle>
+                    <CardTitle className="text-lg">Notaire en charge</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center space-x-3">
                       <Avatar>
                         <AvatarFallback className="bg-blue-100 text-blue-700">
-                          {selectedClient.advisor_name?.split(' ').map(n => n[0]).join('') || 'CN'}
+                          {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'N'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{selectedClient.advisor_name || 'Conseiller Notaire'}</p>
-                        <p className="text-sm text-gray-600">Notaire Principal</p>
+                        <p className="font-medium">{profile?.full_name || 'Notaire'}</p>
+                        <p className="text-sm text-gray-600">Notaire</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Colonne centrale - Historique transactions */}
+              {/* Colonne centrale - Historique transactions réel */}
               <div className="lg:col-span-1 space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Historique des transactions</CardTitle>
+                    <CardTitle className="text-lg">Historique des actes</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-64">
                       <div className="space-y-3">
-                        {/* Transaction simulée */}
-                        {[
-                          { 
-                            id: 1, 
-                            type: 'Vente immobilière', 
-                            amount: 150000000, 
-                            date: '2024-09-15', 
-                            status: 'Terminé',
-                            property: 'Appartement Plateau'
-                          },
-                          { 
-                            id: 2, 
-                            type: 'Prêt hypothécaire', 
-                            amount: 75000000, 
-                            date: '2024-08-22', 
-                            status: 'En cours',
-                            property: 'Villa Almadies'
-                          },
-                          { 
-                            id: 3, 
-                            type: 'Succession', 
-                            amount: 200000000, 
-                            date: '2024-07-10', 
-                            status: 'Terminé',
-                            property: 'Terrain Rufisque'
-                          }
-                        ].map((transaction) => (
-                          <div key={transaction.id} className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4 text-blue-500" />
-                                <span className="font-medium text-sm">{transaction.type}</span>
-                              </div>
-                              <Badge variant={transaction.status === 'Terminé' ? 'default' : 'outline'}>
-                                {transaction.status}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-1">{transaction.property}</p>
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-green-600">
-                                {(transaction.amount / 1000000).toFixed(1)}M FCFA
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(transaction.date).toLocaleDateString('fr-FR')}
-                              </span>
-                            </div>
+                        {(!selectedClient.acts || selectedClient.acts.length === 0) ? (
+                          <div className="text-center py-8 text-gray-500 text-sm">
+                            Aucun acte enregistré pour ce client.
                           </div>
-                        ))}
+                        ) : (
+                          selectedClient.acts.map((act) => (
+                            <div key={act.id} className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <FileText className="h-4 w-4 text-blue-500" />
+                                  <span className="font-medium text-sm">
+                                    {act.act_type || 'Acte notarial'}
+                                  </span>
+                                </div>
+                                <Badge variant={COMPLETED_STATUSES.includes(act.status) ? 'default' : 'outline'}>
+                                  {act.status === 'completed' ? 'Terminé' :
+                                   act.status === 'signed' ? 'Signé' :
+                                   act.status === 'in_progress' ? 'En cours' :
+                                   act.status === 'cancelled' ? 'Annulé' : 'Brouillon'}
+                                </Badge>
+                              </div>
+                              {act.reference && (
+                                <p className="text-xs text-gray-600 mb-1">{act.reference}</p>
+                              )}
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-green-600">
+                                  {act.amount ? formatFCFA(act.amount) : '—'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(act.signed_at || act.created_at).toLocaleDateString('fr-FR')}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </ScrollArea>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Colonne droite - Relations bancaires et stats */}
+              {/* Colonne droite - Statistiques réelles */}
               <div className="lg:col-span-1 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Relations bancaires</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { name: 'Crédit Agricole', type: 'Banque principale', years: '3 ans' },
-                        { name: 'UBA Sénégal', type: 'Crédit immobilier', years: '1 an' },
-                        { name: 'BICIS', type: 'Compte épargne', years: '2 ans' }
-                      ].map((bank, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
-                          <Building className="h-8 w-8 p-2 bg-green-100 text-green-600 rounded" />
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{bank.name}</p>
-                            <p className="text-xs text-gray-600">{bank.type} • {bank.years}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Statistiques client */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Statistiques</CardTitle>
@@ -965,24 +828,40 @@ const NotaireCRMModernized = () => {
                   <CardContent className="space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm">Transactions totales</span>
-                        <span className="font-semibold">{selectedClient.total_acts || 5}</span>
+                        <span className="text-sm">Actes totaux</span>
+                        <span className="font-semibold">{selectedClient.total_acts || 0}</span>
                       </div>
-                      <Progress value={80} className="h-2" />
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm">Valeur portée</span>
-                        <span className="font-semibold text-green-600">425M FCFA</span>
+                        <span className="text-sm">Dossiers actifs</span>
+                        <span className="font-semibold text-blue-600">{selectedClient.active_acts || 0}</span>
                       </div>
-                      <Progress value={65} className="h-2" />
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm">Fidélité</span>
-                        <span className="font-semibold text-purple-600">Excellent</span>
+                        <span className="text-sm">Dossiers finalisés</span>
+                        <span className="font-semibold text-green-600">{selectedClient.completed_acts || 0}</span>
                       </div>
-                      <Progress value={90} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm">Revenus générés</span>
+                        <span className="font-semibold text-green-600">
+                          {selectedClient.total_revenue > 0 ? formatFCFA(selectedClient.total_revenue) : '—'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm">Satisfaction</span>
+                        <span className="font-semibold text-purple-600">
+                          {selectedClient.satisfaction_score != null ? `${selectedClient.satisfaction_score}%` : '—'}
+                        </span>
+                      </div>
+                      {selectedClient.satisfaction_score != null && (
+                        <Progress value={selectedClient.satisfaction_score} className="h-2" />
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1020,7 +899,7 @@ const NotaireCRMModernized = () => {
       )}
 
       {/* Dialog de création de client */}
-      <CreateClientDialog 
+      <CreateClientDialog
         open={showCreateClientDialog}
         onOpenChange={setShowCreateClientDialog}
         onClientCreated={handleClientCreated}

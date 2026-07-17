@@ -1,44 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  Stamp, 
-  Shield, 
-  FileText, 
-  Upload, 
-  Download, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
+import {
+  Stamp,
+  Shield,
+  FileText,
+  CheckCircle,
+  Clock,
+  XCircle,
   Eye,
-  Hash,
-  Lock,
-  Unlock,
-  Link,
   Search,
-  Filter,
-  Plus,
   RefreshCw,
-  ExternalLink,
   Copy,
-  Settings,
-  Zap,
-  Award,
-  Calculator,
-  Activity,
-  TrendingUp,
-  BarChart3,
-  PieChart,
-  DollarSign
+  Award
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -48,37 +27,25 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 
 const NotaireAuthenticationModernized = () => {
-  const { dashboardStats } = useOutletContext();
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [authentications, setAuthentications] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [authStats, setAuthStats] = useState({
-    totalDocuments: 0,
-    authenticatedDocs: 0,
-    pendingAuth: 0,
-    blockchainCost: 0,
-    successRate: 0
-  });
 
-  // Statuts d'authentification
+  // Statuts d'authentification (verification_status réel : pending | verified | rejected)
   const statusOptions = [
     { value: 'all', label: 'Tous les statuts', color: 'bg-gray-100 text-gray-800' },
     { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'verified', label: 'Vérifié', color: 'bg-green-100 text-green-800' },
-    { value: 'failed', label: 'Échec', color: 'bg-red-100 text-red-800' },
-    { value: 'expired', label: 'Expiré', color: 'bg-gray-100 text-gray-800' }
+    { value: 'rejected', label: 'Rejeté', color: 'bg-red-100 text-red-800' }
   ];
 
-  // Chargement des données
   useEffect(() => {
     if (user) {
       loadAuthenticationData();
@@ -86,26 +53,30 @@ const NotaireAuthenticationModernized = () => {
   }, [user]);
 
   const loadAuthenticationData = async () => {
+    if (!user?.id) return;
     setIsLoading(true);
     try {
-      const [docsResult, authResult, statsResult] = await Promise.all([
-        NotaireSupabaseService.getNotarialDocuments(user.id),
-        NotaireSupabaseService.getDocumentAuthentications(user.id),
-        NotaireSupabaseService.getAuthenticationStats(user.id)
+      const [authResult, docsResult] = await Promise.all([
+        supabase
+          .from('document_authentication')
+          .select('id, document_name, document_type, verification_status, authenticity_hash, verified_at, created_at, property_id')
+          .eq('notaire_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('documents')
+          .select('id, name, type, status, url, property_id, created_at')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false })
       ]);
 
-      if (docsResult.success) {
-        setDocuments(docsResult.data || []);
-      }
-      if (authResult.success) {
-        setAuthentications(authResult.data || []);
-      }
-      if (statsResult.success) {
-        setAuthStats(statsResult.data || authStats);
-      }
+      if (authResult.error) throw authResult.error;
+      if (docsResult.error) throw docsResult.error;
+
+      setAuthentications(authResult.data || []);
+      setDocuments(docsResult.data || []);
     } catch (error) {
       console.error('Erreur chargement authentification:', error);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: "Impossible de charger les données d'authentification",
         variant: "destructive"
@@ -115,22 +86,36 @@ const NotaireAuthenticationModernized = () => {
     }
   };
 
-  const handleAuthenticateDocument = async (documentId) => {
+  const handleAuthenticateDocument = async (doc) => {
+    if (!user?.id) return;
     try {
-      const result = await NotaireSupabaseService.authenticateDocument(user.id, documentId);
-      if (result.success) {
-        await loadAuthenticationData();
-        window.safeGlobalToast({
-          title: "Authentification lancée",
-          description: "Le document est en cours d'authentification blockchain",
-          variant: "success"
+      // Enregistre une demande d'authentification. Le hash d'authenticité est
+      // calculé/apposé côté serveur lors de la vérification réelle — on ne
+      // fabrique aucun hash ici.
+      const { error } = await supabase
+        .from('document_authentication')
+        .insert({
+          notaire_id: user.id,
+          property_id: doc.property_id || null,
+          document_name: doc.name || 'Document',
+          document_type: doc.type || null,
+          verification_status: 'pending',
+          authenticity_hash: null
         });
-      }
+
+      if (error) throw error;
+
+      await loadAuthenticationData();
+      window.safeGlobalToast?.({
+        title: "Authentification demandée",
+        description: "Le document a été soumis pour vérification d'authenticité",
+        variant: "success"
+      });
     } catch (error) {
       console.error('Erreur authentification:', error);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         title: "Erreur d'authentification",
-        description: "Impossible d'authentifier le document",
+        description: "Impossible de soumettre le document",
         variant: "destructive"
       });
     }
@@ -141,20 +126,15 @@ const NotaireAuthenticationModernized = () => {
     return statusOption || statusOptions[0];
   };
 
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 FCFA';
-    return `${amount.toLocaleString()} FCFA`;
-  };
-
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         title: "Copié",
         description: "Hash copié dans le presse-papiers",
         variant: "success"
@@ -166,11 +146,19 @@ const NotaireAuthenticationModernized = () => {
 
   // Filtrage
   const filteredAuthentications = authentications.filter(auth => {
-    const matchesSearch = auth.document_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         auth.transaction_hash?.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = auth.document_name?.toLowerCase().includes(term) ||
+                         auth.authenticity_hash?.toLowerCase().includes(term);
     const matchesFilter = statusFilter === 'all' || auth.verification_status === statusFilter;
     return matchesSearch && matchesFilter;
   });
+
+  const verifiedCount = authentications.filter(a => a.verification_status === 'verified').length;
+  const pendingCount = authentications.filter(a => a.verification_status === 'pending').length;
+  const rejectedCount = authentications.filter(a => a.verification_status === 'rejected').length;
+  const successRate = authentications.length > 0
+    ? Math.round((verifiedCount / authentications.length) * 100)
+    : 0;
 
   if (isLoading) {
     return (
@@ -185,8 +173,8 @@ const NotaireAuthenticationModernized = () => {
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Authentification Blockchain</h2>
-          <p className="text-gray-600">Authentification sécurisée des documents notariaux</p>
+          <h2 className="text-3xl font-bold text-gray-900">Authentification des Documents</h2>
+          <p className="text-gray-600">Vérification et authentification des documents notariaux</p>
         </div>
         <Button onClick={loadAuthenticationData} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -215,9 +203,7 @@ const NotaireAuthenticationModernized = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Authentifiés</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {authentications.filter(a => a.verification_status === 'verified').length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{verifiedCount}</p>
               </div>
               <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="h-6 w-6 text-green-600" />
@@ -231,9 +217,7 @@ const NotaireAuthenticationModernized = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">En attente</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {authentications.filter(a => a.verification_status === 'pending').length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{pendingCount}</p>
               </div>
               <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <Clock className="h-6 w-6 text-yellow-600" />
@@ -246,16 +230,11 @@ const NotaireAuthenticationModernized = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Taux de succès</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {authentications.length > 0 
-                    ? Math.round((authentications.filter(a => a.verification_status === 'verified').length / authentications.length) * 100)
-                    : 0
-                  }%
-                </p>
+                <p className="text-sm font-medium text-gray-600">Rejetés</p>
+                <p className="text-2xl font-bold text-gray-900">{rejectedCount}</p>
               </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Award className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <XCircle className="h-6 w-6 text-red-600" />
               </div>
             </div>
           </CardContent>
@@ -265,25 +244,23 @@ const NotaireAuthenticationModernized = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Coût Total</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(authentications.reduce((sum, a) => sum + (a.total_cost || 0), 0))}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Taux de succès</p>
+                <p className="text-2xl font-bold text-gray-900">{successRate}%</p>
               </div>
-              <div className="h-12 w-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Zap className="h-6 w-6 text-amber-600" />
+              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Award className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Alerte blockchain */}
+      {/* Alerte sécurité */}
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          L'authentification blockchain garantit l'intégrité et la traçabilité de vos documents notariaux sur le réseau Polygon.
-          Chaque authentification génère une preuve cryptographique inaltérable.
+          L'authentification garantit l'intégrité et la traçabilité de vos documents notariaux.
+          Chaque document vérifié reçoit une empreinte cryptographique (hash d'authenticité) inaltérable.
         </AlertDescription>
       </Alert>
 
@@ -324,156 +301,11 @@ const NotaireAuthenticationModernized = () => {
 
         {/* Onglet Authentifications */}
         <TabsContent value="authentications" className="space-y-6">
-          {/* Simulateur de coût et statistiques blockchain */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calculator className="h-5 w-5" />
-                  <span>Simulateur de Coût Blockchain</span>
-                </CardTitle>
-                <CardDescription>
-                  Estimez le coût d'authentification de vos documents
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Type de document</Label>
-                    <Select defaultValue="acte-vente">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="acte-vente">Acte de vente</SelectItem>
-                        <SelectItem value="contrat">Contrat</SelectItem>
-                        <SelectItem value="testament">Testament</SelectItem>
-                        <SelectItem value="autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Réseau blockchain</Label>
-                    <Select defaultValue="polygon">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="polygon">Polygon (Rapide)</SelectItem>
-                        <SelectItem value="ethereum">Ethereum (Sécurisé)</SelectItem>
-                        <SelectItem value="bsc">BSC (Économique)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Coût estimé</span>
-                    <span className="text-lg font-bold text-purple-600">0.25 MATIC</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">≈ Équivalent FCFA</span>
-                    <span className="font-semibold">150 FCFA</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Temps d'exécution</span>
-                    <span className="text-sm font-medium">~30 secondes</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  <Stamp className="h-4 w-4 mr-2" />
-                  Authentifier maintenant
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Activity className="h-5 w-5" />
-                  <span>État du Réseau Blockchain</span>
-                </CardTitle>
-                <CardDescription>
-                  Statut en temps réel des réseaux blockchain
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { 
-                    name: 'Polygon', 
-                    status: 'Opérationnel', 
-                    gasPrice: '35 Gwei', 
-                    blockTime: '2.1s',
-                    load: 65,
-                    color: 'bg-green-500'
-                  },
-                  { 
-                    name: 'Ethereum', 
-                    status: 'Congestionné', 
-                    gasPrice: '125 Gwei', 
-                    blockTime: '12.8s',
-                    load: 85,
-                    color: 'bg-orange-500'
-                  },
-                  { 
-                    name: 'BSC', 
-                    status: 'Opérationnel', 
-                    gasPrice: '8 Gwei', 
-                    blockTime: '3.2s',
-                    load: 45,
-                    color: 'bg-green-500'
-                  }
-                ].map((network, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${network.color}`}></div>
-                        <span className="font-medium">{network.name}</span>
-                      </div>
-                      <Badge variant={network.status === 'Opérationnel' ? 'default' : 'secondary'}>
-                        {network.status}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Gas Price:</span>
-                        <span className="ml-2 font-medium">{network.gasPrice}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Block Time:</span>
-                        <span className="ml-2 font-medium">{network.blockTime}</span>
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-600">Charge réseau</span>
-                        <span>{network.load}%</span>
-                      </div>
-                      <Progress value={network.load} className="h-1" />
-                    </div>
-                  </div>
-                ))}
-
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-900">Recommandation</span>
-                  </div>
-                  <p className="text-sm text-blue-800">
-                    Utilisez <strong>Polygon</strong> pour des coûts optimaux avec une bonne vitesse.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           <Card>
             <CardHeader>
               <CardTitle>Historique des Authentifications</CardTitle>
               <CardDescription>
-                Toutes les authentifications blockchain de vos documents
+                Toutes les demandes de vérification d'authenticité de vos documents
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -483,7 +315,7 @@ const NotaireAuthenticationModernized = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune authentification trouvée</h3>
                   <p className="text-gray-600">
                     {authentications.length === 0
-                      ? "Vous n'avez pas encore d'authentifications blockchain."
+                      ? "Vous n'avez pas encore d'authentification de documents."
                       : "Aucune authentification ne correspond à vos critères."
                     }
                   </p>
@@ -494,10 +326,9 @@ const NotaireAuthenticationModernized = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Document</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Statut</TableHead>
-                        <TableHead>Hash Transaction</TableHead>
-                        <TableHead>Réseau</TableHead>
-                        <TableHead>Coût</TableHead>
+                        <TableHead>Hash d'authenticité</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -514,54 +345,40 @@ const NotaireAuthenticationModernized = () => {
                               </div>
                             </TableCell>
                             <TableCell>
+                              <Badge variant="outline">
+                                {auth.document_type || '—'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
                               <Badge className={statusBadge.color}>
                                 {statusBadge.label}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {auth.transaction_hash ? (
+                              {auth.authenticity_hash ? (
                                 <div className="flex items-center space-x-2">
                                   <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    {auth.transaction_hash.substring(0, 10)}...
+                                    {auth.authenticity_hash.substring(0, 10)}...
                                   </code>
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => copyToClipboard(auth.transaction_hash)}
+                                    onClick={() => copyToClipboard(auth.authenticity_hash)}
                                   >
                                     <Copy className="h-3 w-3" />
                                   </Button>
                                 </div>
                               ) : (
-                                <span className="text-gray-400">N/A</span>
+                                <span className="text-gray-400">—</span>
                               )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">
-                                {auth.blockchain_network || 'Polygon'}
-                              </Badge>
+                              {formatDate(auth.verified_at || auth.created_at)}
                             </TableCell>
                             <TableCell>
-                              {formatCurrency(auth.total_cost)}
-                            </TableCell>
-                            <TableCell>
-                              {formatDate(auth.authenticated_at)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                {auth.transaction_hash && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => window.open(`https://polygonscan.com/tx/${auth.transaction_hash}`, '_blank')}
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <Button size="sm" variant="outline">
+                                <Eye className="h-3 w-3" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
@@ -603,27 +420,20 @@ const NotaireAuthenticationModernized = () => {
                               <FileText className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-900">{doc.document_name}</h3>
-                              <p className="text-sm text-gray-600">{doc.document_type}</p>
+                              <h3 className="font-medium text-gray-900">{doc.name || 'Document'}</h3>
+                              <p className="text-sm text-gray-600">{doc.type || '—'}</p>
                             </div>
                           </div>
-                          <Badge className={doc.authenticated ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                            {doc.authenticated ? 'Authentifié' : 'Non authentifié'}
-                          </Badge>
                         </div>
 
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Statut:</span>
-                            <Badge variant="outline">{doc.status}</Badge>
+                            <Badge variant="outline">{doc.status || '—'}</Badge>
                           </div>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Taille:</span>
-                            <span>{doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Upload:</span>
-                            <span>{formatDate(doc.upload_date)}</span>
+                            <span className="text-gray-600">Ajouté le:</span>
+                            <span>{formatDate(doc.created_at)}</span>
                           </div>
                         </div>
 
@@ -632,15 +442,20 @@ const NotaireAuthenticationModernized = () => {
                             size="sm"
                             variant="outline"
                             className="flex-1"
-                            onClick={() => handleAuthenticateDocument(doc.id)}
-                            disabled={doc.authenticated}
+                            onClick={() => handleAuthenticateDocument(doc)}
                           >
                             <Stamp className="h-4 w-4 mr-2" />
-                            {doc.authenticated ? 'Authentifié' : 'Authentifier'}
+                            Authentifier
                           </Button>
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          {doc.url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(doc.url, '_blank')}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -649,182 +464,6 @@ const NotaireAuthenticationModernized = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Onglet Analytics */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Graphique des authentifications par mois */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span>Authentifications par mois</span>
-                </CardTitle>
-                <CardDescription>
-                  Évolution de vos authentifications blockchain
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { month: 'Octobre', count: 28, growth: '+15%' },
-                    { month: 'Septembre', count: 24, growth: '+8%' },
-                    { month: 'Août', count: 22, growth: '+12%' },
-                    { month: 'Juillet', count: 19, growth: '+5%' }
-                  ].map((data, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 text-sm font-medium">{data.month}</div>
-                        <div className="flex-1">
-                          <Progress value={(data.count / 30) * 100} className="h-2" />
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold">{data.count}</span>
-                        <Badge variant="outline" className="text-green-600">
-                          {data.growth}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Répartition par type de document */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <PieChart className="h-5 w-5" />
-                  <span>Types de documents</span>
-                </CardTitle>
-                <CardDescription>
-                  Répartition de vos authentifications par type
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {[
-                    { type: 'Actes de vente', count: 45, percentage: 45, color: 'bg-blue-500' },
-                    { type: 'Contrats', count: 28, percentage: 28, color: 'bg-green-500' },
-                    { type: 'Testaments', count: 15, percentage: 15, color: 'bg-purple-500' },
-                    { type: 'Autres', count: 12, percentage: 12, color: 'bg-gray-500' }
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded ${item.color}`}></div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{item.type}</span>
-                          <span className="text-sm text-gray-600">{item.count}</span>
-                        </div>
-                        <Progress value={item.percentage} className="h-1" />
-                      </div>
-                      <span className="text-sm font-semibold">{item.percentage}%</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Coûts et économies */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5" />
-                  <span>Analyse des coûts</span>
-                </CardTitle>
-                <CardDescription>
-                  Optimisation et économies blockchain
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">2,450 FCFA</div>
-                    <div className="text-sm text-green-700">Économisé ce mois</div>
-                  </div>
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">8,750 FCFA</div>
-                    <div className="text-sm text-blue-700">Coût total</div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Coût moyen par auth.</span>
-                    <span className="font-semibold">125 FCFA</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Réseau le plus utilisé</span>
-                    <span className="font-semibold text-purple-600">Polygon</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Temps moyen</span>
-                    <span className="font-semibold">45 secondes</span>
-                  </div>
-                </div>
-
-                <Alert>
-                  <TrendingUp className="h-4 w-4" />
-                  <AlertDescription>
-                    Vous économisez 23% en utilisant Polygon au lieu d'Ethereum.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-
-            {/* Fiabilité et performance */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Award className="h-5 w-5" />
-                  <span>Performance & Fiabilité</span>
-                </CardTitle>
-                <CardDescription>
-                  Indicateurs de qualité de service
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Taux de succès</span>
-                      <span className="text-sm font-semibold text-green-600">99.2%</span>
-                    </div>
-                    <Progress value={99.2} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Vitesse moyenne</span>
-                      <span className="text-sm font-semibold text-blue-600">⚡ Excellent</span>
-                    </div>
-                    <Progress value={85} className="h-2" />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Sécurité</span>
-                      <span className="text-sm font-semibold text-purple-600">🛡️ Maximale</span>
-                    </div>
-                    <Progress value={100} className="h-2" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <div className="text-center p-2 bg-green-50 rounded">
-                    <div className="text-lg font-bold text-green-600">0</div>
-                    <div className="text-xs text-green-700">Échecs</div>
-                  </div>
-                  <div className="text-center p-2 bg-blue-50 rounded">
-                    <div className="text-lg font-bold text-blue-600">93</div>
-                    <div className="text-xs text-blue-700">Succès</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

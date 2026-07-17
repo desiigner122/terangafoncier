@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { 
-  ArrowLeft, MapPin, Share2, Heart, Calculator, Calendar, 
+import {
+  ArrowLeft, MapPin, Share2, Heart, Calculator, Calendar,
   User, Phone, Mail, MessageSquare, CheckCircle, AlertTriangle,
   Database, Shield, Brain, Sparkles, Network, Globe, Building2,
   Camera, Play, Download, FileText, Star, Zap, TrendingUp,
@@ -20,11 +20,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/lib/supabaseClient';
+
+// Placeholder local (data URI SVG) utilisé quand la parcelle n'a aucune photo
+const PLACEHOLDER_IMAGE =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">' +
+    '<rect width="800" height="600" fill="#e2e8f0"/>' +
+    '<text x="400" y="290" font-family="sans-serif" font-size="28" fill="#64748b" text-anchor="middle">Aucune photo disponible</text>' +
+    '<text x="400" y="330" font-family="sans-serif" font-size="18" fill="#94a3b8" text-anchor="middle">Teranga Foncier</text>' +
+    '</svg>'
+  );
 
 const ParcelleDetailPageBlockchain = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [parcelle, setParcelle] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showVisitModal, setShowVisitModal] = useState(false);
@@ -32,165 +46,106 @@ const ParcelleDetailPageBlockchain = () => {
   const [showFinancingModal, setShowFinancingModal] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Calculateur rapide (vraie formule d'amortissement sur le prix réel)
+  const [downPayment, setDownPayment] = useState('');
+  const [loanYears, setLoanYears] = useState('');
+  const [annualRate, setAnnualRate] = useState('');
+
   useEffect(() => {
-    // Simulation de chargement des données de la parcelle blockchain
-    const mockParcelle = {
-      id: parseInt(id),
-      title: "Terrain Premium NFT Blockchain - Les Almadies",
-      location: "Les Almadies, Dakar",
-      city: 'Dakar',
-      region: 'Dakar',
-      size: 500,
-      price: 125000000, // 125M FCFA
-      price_per_m2: 250000,
-      type: 'Résidentiel Premium',
-      status: 'NFT Vérifié',
-      aiScore: 9.2,
-      sustainabilityScore: 8.7,
-      seller_type: 'Vendeur Pro',
-      seller_name: 'Teranga Développement SARL',
-      seller_rating: 4.9,
-      seller_properties: 23,
-      seller_avatar: '/api/YOUR_API_KEY/100/100',
-      coordinates: { lat: 14.7645, lng: -17.4966 },
-      
-      // Informations NFT Blockchain
-      nft_metadata: {
-        token_id: 'TF001',
-        contract_address: '0x742d35cc663',
-        blockchain: 'Polygon',
-        created_date: '2024-01-15',
-        last_transfer: '2024-01-20',
-        ownership_history: 3,
-        verified_authenticity: true,
-        smart_contract_type: 'ERC-721',
-        royalty_percentage: 2.5,
-        hash: '0x123abc456def789'
-      },
-      
-      // Score IA et analyses
-      ai_insights: {
-        investment_score: 9.2,
-        growth_potential: 8.8,
-        liquidity_score: 7.9,
-        risk_assessment: 'Faible',
-        market_trends: '+12% en 6 mois',
-        predicted_value_1year: 140000000,
-        recommended_action: 'Investissement fortement recommandé'
-      },
-      
-      // Options de financement blockchain
-      financing_options: {
-        crypto_payment: true,
-        traditional_banks: ['Ecobank', 'BOA', 'BICIS', 'BHS', 'SGBS'],
-        defi_protocols: ['Aave', 'Compound', 'MakerDAO'],
-        installment_plans: [
-          { duration: '12 mois', monthly: '11,200,000 FCFA', total: '134,400,000 FCFA', interest: '7.5%' },
-          { duration: '24 mois', monthly: '5,900,000 FCFA', total: '141,600,000 FCFA', interest: '8.2%' },
-          { duration: '36 mois', monthly: '4,100,000 FCFA', total: '147,600,000 FCFA', interest: '8.8%' }
-        ],
-        crypto_accepted: ['BTC', 'ETH', 'USDC', 'DAI', 'MATIC']
-      },
-      
-      // Suivi construction intelligent
-      construction_monitoring: {
-        available: true,
-        features: ['Caméras 4K temps réel', 'Drone mensuel', 'IA de progression', 'Rapports automatiques'],
-        estimated_duration: '8 mois',
-        milestones: [
-          { phase: 'Fondations', duration: '1 mois', progress: 0, ai_predicted: true },
-          { phase: 'Structure', duration: '3 mois', progress: 0, ai_predicted: true },
-          { phase: 'Toiture', duration: '1 mois', progress: 0, ai_predicted: true },
-          { phase: 'Finitions', duration: '3 mois', progress: 0, ai_predicted: true }
-        ]
-      },
-      
-      // Analyse ROI avec IA
-      roi_analysis: {
-        estimated_annual_roi: 12.5,
-        payback_period: '8 ans',
-        rental_yield: 8.2,
-        appreciation_forecast: '+45% en 10 ans',
-        market_score: 9.2,
-        location_score: 8.8,
-        infrastructure_score: 9.5,
-        ai_confidence: 94
-      },
-      
-      // Images et médias
-      images: [
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600', 
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600'
-      ],
-      virtual_tour_url: 'https://parcels.terangafoncier.com/virtual-tour/001',
-      drone_footage_url: 'https://parcels.terangafoncier.com/drone/001',
-      
-      // Caractéristiques du terrain
-      features: [
-        'Titre foncier sécurisé NFT',
-        'Viabilisation complète (eau, électricité, fibre)',
-        'Smart contracts automatiques',
-        'Accès route pavée',
-        'Vue sur océan partielle',
-        'Zone résidentielle haut standing',
-        'Proximité centre commercial',
-        'Sécurité 24h/24',
-        'Réseau d\'assainissement',
-        'Éclairage public LED'
-      ],
-      
-      // Infrastructure environnante avec IA scoring
-      nearby_amenities: [
-        { type: 'École', name: 'École Française Mermoz', distance: '1.2 km', score: 9.1, icon: Users },
-        { type: 'Hôpital', name: 'Clinique de la Madeleine', distance: '2.1 km', score: 8.7, icon: Building2 },
-        { type: 'Commerce', name: 'Sea Plaza', distance: '800 m', score: 9.3, icon: ShoppingCart },
-        { type: 'Transport', name: 'Station BRT', distance: '1.5 km', score: 8.9, icon: Car },
-        { type: 'Loisirs', name: 'Plage des Almadies', distance: '3.2 km', score: 9.5, icon: Globe }
-      ],
-      
-      // Documents blockchain vérifiés
-      documents: [
-        { name: 'Certificat NFT Blockchain', type: 'PDF', verified: true, hash: '0x123abc...', date: '2024-01-15' },
-        { name: 'Titre Foncier Numérisé', type: 'PDF', verified: true, hash: '0x456def...', date: '2024-01-10' },
-        { name: 'Certificat de Viabilisation', type: 'PDF', verified: true, hash: '0x789ghi...', date: '2024-01-08' },
-        { name: 'Étude de Sol Géotechnique', type: 'PDF', verified: true, hash: '0xabcjkl...', date: '2024-01-05' },
-        { name: 'Smart Contract Code', type: 'JSON', verified: true, hash: '0xdefmno...', date: '2024-01-15' }
-      ],
-      
-      description: `ðŸš€ **Terrain d'exception tokenisé en NFT sur blockchain Polygon**
+    let cancelled = false;
 
-Cette propriété premium située dans le quartier prestigieux des Almadies offre une opportunité unique d'investissement sécurisé par la technologie blockchain.
+    const loadParcelle = async () => {
+      setLoading(true);
+      try {
+        const { data: property, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', id)
+          .single();
 
-ðŸ” **Sécurité Blockchain Maximale**
-Avec sa certification NFT, ce terrain bénéficie d'une traçabilité complète et d'une sécurité anti-fraude maximale. Les smart contracts automatisent toutes les transactions et garantissent la transparence totale.
+        if (cancelled) return;
 
-ðŸ–ï¸ **Emplacement Exceptionnel**
-Idéal pour construction de villa haut de gamme avec vue océan partielle. Le quartier connaît une forte croissance avec de nombreux projets de développement en cours.
+        if (error || !property) {
+          console.error('Erreur chargement propriété:', error);
+          setParcelle(null);
+          setLoading(false);
+          return;
+        }
 
-ðŸ’° **Financement Innovant**
-Financement traditionnel et crypto disponible avec nos 12 partenaires bancaires et protocoles DeFi. Suivi de construction en temps réel via notre plateforme de monitoring IA.
+        setParcelle(property);
 
-ðŸ“ˆ **Analyse IA : Score 9.2/10**
-Notre intelligence artificielle recommande fortement cet investissement avec un potentiel de croissance de +45% sur 10 ans.`
+        // Galerie photos (table property_photos), photo principale en premier
+        const { data: photoRows } = await supabase
+          .from('property_photos')
+          .select('id, url, is_primary')
+          .eq('property_id', property.id)
+          .order('is_primary', { ascending: false });
+
+        if (!cancelled) {
+          const urls = (photoRows || []).map((p) => p.url).filter(Boolean);
+          setPhotos(urls.length > 0 ? urls : [PLACEHOLDER_IMAGE]);
+        }
+
+        // Vendeur (profiles via owner_id) — aucune note fictive
+        if (property.owner_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', property.owner_id)
+            .single();
+          if (!cancelled) setSeller(profile || null);
+        }
+      } catch (err) {
+        console.error('Erreur chargement parcelle:', err);
+        if (!cancelled) setParcelle(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
 
-    // Simulation du chargement
-    setTimeout(() => {
-      setParcelle(mockParcelle);
-      setLoading(false);
-    }, 1500);
+    loadParcelle();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const formatPrice = (price) => {
+    if (price === null || price === undefined || isNaN(Number(price))) return '—';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  const pricePerM2 =
+    parcelle && parcelle.price && parcelle.surface && Number(parcelle.surface) > 0
+      ? Math.round(Number(parcelle.price) / Number(parcelle.surface))
+      : null;
+
+  const isTokenized =
+    parcelle &&
+    (parcelle.nft_token_id ||
+      parcelle.blockchain_hash ||
+      parcelle.transaction_hash ||
+      parcelle.smart_contract_address);
+
+  // Mensualité: formule d'amortissement M = C * r / (1 - (1+r)^-n)
+  const computeMonthly = () => {
+    if (!parcelle || !parcelle.price) return null;
+    const principal = Number(parcelle.price) - (Number(downPayment) || 0);
+    const years = Number(loanYears);
+    const rate = Number(annualRate);
+    if (!years || years <= 0 || principal <= 0) return null;
+    const n = years * 12;
+    if (!rate || rate <= 0) return principal / n; // prêt à taux nul
+    const r = rate / 100 / 12;
+    return (principal * r) / (1 - Math.pow(1 + r, -n));
+  };
+  const monthlyPayment = computeMonthly();
+
+  const sellerName =
+    seller?.full_name || seller?.nom || seller?.name || seller?.email || 'Non renseigné';
 
   const handleScheduleVisit = () => {
     setShowVisitModal(true);
@@ -213,7 +168,7 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
           />
-          <div className="text-lg font-medium text-gray-700">Chargement de la parcelle NFT...</div>
+          <div className="text-lg font-medium text-gray-700">Chargement de la parcelle...</div>
           <div className="text-sm text-gray-500 mt-2">Vérification blockchain en cours</div>
         </div>
       </div>
@@ -226,7 +181,7 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Parcelle non trouvée</h2>
-          <p className="text-gray-600 mb-4">La parcelle NFT demandée n'existe pas ou a été supprimée.</p>
+          <p className="text-gray-600 mb-4">La parcelle demandée n'existe pas ou a été supprimée.</p>
           <Button onClick={() => navigate('/parcelles-vendeurs')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour aux parcelles
@@ -236,39 +191,56 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
     );
   }
 
+  const parcelleTitle = parcelle.title || parcelle.name || 'Parcelle';
+  const galleryImages = photos.length > 0 ? photos : [PLACEHOLDER_IMAGE];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Helmet>
-        <title>{parcelle.title} - NFT Blockchain | Teranga Foncier</title>
-        <meta name="description" content={parcelle.description} />
+        <title>{parcelleTitle} - Blockchain | Teranga Foncier</title>
+        <meta
+          name="description"
+          content={parcelle.description ? String(parcelle.description).slice(0, 160) : parcelleTitle}
+        />
       </Helmet>
 
       {/* Header avec navigation */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => navigate('/parcelles-vendeurs')}
               className="text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour aux parcelles
             </Button>
-            
+
             <div className="flex items-center space-x-3">
-              <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-                <Database className="w-3 h-3 mr-1" />
-                NFT #{parcelle.nft_metadata.token_id}
-              </Badge>
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
-                <Shield className="w-3 h-3 mr-1" />
-                {parcelle.status}
-              </Badge>
-              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
-                <Brain className="w-3 h-3 mr-1" />
-                Score IA: {parcelle.aiScore}/10
-              </Badge>
+              {parcelle.nft_token_id ? (
+                <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+                  <Database className="w-3 h-3 mr-1" />
+                  NFT #{parcelle.nft_token_id}
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                  <Database className="w-3 h-3 mr-1" />
+                  Non tokenisé
+                </Badge>
+              )}
+              {(parcelle.verification_status || parcelle.status) && (
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                  <Shield className="w-3 h-3 mr-1" />
+                  {parcelle.verification_status === 'verified' ? 'Vérifié' : (parcelle.verification_status || parcelle.status)}
+                </Badge>
+              )}
+              {parcelle.ai_score !== null && parcelle.ai_score !== undefined && (
+                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                  <Brain className="w-3 h-3 mr-1" />
+                  Score IA: {parcelle.ai_score}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -276,27 +248,27 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Colonne principale - Images et informations */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Galerie d'images */}
             <Card className="overflow-hidden">
               <div className="relative">
-                <img 
-                  src={parcelle.images[activeImageIndex]} 
-                  alt={parcelle.title}
+                <img
+                  src={galleryImages[activeImageIndex] || galleryImages[0]}
+                  alt={parcelleTitle}
                   className="w-full h-96 object-cover"
                 />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-black bg-opacity-70 text-white">
-                    {activeImageIndex + 1} / {parcelle.images.length}
+                    {Math.min(activeImageIndex + 1, galleryImages.length)} / {galleryImages.length}
                   </Badge>
                 </div>
                 <div className="absolute top-4 right-4 flex space-x-2">
                   <Button size="sm" variant="secondary" className="bg-white bg-opacity-90">
                     <Camera className="w-4 h-4 mr-1" />
-                    Visite 360Â°
+                    Visite 360°
                   </Button>
                   <Button size="sm" variant="secondary" className="bg-white bg-opacity-90">
                     <Play className="w-4 h-4 mr-1" />
@@ -316,7 +288,7 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
               </div>
               <div className="p-4">
                 <div className="flex space-x-2 overflow-x-auto">
-                  {parcelle.images.map((image, index) => (
+                  {galleryImages.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setActiveImageIndex(index)}
@@ -337,11 +309,14 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-                      {parcelle.title}
+                      {parcelleTitle}
                     </CardTitle>
                     <div className="flex items-center text-gray-600 mb-4">
                       <MapPin className="w-4 h-4 mr-2" />
-                      {parcelle.location}
+                      {[parcelle.location, parcelle.commune, parcelle.city, parcelle.region]
+                        .filter(Boolean)
+                        .filter((v, i, arr) => arr.indexOf(v) === i)
+                        .join(', ') || 'Localisation non renseignée'}
                     </div>
                   </div>
                   <div className="text-right">
@@ -349,7 +324,7 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                       {formatPrice(parcelle.price)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {formatPrice(parcelle.price_per_m2)}/mÂ²
+                      {pricePerM2 !== null ? `${formatPrice(pricePerM2)}/m²` : '—/m²'}
                     </div>
                   </div>
                 </div>
@@ -357,57 +332,48 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{parcelle.size}</div>
-                    <div className="text-sm text-gray-600">Surface (mÂ²)</div>
+                    <div className="text-2xl font-bold text-blue-600">{parcelle.surface ?? '—'}</div>
+                    <div className="text-sm text-gray-600">Surface (m²)</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{parcelle.aiScore}</div>
+                    <div className="text-2xl font-bold text-green-600">{parcelle.ai_score ?? '—'}</div>
                     <div className="text-sm text-gray-600">Score IA</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">{parcelle.sustainabilityScore}</div>
-                    <div className="text-sm text-gray-600">Durabilité</div>
+                    <div className="text-2xl font-bold text-purple-600">{parcelle.nft_readiness_score ?? '—'}</div>
+                    <div className="text-sm text-gray-600">Préparation NFT</div>
                   </div>
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">{parcelle.roi_analysis.estimated_annual_roi}%</div>
-                    <div className="text-sm text-gray-600">ROI Annuel</div>
+                    <div className="text-2xl font-bold text-yellow-600">{parcelle.views_count ?? '—'}</div>
+                    <div className="text-sm text-gray-600">Vues</div>
                   </div>
                 </div>
 
-                {/* Analyse IA */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-6">
-                  <div className="flex items-center mb-3">
-                    <Brain className="w-5 h-5 text-blue-600 mr-2" />
-                    <h3 className="font-bold text-gray-900">Analyse IA Avancée</h3>
-                    <Badge className="ml-2 bg-green-500 text-white">
-                      Confiance: {parcelle.roi_analysis.ai_confidence}%
-                    </Badge>
-                  </div>
-                  <p className="text-gray-700 mb-3">{parcelle.ai_insights.recommended_action}</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div>
-                      <div className="text-sm text-gray-600">Potentiel Croissance</div>
-                      <div className="font-bold text-green-600">{parcelle.ai_insights.growth_potential}/10</div>
+                {/* Estimations réelles (colonnes properties) */}
+                {(parcelle.estimated_value !== null && parcelle.estimated_value !== undefined) ||
+                (parcelle.market_value !== null && parcelle.market_value !== undefined) ? (
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-6">
+                    <div className="flex items-center mb-3">
+                      <Brain className="w-5 h-5 text-blue-600 mr-2" />
+                      <h3 className="font-bold text-gray-900">Estimations</h3>
                     </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Tendance Marché</div>
-                      <div className="font-bold text-blue-600">{parcelle.ai_insights.market_trends}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Risque</div>
-                      <div className="font-bold text-yellow-600">{parcelle.ai_insights.risk_assessment}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Valeur prédite 1 an</div>
-                      <div className="font-bold text-purple-600">{formatPrice(parcelle.ai_insights.predicted_value_1year)}</div>
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-sm text-gray-600">Valeur estimée</div>
+                        <div className="font-bold text-green-600">{formatPrice(parcelle.estimated_value)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Valeur de marché</div>
+                        <div className="font-bold text-purple-600">{formatPrice(parcelle.market_value)}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : null}
 
                 {/* Description */}
                 <div className="prose max-w-none">
                   <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                    {parcelle.description}
+                    {parcelle.description || 'Aucune description renseignée.'}
                   </div>
                 </div>
               </CardContent>
@@ -427,43 +393,56 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <TabsContent value="blockchain" className="p-6">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900">Informations NFT Blockchain</h3>
-                      <Badge className="bg-green-500 text-white">
-                        <Shield className="w-3 h-3 mr-1" />
-                        Vérifié
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600">Token ID</div>
-                        <div className="font-mono text-lg">{parcelle.nft_metadata.token_id}</div>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600">Blockchain</div>
-                        <div className="font-bold">{parcelle.nft_metadata.blockchain}</div>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600">Adresse du Contrat</div>
-                        <div className="font-mono text-sm">{parcelle.nft_metadata.contract_address}...</div>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600">Hash de Vérification</div>
-                        <div className="font-mono text-sm">{parcelle.nft_metadata.hash}...</div>
-                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">Informations Blockchain</h3>
+                      {isTokenized ? (
+                        <Badge className="bg-green-500 text-white">
+                          <Shield className="w-3 h-3 mr-1" />
+                          Tokenisé
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                          Non tokenisé
+                        </Badge>
+                      )}
                     </div>
 
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-bold text-gray-900 mb-3">Options de Paiement Crypto</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {parcelle.financing_options.crypto_accepted.map((crypto, index) => (
-                          <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-700">
-                            <Coins className="w-3 h-3 mr-1" />
-                            {crypto}
-                          </Badge>
-                        ))}
+                    {isTokenized ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-600">Token ID</div>
+                          <div className="font-mono text-lg">{parcelle.nft_token_id ?? '—'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-600">Adresse du Contrat</div>
+                          <div className="font-mono text-sm break-all">{parcelle.smart_contract_address ?? '—'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-600">Hash Blockchain</div>
+                          <div className="font-mono text-sm break-all">{parcelle.blockchain_hash ?? '—'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-600">Hash de Transaction</div>
+                          <div className="font-mono text-sm break-all">{parcelle.transaction_hash ?? '—'}</div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="bg-gray-50 p-6 rounded-lg text-center text-gray-600">
+                        Cette parcelle n'est pas encore tokenisée sur la blockchain.
+                        {parcelle.nft_readiness_score !== null && parcelle.nft_readiness_score !== undefined && (
+                          <div className="mt-2 text-sm">
+                            Score de préparation NFT :{' '}
+                            <span className="font-bold text-gray-900">{parcelle.nft_readiness_score}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {parcelle.nft_readiness_score !== null && parcelle.nft_readiness_score !== undefined && isTokenized && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-bold text-gray-900 mb-2">Score de préparation NFT</h4>
+                        <div className="text-2xl font-bold text-blue-600">{parcelle.nft_readiness_score}</div>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 
@@ -471,34 +450,35 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <TabsContent value="features" className="p-6">
                   <div className="space-y-6">
                     <h3 className="text-lg font-bold text-gray-900">Caractéristiques du Terrain</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {parcelle.features.map((feature, index) => (
-                        <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                          <span className="text-gray-800">{feature}</span>
-                        </div>
-                      ))}
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Home className="w-5 h-5 text-blue-600 mr-3" />
+                        <span className="text-gray-800">Type : {parcelle.type || 'Non renseigné'}</span>
+                      </div>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <MapPin className="w-5 h-5 text-blue-600 mr-3" />
+                        <span className="text-gray-800">Région : {parcelle.region || 'Non renseignée'}</span>
+                      </div>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Building2 className="w-5 h-5 text-blue-600 mr-3" />
+                        <span className="text-gray-800">Commune : {parcelle.commune || parcelle.city || 'Non renseignée'}</span>
+                      </div>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Navigation className="w-5 h-5 text-blue-600 mr-3" />
+                        <span className="text-gray-800">
+                          GPS :{' '}
+                          {parcelle.latitude && parcelle.longitude
+                            ? `${Number(parcelle.latitude).toFixed(5)}, ${Number(parcelle.longitude).toFixed(5)}`
+                            : 'Non renseigné'}
+                        </span>
+                      </div>
                     </div>
 
                     <div>
                       <h4 className="font-bold text-gray-900 mb-4">Commodités Environnantes</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parcelle.nearby_amenities.map((amenity, index) => {
-                          const IconComponent = amenity.icon;
-                          return (
-                            <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg">
-                              <IconComponent className="w-6 h-6 text-blue-600 mr-3" />
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{amenity.name}</div>
-                                <div className="text-sm text-gray-600">{amenity.distance}</div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm font-bold text-green-600">Score: {amenity.score}/10</div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="bg-gray-50 p-6 rounded-lg text-center text-gray-500">
+                        Bientôt disponible
                       </div>
                     </div>
                   </div>
@@ -508,44 +488,24 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <TabsContent value="roi" className="p-6">
                   <div className="space-y-6">
                     <h3 className="text-lg font-bold text-gray-900">Analyse ROI & Rentabilité</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{parcelle.roi_analysis.estimated_annual_roi}%</div>
-                        <div className="text-sm text-gray-600">ROI Annuel Estimé</div>
+                        <div className="text-2xl font-bold text-green-600">{formatPrice(parcelle.estimated_value)}</div>
+                        <div className="text-sm text-gray-600">Valeur Estimée</div>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{parcelle.roi_analysis.payback_period}</div>
-                        <div className="text-sm text-gray-600">Période de Retour</div>
+                        <div className="text-2xl font-bold text-blue-600">{formatPrice(parcelle.market_value)}</div>
+                        <div className="text-sm text-gray-600">Valeur de Marché</div>
                       </div>
                       <div className="bg-purple-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">{parcelle.roi_analysis.appreciation_forecast}</div>
-                        <div className="text-sm text-gray-600">Appréciation Prévue</div>
+                        <div className="text-2xl font-bold text-purple-600">{parcelle.ai_score ?? '—'}</div>
+                        <div className="text-sm text-gray-600">Score IA</div>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span>Score Marché</span>
-                          <span className="font-bold">{parcelle.roi_analysis.market_score}/10</span>
-                        </div>
-                        <Progress value={parcelle.roi_analysis.market_score * 10} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span>Score Emplacement</span>
-                          <span className="font-bold">{parcelle.roi_analysis.location_score}/10</span>
-                        </div>
-                        <Progress value={parcelle.roi_analysis.location_score * 10} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span>Score Infrastructure</span>
-                          <span className="font-bold">{parcelle.roi_analysis.infrastructure_score}/10</span>
-                        </div>
-                        <Progress value={parcelle.roi_analysis.infrastructure_score * 10} className="h-2" />
-                      </div>
+                    <div className="bg-gray-50 p-6 rounded-lg text-center text-gray-500">
+                      Analyse ROI détaillée bientôt disponible
                     </div>
 
                     <Button className="w-full" onClick={handleFinancing}>
@@ -558,32 +518,12 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 {/* Onglet Documents */}
                 <TabsContent value="documents" className="p-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-900">Documents Blockchain Vérifiés</h3>
-                    
-                    {parcelle.documents.map((doc, index) => (
-                      <div key={index} className="border rounded-lg p-4 flex items-center justify-between">
-                        <div className="flex items-center">
-                          <FileText className="w-5 h-5 text-blue-600 mr-3" />
-                          <div>
-                            <div className="font-medium">{doc.name}</div>
-                            <div className="text-sm text-gray-600">Hash: {doc.hash}</div>
-                            <div className="text-xs text-gray-500">Vérifié le {doc.date}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {doc.verified && (
-                            <Badge className="bg-green-500 text-white">
-                              <Shield className="w-3 h-3 mr-1" />
-                              Vérifié
-                            </Badge>
-                          )}
-                          <Button size="sm" variant="outline">
-                            <Download className="w-4 h-4 mr-1" />
-                            Télécharger
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                    <h3 className="text-lg font-bold text-gray-900">Documents</h3>
+
+                    <div className="bg-gray-50 p-6 rounded-lg text-center text-gray-500">
+                      <FileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      Aucun document disponible pour cette parcelle.
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -592,7 +532,7 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
 
           {/* Sidebar - Actions et informations vendeur */}
           <div className="space-y-6">
-            
+
             {/* Actions principales */}
             <Card>
               <CardContent className="p-6">
@@ -601,17 +541,17 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Contacter le Vendeur
                   </Button>
-                  
+
                   <Button onClick={handleScheduleVisit} variant="outline" className="w-full">
                     <Calendar className="w-4 h-4 mr-2" />
                     Programmer une Visite
                   </Button>
-                  
+
                   <Button onClick={handleFinancing} variant="outline" className="w-full">
                     <Calculator className="w-4 h-4 mr-2" />
                     Options de Financement
                   </Button>
-                  
+
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm" className="flex-1">
                       <Share2 className="w-4 h-4 mr-1" />
@@ -632,33 +572,49 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <CardTitle className="text-lg">Informations Vendeur</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-start space-x-3">
-                  <img 
-                    src={parcelle.seller_avatar} 
-                    alt={parcelle.seller_name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{parcelle.seller_name}</div>
-                    <div className="text-sm text-blue-600">{parcelle.seller_type}</div>
-                    <div className="flex items-center mt-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm text-gray-600 ml-1">
-                        {parcelle.seller_rating} ({parcelle.seller_properties} propriétés)
-                      </span>
+                {seller ? (
+                  <div className="flex items-start space-x-3">
+                    <img
+                      src={seller.avatar_url || '/placeholder-avatar.svg'}
+                      alt={sellerName}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{sellerName}</div>
+                      <div className="text-sm text-blue-600">{seller.role || 'Vendeur'}</div>
                     </div>
                   </div>
-                </div>
-                
+                ) : (
+                  <div className="text-sm text-gray-500">Informations vendeur non disponibles.</div>
+                )}
+
                 <div className="mt-4 space-y-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Appeler
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email
-                  </Button>
+                  {seller?.phone ? (
+                    <a href={`tel:${seller.phone}`} className="block">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Appeler
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button variant="outline" size="sm" className="w-full" disabled>
+                      <Phone className="w-4 h-4 mr-2" />
+                      Téléphone non renseigné
+                    </Button>
+                  )}
+                  {seller?.email ? (
+                    <a href={`mailto:${seller.email}`} className="block">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Mail className="w-4 h-4 mr-2" />
+                        Email
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button variant="outline" size="sm" className="w-full" disabled>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email non renseigné
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -671,12 +627,31 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm">Apport initial (30% min.)</Label>
-                    <Input type="number" placeholder="37 500 000" className="mt-1" />
+                    <Label className="text-sm">Apport initial (FCFA)</Label>
+                    <Input
+                      type="number"
+                      placeholder={
+                        parcelle.price ? String(Math.round(Number(parcelle.price) * 0.3)) : '—'
+                      }
+                      value={downPayment}
+                      onChange={(e) => setDownPayment(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Taux annuel (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Ex: 7.5"
+                      value={annualRate}
+                      onChange={(e) => setAnnualRate(e.target.value)}
+                      className="mt-1"
+                    />
                   </div>
                   <div>
                     <Label className="text-sm">Durée (années)</Label>
-                    <Select>
+                    <Select value={loanYears} onValueChange={setLoanYears}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choisir" />
                       </SelectTrigger>
@@ -691,9 +666,13 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                   </div>
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <div className="text-sm text-gray-600">Mensualité estimée</div>
-                    <div className="text-lg font-bold text-blue-600">â‰ˆ 890,000 FCFA/mois</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {monthlyPayment !== null && isFinite(monthlyPayment)
+                        ? `≈ ${formatPrice(Math.round(monthlyPayment))}/mois`
+                        : '—'}
+                    </div>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full" onClick={handleFinancing}>
                     <Calculator className="w-4 h-4 mr-2" />
                     Calcul détaillé
                   </Button>
@@ -721,9 +700,48 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
           </div>
         </div>
       )}
+
+      {showVisitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Programmer une Visite</h3>
+            <div className="space-y-4">
+              <Input placeholder="Votre nom" />
+              <Input placeholder="Téléphone" type="tel" />
+              <Input type="date" />
+              <div className="flex space-x-3">
+                <Button className="flex-1">Demander la visite</Button>
+                <Button variant="outline" onClick={() => setShowVisitModal(false)}>Annuler</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFinancingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Options de Financement</h3>
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600">
+                Prix du bien : <span className="font-bold text-gray-900">{formatPrice(parcelle.price)}</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                Utilisez le calculateur rapide pour estimer votre mensualité, ou contactez le vendeur pour
+                connaître les options de financement disponibles.
+              </div>
+              <div className="flex space-x-3">
+                <Button className="flex-1" onClick={() => { setShowFinancingModal(false); setShowContactModal(true); }}>
+                  Contacter le vendeur
+                </Button>
+                <Button variant="outline" onClick={() => setShowFinancingModal(false)}>Fermer</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ParcelleDetailPageBlockchain;
-

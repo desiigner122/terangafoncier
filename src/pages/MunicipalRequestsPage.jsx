@@ -25,8 +25,31 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+const STATUS_LABELS = {
+  pending: "En cours d'examen",
+  en_attente: "En cours d'examen",
+  in_review: "En cours d'examen",
+  submitted: "En cours d'examen",
+  approved: 'Approuvée',
+  approuvee: 'Approuvée',
+  approuvée: 'Approuvée',
+  rejected: 'Rejetée',
+  rejetee: 'Rejetée',
+  rejetée: 'Rejetée',
+  incomplete: 'Documents manquants',
+  documents_manquants: 'Documents manquants'
+};
+
+const mapStatusLabel = (status) => {
+  if (!status) return 'Non renseigné';
+  return STATUS_LABELS[String(status).toLowerCase()] || status;
+};
 
 const MunicipalRequestsPage = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,82 +58,62 @@ const MunicipalRequestsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(3);
 
-  // Données mockées des demandes
+  // Chargement réel des demandes communales de l'utilisateur connecté
   useEffect(() => {
-    const mockRequests = [
-      {
-        id: 'REQ-2024-001',
-        type: 'Attribution terrain communal',
-        municipality: 'Commune de Guédiawaye',
-        location: 'Zone résidentielle Nord',
-        area: '300mÂ²',
-        status: 'En cours d\'examen',
-        submittedDate: '2024-01-15',
-        lastUpdate: '2024-01-22',
-        estimatedDecision: '2024-02-15',
-        documents: ['Demande manuscrite', 'Pièce d\'identité', 'Justificatif de revenus'],
-        requirements: ['Résidence dans la commune depuis 2 ans', 'Revenus inférieurs Ï  500,000 FCFA/mois', 'Premier logement']
-      },
-      {
-        id: 'REQ-2024-002',
-        type: 'Lotissement social',
-        municipality: 'Commune de Pikine',
-        location: 'Extension Pikine Sud',
-        area: '250mÂ²',
-        status: 'Approuvée',
-        submittedDate: '2023-12-10',
-        lastUpdate: '2024-01-20',
-        estimatedDecision: '2024-01-20',
-        documents: ['Dossier complet', 'Attestation domiciliation', 'Projet de construction'],
-        requirements: ['Domiciliation Pikine', 'Famille de 4+ personnes', 'Projet architectural validé']
-      },
-      {
-        id: 'REQ-2024-003',
-        type: 'Terrain commercial',
-        municipality: 'Commune de Rufisque',
-        location: 'Zone commerciale centrale',
-        area: '500mÂ²',
-        status: 'Documents manquants',
-        submittedDate: '2024-01-05',
-        lastUpdate: '2024-01-18',
-        estimatedDecision: '2024-02-28',
-        documents: ['Demande incomplète', 'Justificatifs financiers manquants'],
-        requirements: ['Activité commerciale justifiée', 'Caution de 2,000,000 FCFA', 'Autorisation commerciale']
-      },
-      {
-        id: 'REQ-2024-004',
-        type: 'Terrain résidentiel',
-        municipality: 'Commune de Thiès',
-        location: 'Quartier résidentiel Est',
-        area: '400mÂ²',
-        status: 'En cours d\'examen',
-        submittedDate: '2024-01-25',
-        lastUpdate: '2024-02-01',
-        estimatedDecision: '2024-03-05',
-        documents: ['Demande complète', 'Justificatifs revenus', 'Plan de construction'],
-        requirements: ['Résidence Thiès', 'Premier achat terrain', 'Projet familial']
-      },
-      {
-        id: 'REQ-2024-005',
-        type: 'Extension urbaine',
-        municipality: 'Commune de Mbour',
-        location: 'Zone d\'extension Sud',
-        area: '350mÂ²',
-        status: 'Approuvée',
-        submittedDate: '2023-11-20',
-        lastUpdate: '2024-01-15',
-        estimatedDecision: '2024-01-15',
-        documents: ['Dossier validé', 'Contrat signé', 'Permis de construire'],
-        requirements: ['Domiciliation Mbour', 'Activité économique locale', 'Engagement construction 18 mois']
-      }
-    ];
+    let cancelled = false;
 
-    setTimeout(() => {
-      setRequests(mockRequests);
-      setFilteredRequests(mockRequests);
+    const loadRequests = async () => {
+      // Visiteur anonyme : la RLS empêche la lecture -> état vide honnête
+      if (!user?.id) {
+        if (!cancelled) {
+          setRequests([]);
+          setFilteredRequests([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('communal_requests')
+        .select('*')
+        .eq('applicant_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error('Erreur chargement demandes communales:', error);
+        setRequests([]);
+        setFilteredRequests([]);
+        setLoading(false);
+        return;
+      }
+
+      const mapped = (data || []).map((r) => ({
+        id: r.id,
+        type: r.type || 'Demande de terrain communal',
+        municipality: r.commune || 'Non renseigné',
+        location: r.zone || 'Non renseigné',
+        area: r.surface ? `${r.surface} m²` : null,
+        status: mapStatusLabel(r.status),
+        submittedDate: r.created_at || null,
+        lastUpdate: r.updated_at || null,
+        estimatedDecision: null,
+        documents: [],
+        requirements: [],
+      }));
+
+      setRequests(mapped);
+      setFilteredRequests(mapped);
       setLoading(false);
-    }, 1000);
-  }, []);
+    };
+
+    loadRequests();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   // Fonction de filtrage et recherche
   useEffect(() => {
@@ -384,19 +387,19 @@ const MunicipalRequestsPage = () => {
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Surface:</span>
-                                <span className="font-medium">{request.area}</span>
+                                <span className="font-medium">{request.area || 'Non renseigné'}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Date soumission:</span>
-                                <span className="font-medium">{new Date(request.submittedDate).toLocaleDateString('fr-FR')}</span>
+                                <span className="font-medium">{request.submittedDate ? new Date(request.submittedDate).toLocaleDateString('fr-FR') : '—'}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Dernière MAJ:</span>
-                                <span className="font-medium">{new Date(request.lastUpdate).toLocaleDateString('fr-FR')}</span>
+                                <span className="font-medium">{request.lastUpdate ? new Date(request.lastUpdate).toLocaleDateString('fr-FR') : '—'}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Décision estimée:</span>
-                                <span className="font-medium">{new Date(request.estimatedDecision).toLocaleDateString('fr-FR')}</span>
+                                <span className="font-medium">{request.estimatedDecision ? new Date(request.estimatedDecision).toLocaleDateString('fr-FR') : '—'}</span>
                               </div>
                             </div>
                           </div>
@@ -405,12 +408,16 @@ const MunicipalRequestsPage = () => {
                           <div>
                             <h4 className="font-semibold text-gray-900 mb-3">Documents</h4>
                             <div className="space-y-2">
-                              {request.documents.map((doc, docIndex) => (
-                                <div key={docIndex} className="flex items-center gap-2 text-sm">
-                                  <FileText className="w-4 h-4 text-blue-500" />
-                                  <span>{doc}</span>
-                                </div>
-                              ))}
+                              {request.documents.length > 0 ? (
+                                request.documents.map((doc, docIndex) => (
+                                  <div key={docIndex} className="flex items-center gap-2 text-sm">
+                                    <FileText className="w-4 h-4 text-blue-500" />
+                                    <span>{doc}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-400">Aucun document renseigné</p>
+                              )}
                             </div>
                           </div>
 
@@ -418,12 +425,16 @@ const MunicipalRequestsPage = () => {
                           <div>
                             <h4 className="font-semibold text-gray-900 mb-3">Critères d'éligibilité</h4>
                             <div className="space-y-2">
-                              {request.requirements.map((req, reqIndex) => (
-                                <div key={reqIndex} className="flex items-start gap-2 text-sm">
-                                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                  <span>{req}</span>
-                                </div>
-                              ))}
+                              {request.requirements.length > 0 ? (
+                                request.requirements.map((req, reqIndex) => (
+                                  <div key={reqIndex} className="flex items-start gap-2 text-sm">
+                                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>{req}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-400">Non renseigné</p>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import StatsService from '@/services/StatsService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -37,6 +38,35 @@ const logoUrl = "/images/logo.png";
 
 const BlockchainFooter = () => {
   const currentYear = new Date().getFullYear();
+  const [liveStats, setLiveStats] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadStats = async () => {
+      try {
+        const [blockchainRes, platformRes] = await Promise.all([
+          StatsService.getBlockchainStats(),
+          StatsService.getPlatformStats()
+        ]);
+        if (!isMounted) return;
+        setLiveStats({
+          blockchain: blockchainRes?.stats || null,
+          platform: platformRes?.stats || null
+        });
+      } catch (error) {
+        console.error('Erreur chargement stats footer:', error);
+        if (isMounted) setLiveStats({ blockchain: null, platform: null });
+      }
+    };
+    loadStats();
+    return () => { isMounted = false; };
+  }, []);
+
+  // '—' pendant le chargement (pas de flash de 0), sinon compteur réel formaté
+  const formatCount = (value) => {
+    if (liveStats === null || value === null || value === undefined) return '—';
+    return Number(value).toLocaleString('fr-FR');
+  };
 
   const quickLinks = [
     {
@@ -84,13 +114,15 @@ const BlockchainFooter = () => {
     }
   ];
 
+  // Compteurs réels (RPC get_platform_public_stats + agrégats properties via StatsService).
+  // Aucune tendance réelle n'est disponible en base : trend reste null (affiché uniquement s'il existe).
   const blockchainStats = [
-    { label: "Transactions Blockchain", value: "5,847+", icon: Blocks, trend: "+23%" },
-    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield, trend: "+12%" },
-    { label: "Smart Contracts", value: "1,250+", icon: Cpu, trend: "+45%" },
-    { label: "Utilisateurs Crypto", value: "892+", icon: Coins, trend: "+67%" },
-    { label: "Partenaires Certifiés", value: "150+", icon: Fingerprint, trend: "+8%" },
-    { label: "NFT Propriétés", value: "734+", icon: Sparkles, trend: "+89%" }
+    { label: "Transactions Blockchain", value: formatCount(liveStats?.blockchain?.transactions), icon: Blocks, trend: null },
+    { label: "Terrains Vérifiés", value: formatCount(liveStats?.platform?.verifiedProperties), icon: Shield, trend: null },
+    { label: "Smart Contracts", value: formatCount(liveStats?.blockchain?.smartContracts), icon: Cpu, trend: null },
+    { label: "Utilisateurs Crypto", value: '—', icon: Coins, trend: null },
+    { label: "Partenaires Certifiés", value: '—', icon: Fingerprint, trend: null },
+    { label: "NFT Propriétés", value: formatCount(liveStats?.blockchain?.nftProperties), icon: Sparkles, trend: null }
   ];
 
   const socialLinks = [
@@ -131,7 +163,9 @@ const BlockchainFooter = () => {
                 <div className="text-center">
                   <div className="text-xl font-bold text-white mb-1">{stat.value}</div>
                   <div className="text-xs text-gray-400 mb-2">{stat.label}</div>
-                  <div className="text-xs text-green-400 font-semibold">{stat.trend}</div>
+                  {stat.trend && (
+                    <div className="text-xs text-green-400 font-semibold">{stat.trend}</div>
+                  )}
                 </div>
               </div>
             ))}

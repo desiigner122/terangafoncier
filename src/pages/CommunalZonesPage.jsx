@@ -15,6 +15,7 @@ import {
   ArrowRight,
   ChevronDown
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const CommunalZonesPage = () => {
   const [zones, setZones] = useState([]);
@@ -31,106 +32,6 @@ const CommunalZonesPage = () => {
     searchTerm: ''
   });
 
-  // Données simulées des zones communales
-  const mockZones = [
-    {
-      id: 1,
-      title: 'Zone Résidentielle Almadies Nord',
-      region: 'Dakar',
-      commune: 'Almadies',
-      totalArea: '15 hectares',
-      availablePlots: 24,
-      pricePerM2: '85000',
-      status: 'Disponible',
-      description: 'Zone résidentielle haut standing avec tous les équipements.',
-      features: ['Électricité', 'Eau potable', 'Assainissement', 'Routes pavées', 'Éclairage public'],
-      datePublished: '2024-03-15',
-      deadlineApplication: '2024-06-15',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 14.7451, lng: -17.5069 }
-    },
-    {
-      id: 2,
-      title: 'Zone Mixte Thiès Centre',
-      region: 'Thiès',
-      commune: 'Thiès',
-      totalArea: '8 hectares',
-      availablePlots: 36,
-      pricePerM2: '45000',
-      status: 'Disponible',
-      description: 'Zone mixte résidentielle et commerciale au cœur de Thiès.',
-      features: ['Électricité', 'Eau potable', 'Transport public', 'Centre commercial'],
-      datePublished: '2024-02-20',
-      deadlineApplication: '2024-05-20',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 14.7886, lng: -16.9246 }
-    },
-    {
-      id: 3,
-      title: 'Zone Agricole Kaolack Sud',
-      region: 'Kaolack',
-      commune: 'Kaolack',
-      totalArea: '25 hectares',
-      availablePlots: 50,
-      pricePerM2: '15000',
-      status: 'En Cours',
-      description: 'Zone agricole avec accès aux infrastructures d\'irrigation.',
-      features: ['Irrigation', 'Accès véhicule', 'Sol fertile', 'Proximité marché'],
-      datePublished: '2024-01-10',
-      deadlineApplication: '2024-04-10',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 14.1333, lng: -16.0667 }
-    },
-    {
-      id: 4,
-      title: 'Zone Touristique Saly Portudal',
-      region: 'Thiès',
-      commune: 'Mbour',
-      totalArea: '12 hectares',
-      availablePlots: 18,
-      pricePerM2: '120000',
-      status: 'Bientôt Disponible',
-      description: 'Zone touristique en bord de mer avec vue océan.',
-      features: ['Front de mer', 'Électricité', 'Eau potable', 'Accès plage', 'Zone touristique'],
-      datePublished: '2024-03-01',
-      deadlineApplication: '2024-07-01',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 14.3333, lng: -16.7667 }
-    },
-    {
-      id: 5,
-      title: 'Zone Industrielle Rufisque',
-      region: 'Dakar',
-      commune: 'Rufisque',
-      totalArea: '20 hectares',
-      availablePlots: 15,
-      pricePerM2: '95000',
-      status: 'Disponible',
-      description: 'Zone industrielle avec accès direct à l\'autoroute.',
-      features: ['Accès autoroute', 'Électricité HT', 'Eau industrielle', 'Rail proche'],
-      datePublished: '2024-02-05',
-      deadlineApplication: '2024-08-05',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 14.7167, lng: -17.2833 }
-    },
-    {
-      id: 6,
-      title: 'Zone Résidentielle Saint-Louis',
-      region: 'Saint-Louis',
-      commune: 'Saint-Louis',
-      totalArea: '10 hectares',
-      availablePlots: 28,
-      pricePerM2: '35000',
-      status: 'Disponible',
-      description: 'Zone résidentielle dans la ville historique de Saint-Louis.',
-      features: ['Patrimoine historique', 'Électricité', 'Eau potable', 'Transport'],
-      datePublished: '2024-01-25',
-      deadlineApplication: '2024-05-25',
-      image: '/api/placeholder/400/250',
-      coordinates: { lat: 16.0333, lng: -16.5000 }
-    }
-  ];
-
   // Options pour les filtres
   const regions = ['Toutes les régions', 'Dakar', 'Thiès', 'Kaolack', 'Saint-Louis', 'Diourbel', 'Fatick', 'Kaffrine', 'Kolda', 'Louga', 'Matam', 'Sédhiou', 'Tambacounda', 'Kédougou', 'Ziguinchor'];
   const communes = {
@@ -142,12 +43,46 @@ const CommunalZonesPage = () => {
   const statusOptions = ['Tous les statuts', 'Disponible', 'En Cours', 'Bientôt Disponible', 'Complet'];
 
   useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      setZones(mockZones);
-      setFilteredZones(mockZones);
-      setLoading(false);
-    }, 1000);
+    const fetchZones = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('communal_zones')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mapped = (data || []).map((z) => ({
+          id: z.id,
+          title: z.nom || 'Zone communale',
+          region: z.region || '',
+          commune: z.commune || '',
+          totalArea: z.superficie_totale != null ? `${Number(z.superficie_totale).toLocaleString('fr-FR')} m²` : null,
+          availablePlots: z.available_parcels,
+          pricePerM2: z.prix_m2,
+          status: z.status || 'Non renseigné',
+          description: z.description || '',
+          features: Array.isArray(z.features) ? z.features : [],
+          deadlineApplication: z.application_deadline,
+          image: z.image_url || null,
+          coordinates: (z.latitude != null && z.longitude != null)
+            ? { lat: z.latitude, lng: z.longitude }
+            : null
+        }));
+
+        setZones(mapped);
+        setFilteredZones(mapped);
+      } catch (err) {
+        console.error('Erreur lors du chargement des zones communales:', err);
+        setZones([]);
+        setFilteredZones([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchZones();
   }, []);
 
   useEffect(() => {
@@ -167,11 +102,11 @@ const CommunalZonesPage = () => {
     }
 
     if (filters.minPrice) {
-      filtered = filtered.filter(zone => parseInt(zone.pricePerM2) >= parseInt(filters.minPrice));
+      filtered = filtered.filter(zone => zone.pricePerM2 != null && parseInt(zone.pricePerM2) >= parseInt(filters.minPrice));
     }
 
     if (filters.maxPrice) {
-      filtered = filtered.filter(zone => parseInt(zone.pricePerM2) <= parseInt(filters.maxPrice));
+      filtered = filtered.filter(zone => zone.pricePerM2 != null && parseInt(zone.pricePerM2) <= parseInt(filters.maxPrice));
     }
 
     if (filters.searchTerm) {
@@ -402,9 +337,17 @@ const CommunalZonesPage = () => {
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
               {/* Image */}
-              <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center">
-                <Building className="w-16 h-16 text-white/70" />
-              </div>
+              {zone.image ? (
+                <img
+                  src={zone.image}
+                  alt={zone.title}
+                  className="h-48 w-full object-cover"
+                />
+              ) : (
+                <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center">
+                  <Building className="w-16 h-16 text-white/70" />
+                </div>
+              )}
 
               <div className="p-6">
                 {/* Statut */}
@@ -430,35 +373,37 @@ const CommunalZonesPage = () => {
                 {/* Localisation */}
                 <p className="text-gray-600 text-sm mb-3 flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
-                  {zone.commune}, {zone.region}
+                  {[zone.commune, zone.region].filter(Boolean).join(', ') || 'Non renseigné'}
                 </p>
 
                 {/* Prix */}
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <span className="text-2xl font-bold text-green-600">
-                      {parseInt(zone.pricePerM2).toLocaleString()} FCFA
+                      {zone.pricePerM2 != null ? `${parseInt(zone.pricePerM2).toLocaleString()} FCFA` : '—'}
                     </span>
                     <span className="text-gray-500 text-sm">/m²</span>
                   </div>
-                  <span className="text-gray-500 text-sm">{zone.totalArea}</span>
+                  <span className="text-gray-500 text-sm">{zone.totalArea || '—'}</span>
                 </div>
 
                 {/* Informations clés */}
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                   <div className="flex items-center text-gray-600">
                     <Users className="w-4 h-4 mr-2 text-green-600" />
-                    {zone.availablePlots} parcelles
+                    {zone.availablePlots != null ? `${zone.availablePlots} parcelles` : '— parcelles'}
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Calendar className="w-4 h-4 mr-2 text-green-600" />
-                    Jusqu'au {new Date(zone.deadlineApplication).toLocaleDateString('fr-FR')}
+                    {zone.deadlineApplication
+                      ? `Jusqu'au ${new Date(zone.deadlineApplication).toLocaleDateString('fr-FR')}`
+                      : 'Non renseigné'}
                   </div>
                 </div>
 
                 {/* Description */}
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {zone.description}
+                  {zone.description || 'Aucune description disponible'}
                 </p>
 
                 {/* Caractéristiques */}

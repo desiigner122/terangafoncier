@@ -1,5 +1,5 @@
-﻿import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Helmet } from 'react-helmet-async';
-import { 
-  MapPin, 
-  Users, 
-  TrendingUp, 
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import {
+  MapPin,
+  Users,
+  TrendingUp,
   Building,
   Landmark,
   Star,
@@ -28,12 +30,21 @@ import {
   DollarSign,
   Home,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 const CityPage = () => {
   const { cityId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [city, setCity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [parcels, setParcels] = useState([]);
   const [currentParcelIndex, setCurrentParcelIndex] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null); // { type: 'success' | 'error', message }
   const [requestForm, setRequestForm] = useState({
     fullName: '',
     email: '',
@@ -46,106 +57,177 @@ const CityPage = () => {
     additionalInfo: ''
   });
 
-  // Données mockées pour la ville
-  const cityData = {
-    dakar: {
-      name: 'Dakar',
-      region: 'Région de Dakar',
-      population: '1,378,000',
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Capitale économique et politique du Sénégal, Dakar est le centre des affaires et offre les meilleures opportunités d\'investissement immobilier.',
-      advantages: [
-        'Centre économique et politique',
-        'Infrastructure développée',
-        'Transports publics efficaces',
-        'Nombreuses opportunités d\'emploi',
-        'Proximité aéroport international',
-        'Vie culturelle riche',
-        'Établissements d\'enseignement supérieur',
-        'Services de santé de qualité'
-      ],
-      communalRequests: 89,
-      averagePrice: 85000,
-      demandLevel: 'Très Élevée',
-      availableZones: [
-        'Pikine Extension',
-        'Guédiawaye Nord',
-        'Keur Massar',
-        'Malika',
-        'Yeumbeul Sud'
-      ],
-      mayor: {
-        name: 'Barthélémy Dias',
-        email: 'mairie@ville-dakar.sn',
-        phone: '+221 33 849 05 00'
-      },
-      parcelsForSale: [
-        {
-          id: 'DK-001',
-          title: 'Terrain Résidentiel Almadies',
-          size: '400 mÂ²',
-          price: 38000000,
-          image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Amadou Diallo',
-          features: ['Vue mer', 'Viabilisé', 'Proche commodités']
-        },
-        {
-          id: 'DK-002',
-          title: 'Parcelle Commerciale Plateau',
-          size: '600 mÂ²',
-          price: 52000000,
-          image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Fatou Ndiaye',
-          features: ['Zone commerciale', 'Accès facile', 'High standing']
-        },
-        {
-          id: 'DK-003',
-          title: 'Terrain Villa Mermoz',
-          size: '500 mÂ²',
-          price: 45000000,
-          image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Moussa Sow',
-          features: ['Quartier calme', 'Sécurisé', 'Titre foncier']
-        }
-      ]
-    }
-    // Ajout d'autres villes ici...
-  };
+  useEffect(() => {
+    let cancelled = false;
 
-  const city = cityData[cityId] || cityData.dakar;
+    const loadCity = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('cities')
+          .select('*')
+          .eq('slug', cityId)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (error || !data) {
+          setCity(null);
+          setParcels([]);
+          return;
+        }
+
+        setCity(data);
+
+        // Parcelles réelles de la ville (lecture anonyme autorisée)
+        if (data.name) {
+          const { data: props, error: propsError } = await supabase
+            .from('properties')
+            .select('*')
+            .ilike('city', `%${data.name}%`)
+            .limit(6);
+
+          if (!cancelled) {
+            setParcels(!propsError && Array.isArray(props) ? props : []);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setCity(null);
+          setParcels([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadCity();
+    return () => { cancelled = true; };
+  }, [cityId]);
+
+  const advantages = Array.isArray(city?.advantages) ? city.advantages : [];
+  const availableZones = Array.isArray(city?.available_zones) ? city.available_zones : [];
 
   const nextParcel = () => {
-    setCurrentParcelIndex((prev) => (prev + 1) % city.parcelsForSale.length);
+    if (parcels.length === 0) return;
+    setCurrentParcelIndex((prev) => (prev + 1) % parcels.length);
   };
 
   const prevParcel = () => {
-    setCurrentParcelIndex((prev) => (prev - 1 + city.parcelsForSale.length) % city.parcelsForSale.length);
+    if (parcels.length === 0) return;
+    setCurrentParcelIndex((prev) => (prev - 1 + parcels.length) % parcels.length);
   };
 
-  const handleSubmitRequest = (e) => {
+  const handleSubmitRequest = async (e) => {
     e.preventDefault();
-    // Ici, vous ajouteriez la logique pour soumettre la demande
-    console.log('Demande communale soumise:', requestForm);
-    // Simulation de succès
-    alert('Votre demande a été soumise avec succès ! La mairie vous contactera sous 48h.');
+
+    if (!user) {
+      navigate('/login', { state: { from: `/villes/${cityId}` } });
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitStatus(null);
+    try {
+      const { error } = await supabase
+        .from('communal_requests')
+        .insert({
+          applicant_id: user.id,
+          applicant_name: requestForm.fullName,
+          commune: city?.name || cityId,
+          zone: requestForm.preferredLocation || null,
+          type: requestForm.purpose || null,
+          surface: requestForm.landSize || null,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      setSubmitStatus({
+        type: 'success',
+        message: 'Votre demande a été soumise avec succès. La mairie vous contactera.'
+      });
+      setRequestForm({
+        fullName: '',
+        email: '',
+        phone: '',
+        preferredLocation: '',
+        budgetRange: '',
+        landSize: '',
+        purpose: '',
+        timeline: '',
+        additionalInfo: ''
+      });
+    } catch (err) {
+      setSubmitStatus({
+        type: 'error',
+        message: "Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer."
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-gray-600">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>Chargement de la ville...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!city) {
+    return (
+      <>
+        <Helmet>
+          <title>Ville introuvable | Teranga Foncier</title>
+        </Helmet>
+        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+          <Card className="max-w-md w-full mx-4">
+            <CardContent className="p-8 text-center space-y-4">
+              <Landmark className="h-12 w-12 text-gray-400 mx-auto" />
+              <h1 className="text-2xl font-bold">Ville introuvable</h1>
+              <p className="text-gray-600">
+                Cette ville n'est pas encore référencée sur Teranga Foncier.
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/villes-partenaires">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Voir les villes partenaires
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  const hasMayorContact = city.mayor_name || city.mayor_phone || city.mayor_email;
 
   return (
     <>
       <Helmet>
         <title>{city.name} - Terrains Communaux | Teranga Foncier</title>
-        <meta name="description" content={`Découvrez les opportunités foncières Ï  ${city.name}. Soumettez votre demande de terrain communal et explorez les parcelles disponibles.`} />
+        <meta name="description" content={`Découvrez les opportunités foncières à ${city.name}. Soumettez votre demande de terrain communal et explorez les parcelles disponibles.`} />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50 pt-20">
         {/* Hero Section Ville */}
         <section className="relative h-[400px] overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${city.image})` }}
-          />
+          {city.hero_image_url ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${city.hero_image_url})` }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary to-gray-900" />
+          )}
           <div className="absolute inset-0 bg-black/60" />
-          
+
           <div className="relative h-full flex items-center">
             <div className="container mx-auto px-4">
               <div className="max-w-3xl">
@@ -154,21 +236,24 @@ const CityPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
-                    <Landmark className="h-4 w-4 mr-2" />
-                    Ville Partenaire
-                  </Badge>
-                  
+                  {city.is_partner && (
+                    <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
+                      <Landmark className="h-4 w-4 mr-2" />
+                      Ville Partenaire
+                    </Badge>
+                  )}
+
                   <h1 className="text-4xl lg:text-5xl font-bold text-white mb-4">
                     {city.name}
                   </h1>
-                  
+
                   <p className="text-xl text-gray-200 mb-6">
-                    {city.region} â€¢ {city.population} habitants
+                    {city.region || 'Région non renseignée'}
+                    {city.population ? ` • ${Number(city.population).toLocaleString()} habitants` : ''}
                   </p>
-                  
+
                   <p className="text-lg text-gray-300 leading-relaxed">
-                    {city.description}
+                    {city.description || 'Description bientôt disponible.'}
                   </p>
                 </motion.div>
               </div>
@@ -180,25 +265,33 @@ const CityPage = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Contenu principal */}
             <div className="lg:col-span-2 space-y-8">
-              
+
               {/* Statistiques */}
               <Card>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{city.communalRequests}</div>
-                      <div className="text-sm text-gray-600">Demandes communales</div>
+                      <div className="text-2xl font-bold text-primary">
+                        {city.population ? Number(city.population).toLocaleString() : '—'}
+                      </div>
+                      <div className="text-sm text-gray-600">Population</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{city.averagePrice.toLocaleString()} F</div>
-                      <div className="text-sm text-gray-600">Prix moyen/mÂ²</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {city.average_price_m2 ? `${Number(city.average_price_m2).toLocaleString()} F` : '—'}
+                      </div>
+                      <div className="text-sm text-gray-600">Prix moyen/m²</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">{city.demandLevel}</div>
-                      <div className="text-sm text-gray-600">Niveau demande</div>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {parcels.length > 0 ? parcels.length : '—'}
+                      </div>
+                      <div className="text-sm text-gray-600">Terrains en vente</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{city.availableZones.length}</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {availableZones.length > 0 ? availableZones.length : '—'}
+                      </div>
                       <div className="text-sm text-gray-600">Zones disponibles</div>
                     </div>
                   </div>
@@ -212,113 +305,136 @@ const CityPage = () => {
                   <TabsTrigger value="zones">Zones Disponibles</TabsTrigger>
                   <TabsTrigger value="parcels">Terrains Vendeurs</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="advantages" className="mt-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Pourquoi Investir Ï  {city.name} ?</CardTitle>
+                      <CardTitle>Pourquoi Investir à {city.name} ?</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {city.advantages.map((advantage, index) => (
-                          <div key={index} className="flex items-center gap-3">
-                            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                            <span>{advantage}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {advantages.length > 0 ? (
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {advantages.map((advantage, index) => (
+                            <div key={index} className="flex items-center gap-3">
+                              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                              <span>{typeof advantage === 'string' ? advantage : (advantage?.title || advantage?.label || '')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Aucun avantage renseigné pour le moment.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="zones" className="mt-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Zones d'Extension Urbaine</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid gap-4">
-                        {city.availableZones.map((zone, index) => (
-                          <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <MapPin className="h-5 w-5 text-primary" />
-                                <span className="font-medium">{zone}</span>
+                      {availableZones.length > 0 ? (
+                        <div className="grid gap-4">
+                          {availableZones.map((zone, index) => {
+                            const zoneName = typeof zone === 'string' ? zone : (zone?.name || zone?.nom || '');
+                            return (
+                              <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <MapPin className="h-5 w-5 text-primary" />
+                                    <span className="font-medium">{zoneName}</span>
+                                  </div>
+                                  <Button asChild variant="outline" size="sm">
+                                    <Link to="/contact">Demander Info</Link>
+                                  </Button>
+                                </div>
                               </div>
-                              <Button variant="outline" size="sm">
-                                Demander Info
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Aucune zone disponible renseignée pour le moment.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="parcels" className="mt-6">
                   <Card>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle>Terrains de nos Vendeurs</CardTitle>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={prevParcel}>
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={nextParcel}>
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {parcels.length > 1 && (
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={prevParcel}>
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={nextParcel}>
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="relative overflow-hidden">
-                        <motion.div
-                          className="flex"
-                          animate={{ x: -currentParcelIndex * 100 + '%' }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          {city.parcelsForSale.map((parcel, index) => (
-                            <div key={index} className="w-full flex-shrink-0">
-                              <div className="grid md:grid-cols-2 gap-6">
-                                <img
-                                  src={parcel.image}
-                                  alt={parcel.title}
-                                  className="w-full h-48 object-cover rounded-lg"
-                                />
-                                <div>
-                                  <h3 className="text-xl font-bold mb-2">{parcel.title}</h3>
-                                  <p className="text-gray-600 mb-4">Vendu par {parcel.seller}</p>
-                                  
-                                  <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                      <div className="text-sm text-gray-500">Superficie</div>
-                                      <div className="font-semibold">{parcel.size}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-sm text-gray-500">Prix</div>
-                                      <div className="font-semibold text-primary">{parcel.price.toLocaleString()} F</div>
-                                    </div>
+                      {parcels.length > 0 ? (
+                        <div className="relative overflow-hidden">
+                          <motion.div
+                            className="flex"
+                            animate={{ x: -currentParcelIndex * 100 + '%' }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {parcels.map((parcel) => (
+                              <div key={parcel.id} className="w-full flex-shrink-0">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div className="w-full h-48 rounded-lg bg-gray-200 flex items-center justify-center">
+                                    <Building className="h-12 w-12 text-gray-400" />
                                   </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 mb-4">
-                                    {parcel.features.map((feature, idx) => (
-                                      <Badge key={idx} variant="outline">{feature}</Badge>
-                                    ))}
+                                  <div>
+                                    <h3 className="text-xl font-bold mb-2">{parcel.title || parcel.name || 'Terrain'}</h3>
+                                    <p className="text-gray-600 mb-4">
+                                      {parcel.location || parcel.commune || 'Localisation non renseignée'}
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                      <div>
+                                        <div className="text-sm text-gray-500">Superficie</div>
+                                        <div className="font-semibold">
+                                          {parcel.surface ? `${Number(parcel.surface).toLocaleString()} m²` : '—'}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-sm text-gray-500">Prix</div>
+                                        <div className="font-semibold text-primary">
+                                          {parcel.price ? `${Number(parcel.price).toLocaleString()} F` : '—'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                      {parcel.type && <Badge variant="outline">{parcel.type}</Badge>}
+                                      {parcel.status && <Badge variant="outline">{parcel.status}</Badge>}
+                                      {parcel.verification_status === 'verified' && (
+                                        <Badge variant="outline">Vérifié</Badge>
+                                      )}
+                                    </div>
+
+                                    <Button asChild className="w-full">
+                                      <Link to={`/parcelles/${parcel.id}`}>
+                                        Voir les Détails
+                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                      </Link>
+                                    </Button>
                                   </div>
-                                  
-                                  <Button asChild className="w-full">
-                                    <Link to={`/parcelles/${parcel.id}`}>
-                                      Voir les Détails
-                                      <ArrowRight className="h-4 w-4 ml-2" />
-                                    </Link>
-                                  </Button>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </motion.div>
-                      </div>
+                            ))}
+                          </motion.div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Aucun terrain en vente référencé dans cette ville pour le moment.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -346,7 +462,7 @@ const CityPage = () => {
                         required
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="email">Email *</Label>
@@ -368,7 +484,7 @@ const CityPage = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="preferredLocation">Zone préférée</Label>
                       <Select
@@ -376,16 +492,19 @@ const CityPage = () => {
                         onValueChange={(value) => setRequestForm({...requestForm, preferredLocation: value})}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez une zone" />
+                          <SelectValue placeholder={availableZones.length > 0 ? 'Sélectionnez une zone' : 'Aucune zone renseignée'} />
                         </SelectTrigger>
                         <SelectContent>
-                          {city.availableZones.map((zone, index) => (
-                            <SelectItem key={index} value={zone}>{zone}</SelectItem>
-                          ))}
+                          {availableZones.map((zone, index) => {
+                            const zoneName = typeof zone === 'string' ? zone : (zone?.name || zone?.nom || '');
+                            return zoneName ? (
+                              <SelectItem key={index} value={zoneName}>{zoneName}</SelectItem>
+                            ) : null;
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="budgetRange">Budget (FCFA)</Label>
@@ -414,15 +533,15 @@ const CityPage = () => {
                             <SelectValue placeholder="Superficie" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="200-400">200-400 mÂ²</SelectItem>
-                            <SelectItem value="400-600">400-600 mÂ²</SelectItem>
-                            <SelectItem value="600-1000">600-1000 mÂ²</SelectItem>
-                            <SelectItem value="1000+">1000+ mÂ²</SelectItem>
+                            <SelectItem value="200-400">200-400 m²</SelectItem>
+                            <SelectItem value="400-600">400-600 m²</SelectItem>
+                            <SelectItem value="600-1000">600-1000 m²</SelectItem>
+                            <SelectItem value="1000+">1000+ m²</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="purpose">Objectif du projet</Label>
                       <Select
@@ -440,7 +559,7 @@ const CityPage = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="additionalInfo">Informations complémentaires</Label>
                       <Textarea
@@ -451,17 +570,34 @@ const CityPage = () => {
                         placeholder="Détails spécifiques, délais souhaités..."
                       />
                     </div>
-                    
+
                     <Alert>
                       <Info className="h-4 w-4" />
                       <AlertDescription>
-                        Votre demande sera transmise directement Ï  la mairie. Réponse garantie sous 48h.
+                        {user
+                          ? 'Votre demande sera transmise directement à la mairie.'
+                          : 'Connectez-vous pour soumettre votre demande à la mairie.'}
                       </AlertDescription>
                     </Alert>
-                    
-                    <Button type="submit" className="w-full">
-                      <Send className="h-4 w-4 mr-2" />
-                      Soumettre la Demande
+
+                    {submitStatus && (
+                      <Alert variant={submitStatus.type === 'error' ? 'destructive' : 'default'}>
+                        {submitStatus.type === 'success' ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <Info className="h-4 w-4" />
+                        )}
+                        <AlertDescription>{submitStatus.message}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button type="submit" className="w-full" disabled={submitting}>
+                      {submitting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
+                      {user ? 'Soumettre la Demande' : 'Se connecter pour soumettre'}
                     </Button>
                   </form>
                 </CardContent>
@@ -473,22 +609,42 @@ const CityPage = () => {
                   <CardTitle>Contact Mairie</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">{city.mayor.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <a href={`tel:${city.mayor.phone}`} className="text-sm text-primary hover:underline">
-                      {city.mayor.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <a href={`mailto:${city.mayor.email}`} className="text-sm text-primary hover:underline">
-                      {city.mayor.email}
-                    </a>
-                  </div>
+                  {hasMayorContact ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{city.mayor_name || 'Non renseigné'}</span>
+                      </div>
+                      {city.mayor_phone ? (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <a href={`tel:${city.mayor_phone}`} className="text-sm text-primary hover:underline">
+                            {city.mayor_phone}
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-500">Non renseigné</span>
+                        </div>
+                      )}
+                      {city.mayor_email ? (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <a href={`mailto:${city.mayor_email}`} className="text-sm text-primary hover:underline">
+                            {city.mayor_email}
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-500">Non renseigné</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500">Coordonnées de la mairie non renseignées.</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -527,4 +683,3 @@ const CityPage = () => {
 };
 
 export default CityPage;
-

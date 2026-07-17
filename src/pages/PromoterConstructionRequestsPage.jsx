@@ -1,17 +1,18 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { 
+import { supabase } from '@/lib/supabaseClient';
+import {
   Plus,
-  Building2, 
-  Users, 
-  Calendar, 
-  MapPin, 
-  Star, 
-  Clock, 
-  TrendingUp, 
+  Building2,
+  Users,
+  Calendar,
+  MapPin,
+  Star,
+  Clock,
+  TrendingUp,
   Zap,
   Shield,
   Eye,
@@ -85,10 +86,42 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 
+// Localisation d'une demande (issue de la jointure properties)
+const getRequestLocation = (request) =>
+  request?.property?.location || request?.property?.title || request?.property?.name || '';
+
+const getStatusInfo = (status) => {
+  switch (status) {
+    case 'Recherche promoteur':
+      return { color: 'bg-blue-100 text-blue-800', icon: <Building2 className="w-4 h-4" /> };
+    case 'En négociation':
+      return { color: 'bg-orange-100 text-orange-800', icon: <MessageSquare className="w-4 h-4" /> };
+    case 'Urgent':
+      return { color: 'bg-red-100 text-red-800', icon: <AlertCircle className="w-4 h-4" /> };
+    case 'Financement confirmé':
+      return { color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-4 h-4" /> };
+    case 'Ouvert aux propositions':
+      return { color: 'bg-purple-100 text-purple-800', icon: <Hammer className="w-4 h-4" /> };
+    case 'Étude de faisabilité':
+      return { color: 'bg-yellow-100 text-yellow-800', icon: <FileText className="w-4 h-4" /> };
+    default:
+      return { color: 'bg-gray-100 text-gray-800', icon: <Clock className="w-4 h-4" /> };
+  }
+};
+
+const getPriorityColor = (priority) => {
+  switch (priority) {
+    case 'Haute': return 'border-l-red-500';
+    case 'Moyenne': return 'border-l-yellow-500';
+    case 'Basse': return 'border-l-green-500';
+    default: return 'border-l-gray-300';
+  }
+};
+
 const PromoterConstructionRequestsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // États pour les demandes
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -117,256 +150,39 @@ const PromoterConstructionRequestsPage = () => {
     urgent: false
   });
 
-  // Données mockées des demandes de construction
+  // Chargement des demandes de construction depuis Supabase
   useEffect(() => {
-    const mockRequests = [
-      {
-        id: 1,
-        title: 'Villa Moderne avec Piscine - Almadies',
-        type: 'Villa individuelle',
-        status: 'Recherche promoteur',
-        priority: 'Haute',
-        location: 'Almadies, Dakar',
-        budget: {
-          min: 80000000,
-          max: 120000000,
-          estimated: 85000000
-        },
-        client: {
-          name: 'Fatou Diallo',
-          type: 'Diaspora',
-          location: 'France',
-          phone: '+221 77 123 45 67',
-          email: 'fatou.diallo@email.com',
-          verified: true
-        },
-        details: {
-          surface: '400mÂ²',
-          terrain: '800mÂ²',
-          rooms: '5 chambres, 3 salles de bain',
-          features: ['Piscine', 'Garage 2 voitures', 'Jardin paysager', 'Panneaux solaires'],
-          style: 'Moderne contemporain'
-        },
-        timeline: '8-10 mois',
-        deadline: '2025-06-01',
-        created_date: '2024-12-15',
-        last_update: '2025-01-05',
-        proposals: 3,
-        views: 24,
-        image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: true,
-          verified: true,
-          smartContract: true
+    let cancelled = false;
+
+    const fetchRequests = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('construction_requests')
+          .select('*, property:properties(id,title,name,location)')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!cancelled) {
+          setRequests(data || []);
+          setFilteredRequests(data || []);
         }
-      },
-      {
-        id: 2,
-        title: 'Résidence de 8 Appartements - Sicap',
-        type: 'Immeuble résidentiel',
-        status: 'En négociation',
-        priority: 'Moyenne',
-        location: 'Sicap Liberté, Dakar',
-        budget: {
-          min: 200000000,
-          max: 280000000,
-          estimated: 240000000
-        },
-        client: {
-          name: 'Groupe Teranga Invest',
-          type: 'Entreprise',
-          location: 'Dakar',
-          phone: '+221 33 123 45 67',
-          email: 'contact@teranga-invest.sn',
-          verified: true
-        },
-        details: {
-          surface: '1200mÂ²',
-          terrain: '600mÂ²',
-          rooms: '8 appartements (T3 et T4)',
-          features: ['Ascenseur', 'Parking souterrain', 'Terrasse commune', 'Système sécurité'],
-          style: 'Moderne urbain'
-        },
-        timeline: '12-15 mois',
-        deadline: '2025-08-01',
-        created_date: '2024-11-20',
-        last_update: '2025-01-03',
-        proposals: 7,
-        views: 45,
-        image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: true,
-          verified: true,
-          smartContract: true
+      } catch (err) {
+        console.error('Erreur chargement demandes de construction:', err);
+        if (!cancelled) {
+          setRequests([]);
+          setFilteredRequests([]);
         }
-      },
-      {
-        id: 3,
-        title: 'Centre Commercial - Rufisque',
-        type: 'Commercial',
-        status: 'Ouvert aux propositions',
-        priority: 'Haute',
-        location: 'Rufisque, Dakar',
-        budget: {
-          min: 500000000,
-          max: 750000000,
-          estimated: 600000000
-        },
-        client: {
-          name: 'SCI Développement Rufisque',
-          type: 'SCI',
-          location: 'Rufisque',
-          phone: '+221 33 987 65 43',
-          email: 'sci.rufisque@email.sn',
-          verified: true
-        },
-        details: {
-          surface: '3000mÂ²',
-          terrain: '5000mÂ²',
-          rooms: '50 boutiques + supermarché + restaurants',
-          features: ['Parking 200 places', 'Climatisation centrale', 'Groupe électrogène', 'Sécurité 24h'],
-          style: 'Architecture moderne'
-        },
-        timeline: '18-24 mois',
-        deadline: '2025-12-01',
-        created_date: '2024-10-15',
-        last_update: '2024-12-28',
-        proposals: 12,
-        views: 89,
-        image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: true,
-          verified: true,
-          smartContract: true
-        }
-      },
-      {
-        id: 4,
-        title: 'Rénovation Villa Coloniale - Fann',
-        type: 'Rénovation',
-        status: 'Urgent',
-        priority: 'Haute',
-        location: 'Fann Résidence, Dakar',
-        budget: {
-          min: 35000000,
-          max: 55000000,
-          estimated: 45000000
-        },
-        client: {
-          name: 'Aminata Ba',
-          type: 'Particulier',
-          location: 'Dakar',
-          phone: '+221 76 543 21 09',
-          email: 'aminata.ba@email.sn',
-          verified: false
-        },
-        details: {
-          surface: '250mÂ²',
-          terrain: '400mÂ²',
-          rooms: '4 chambres + salon + bureau',
-          features: ['Conservation caractère colonial', 'Modernisation électricité', 'Nouvelle plomberie', 'Jardin'],
-          style: 'Colonial rénové'
-        },
-        timeline: '4-6 mois',
-        deadline: '2025-04-01',
-        created_date: '2024-12-01',
-        last_update: '2025-01-04',
-        proposals: 5,
-        views: 18,
-        image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: false,
-          verified: false,
-          smartContract: false
-        }
-      },
-      {
-        id: 5,
-        title: 'Complexe Résidentiel - VDN',
-        type: 'Complexe résidentiel',
-        status: 'Étude de faisabilité',
-        priority: 'Moyenne',
-        location: 'VDN, Dakar',
-        budget: {
-          min: 1200000000,
-          max: 1800000000,
-          estimated: 1500000000
-        },
-        client: {
-          name: 'Promo Habitat Sénégal',
-          type: 'Promoteur',
-          location: 'Dakar',
-          phone: '+221 33 456 78 90',
-          email: 'contact@promo-habitat.sn',
-          verified: true
-        },
-        details: {
-          surface: '8000mÂ²',
-          terrain: '15000mÂ²',
-          rooms: '120 logements (F2 Ï  F5)',
-          features: ['Piscine commune', 'Salle de sport', 'Espaces verts', 'Gardiennage', 'Playground'],
-          style: 'Résidentiel haut standing'
-        },
-        timeline: '30-36 mois',
-        deadline: '2026-01-01',
-        created_date: '2024-09-15',
-        last_update: '2024-12-20',
-        proposals: 15,
-        views: 156,
-        image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: true,
-          verified: true,
-          smartContract: true
-        }
-      },
-      {
-        id: 6,
-        title: 'Bureaux Modernes - Mermoz',
-        type: 'Bureau',
-        status: 'Financement confirmé',
-        priority: 'Basse',
-        location: 'Mermoz, Dakar',
-        budget: {
-          min: 150000000,
-          max: 220000000,
-          estimated: 185000000
-        },
-        client: {
-          name: 'Tech Hub Dakar',
-          type: 'Startup',
-          location: 'Mermoz',
-          phone: '+221 70 111 22 33',
-          email: 'hello@techhub-dakar.com',
-          verified: true
-        },
-        details: {
-          surface: '800mÂ²',
-          terrain: '1000mÂ²',
-          rooms: 'Open space + 10 bureaux privés + salles réunion',
-          features: ['Fibre optique', 'Climatisation', 'Parkings', 'Système audiovisuel'],
-          style: 'Moderne tech'
-        },
-        timeline: '8-12 mois',
-        deadline: '2025-09-01',
-        created_date: '2024-11-01',
-        last_update: '2024-12-30',
-        proposals: 9,
-        views: 67,
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop',
-        blockchain: {
-          tokenized: true,
-          verified: true,
-          smartContract: false
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
         }
       }
-    ];
+    };
 
-    setTimeout(() => {
-      setRequests(mockRequests);
-      setFilteredRequests(mockRequests);
-      setLoading(false);
-    }, 1000);
+    fetchRequests();
+    return () => { cancelled = true; };
   }, []);
   // Filtrage et tri des demandes
   useEffect(() => {
@@ -374,10 +190,10 @@ const PromoterConstructionRequestsPage = () => {
 
     // Filtrage par recherche
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(request =>
-        request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.client.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (request.title || '').toLowerCase().includes(term) ||
+        getRequestLocation(request).toLowerCase().includes(term)
       );
     }
 
@@ -388,7 +204,7 @@ const PromoterConstructionRequestsPage = () => {
 
     // Filtrage par type
     if (selectedType !== 'all') {
-      filtered = filtered.filter(request => request.type === selectedType);
+      filtered = filtered.filter(request => (request.type || '') === selectedType);
     }
 
     // Filtrage par gamme de prix
@@ -400,34 +216,36 @@ const PromoterConstructionRequestsPage = () => {
         'premium': [500000000, Infinity]
       };
       const [min, max] = ranges[selectedPriceRange];
-      filtered = filtered.filter(request => 
-        request.budget.estimated >= min && request.budget.estimated < max
-      );
+      filtered = filtered.filter(request => {
+        const budget = Number(request.budget);
+        return Number.isFinite(budget) && budget >= min && budget < max;
+      });
     }
 
     // Filtrage par localisation
     if (selectedLocation !== 'all') {
-      filtered = filtered.filter(request => 
-        request.location.toLowerCase().includes(selectedLocation.toLowerCase())
+      filtered = filtered.filter(request =>
+        getRequestLocation(request).toLowerCase().includes(selectedLocation.toLowerCase())
       );
     }
 
     // Tri
     switch (sortBy) {
       case 'latest':
-        filtered.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case 'budget_high':
-        filtered.sort((a, b) => b.budget.estimated - a.budget.estimated);
+        filtered.sort((a, b) => (Number(b.budget) || 0) - (Number(a.budget) || 0));
         break;
       case 'budget_low':
-        filtered.sort((a, b) => a.budget.estimated - b.budget.estimated);
+        filtered.sort((a, b) => (Number(a.budget) || 0) - (Number(b.budget) || 0));
         break;
       case 'deadline':
-        filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        // Pas de colonne échéance : repli sur la date de création
+        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         break;
       case 'proposals':
-        filtered.sort((a, b) => b.proposals - a.proposals);
+        // Pas de colonne propositions : ordre inchangé
         break;
       default:
         break;
@@ -436,37 +254,9 @@ const PromoterConstructionRequestsPage = () => {
     setFilteredRequests(filtered);
   }, [requests, searchTerm, selectedStatus, selectedType, selectedPriceRange, selectedLocation, sortBy]);
 
-  const getStatusInfo = (status) => {
-    switch (status) {
-      case 'Recherche promoteur':
-        return { color: 'bg-blue-100 text-blue-800', icon: <Building2 className="w-4 h-4" /> };
-      case 'En négociation':
-        return { color: 'bg-orange-100 text-orange-800', icon: <MessageSquare className="w-4 h-4" /> };
-      case 'Urgent':
-        return { color: 'bg-red-100 text-red-800', icon: <AlertCircle className="w-4 h-4" /> };
-      case 'Financement confirmé':
-        return { color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-4 h-4" /> };
-      case 'Ouvert aux propositions':
-        return { color: 'bg-purple-100 text-purple-800', icon: <Hammer className="w-4 h-4" /> };
-      case 'Étude de faisabilité':
-        return { color: 'bg-yellow-100 text-yellow-800', icon: <FileText className="w-4 h-4" /> };
-      default:
-        return { color: 'bg-gray-100 text-gray-800', icon: <Clock className="w-4 h-4" /> };
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'Haute': return 'border-l-red-500';
-      case 'Moyenne': return 'border-l-yellow-500';
-      case 'Basse': return 'border-l-green-500';
-      default: return 'border-l-gray-300';
-    }
-  };
-
   const toggleFavorite = (requestId) => {
-    setFavorites(prev => 
-      prev.includes(requestId) 
+    setFavorites(prev =>
+      prev.includes(requestId)
         ? prev.filter(id => id !== requestId)
         : [...prev, requestId]
     );
@@ -475,9 +265,9 @@ const PromoterConstructionRequestsPage = () => {
   const getStats = () => {
     const total = requests.length;
     const urgent = requests.filter(r => r.status === 'Urgent').length;
-    const totalBudget = requests.reduce((sum, r) => sum + r.budget.estimated, 0);
+    const totalBudget = requests.reduce((sum, r) => sum + (Number(r.budget) || 0), 0);
     const avgBudget = total > 0 ? totalBudget / total : 0;
-    
+
     return {
       total,
       urgent,
@@ -523,7 +313,7 @@ const PromoterConstructionRequestsPage = () => {
               <p className="text-xl md:text-2xl mb-8 opacity-90">
                 Découvrez des projets immobiliers sécurisés par blockchain
               </p>
-              
+
               {/* Statistiques */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
                 <motion.div
@@ -535,7 +325,7 @@ const PromoterConstructionRequestsPage = () => {
                   <div className="text-3xl font-bold mb-2">{stats.total}</div>
                   <div className="text-sm opacity-90">Projets disponibles</div>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -545,7 +335,7 @@ const PromoterConstructionRequestsPage = () => {
                   <div className="text-3xl font-bold mb-2">{stats.urgent}</div>
                   <div className="text-sm opacity-90">Projets urgents</div>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -555,7 +345,7 @@ const PromoterConstructionRequestsPage = () => {
                   <div className="text-3xl font-bold mb-2">{(stats.totalBudget / 1000000000).toFixed(1)}B</div>
                   <div className="text-sm opacity-90">Budget total (FCFA)</div>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -739,14 +529,14 @@ const PromoterConstructionRequestsPage = () => {
               </motion.div>
             ) : (
               <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'md:grid-cols-2 lg:grid-cols-3' 
+                viewMode === 'grid'
+                  ? 'md:grid-cols-2 lg:grid-cols-3'
                   : 'grid-cols-1'
               }`}>
                 {filteredRequests.map((request, index) => (
-                  <RequestCard 
-                    key={request.id} 
-                    request={request} 
+                  <RequestCard
+                    key={request.id}
+                    request={request}
                     index={index}
                     viewMode={viewMode}
                     isFavorite={favorites.includes(request.id)}
@@ -767,6 +557,10 @@ const PromoterConstructionRequestsPage = () => {
 const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, onViewDetails }) => {
   const statusInfo = getStatusInfo(request.status);
   const priorityColor = getPriorityColor(request.priority);
+  const location = getRequestLocation(request);
+  const budgetLabel = Number.isFinite(Number(request.budget)) && request.budget != null
+    ? `${(Number(request.budget) / 1000000).toFixed(0)}M FCFA`
+    : '—';
 
   return (
     <motion.div
@@ -780,13 +574,19 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
         <>
           {/* Image */}
           <div className="relative h-48 overflow-hidden">
-            <img 
-              src={request.image} 
-              alt={request.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+            {request.image ? (
+              <img
+                src={request.image}
+                alt={request.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                <Building2 className="w-16 h-16 text-blue-300" />
+              </div>
+            )}
             <div className="absolute top-4 right-4 flex gap-2">
-              {request.blockchain.tokenized && (
+              {request.blockchain?.tokenized && (
                 <Badge className="bg-purple-100 text-purple-800">
                   <Blocks className="w-3 h-3 mr-1" />
                   Blockchain
@@ -798,8 +598,8 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
                   onToggleFavorite();
                 }}
                 className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
-                  isFavorite 
-                    ? 'bg-red-500 text-white' 
+                  isFavorite
+                    ? 'bg-red-500 text-white'
                     : 'bg-white/80 text-gray-600 hover:bg-red-500 hover:text-white'
                 }`}
               >
@@ -809,7 +609,7 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
             <div className="absolute bottom-4 left-4">
               <Badge className={statusInfo.color}>
                 {statusInfo.icon}
-                <span className="ml-1">{request.status}</span>
+                <span className="ml-1">{request.status || 'Non renseigné'}</span>
               </Badge>
             </div>
           </div>
@@ -818,32 +618,36 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
           <div className="p-6">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                {request.title}
+                {request.title || 'Demande de construction'}
               </h3>
             </div>
 
             <div className="space-y-3 mb-4">
               <div className="flex items-center gap-2 text-gray-600">
                 <MapPin className="w-4 h-4" />
-                <span className="text-sm">{request.location}</span>
+                <span className="text-sm">{location || '—'}</span>
               </div>
-              
+
               <div className="flex items-center gap-2 text-gray-600">
                 <Building2 className="w-4 h-4" />
-                <span className="text-sm">{request.details.surface}</span>
+                <span className="text-sm">{request.details?.surface || 'Surface non renseignée'}</span>
               </div>
 
               <div className="flex items-center gap-2 text-gray-600">
                 <Users className="w-4 h-4" />
-                <span className="text-sm">{request.client.name}</span>
-                {request.client.verified && (
+                <span className="text-sm">{request.client?.name || 'Client non renseigné'}</span>
+                {request.client?.verified && (
                   <CheckCircle className="w-3 h-3 text-green-500" />
                 )}
               </div>
 
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="w-4 h-4" />
-                <span className="text-sm">Échéance: {new Date(request.deadline).toLocaleDateString('fr-FR')}</span>
+                <span className="text-sm">
+                  {request.deadline
+                    ? `Échéance: ${new Date(request.deadline).toLocaleDateString('fr-FR')}`
+                    : `Créée le: ${request.created_at ? new Date(request.created_at).toLocaleDateString('fr-FR') : '—'}`}
+                </span>
               </div>
             </div>
 
@@ -851,10 +655,10 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
             <div className="bg-blue-50 rounded-lg p-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-1">
-                  {(request.budget.estimated / 1000000).toFixed(0)}M FCFA
+                  {budgetLabel}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {(request.budget.min / 1000000).toFixed(0)}M - {(request.budget.max / 1000000).toFixed(0)}M FCFA
+                  Budget
                 </div>
               </div>
             </div>
@@ -863,22 +667,22 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
             <div className="flex justify-between text-sm text-gray-500 mb-4">
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                <span>{request.views} vues</span>
+                <span>{request.views != null ? `${request.views} vues` : '— vues'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <MessageSquare className="w-4 h-4" />
-                <span>{request.proposals} propositions</span>
+                <span>{request.proposals != null ? `${request.proposals} propositions` : '— propositions'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{request.timeline}</span>
+                <span>{request.timeline || '—'}</span>
               </div>
             </div>
 
             {/* Boutons d'action */}
             <div className="flex gap-2">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="flex-1"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -888,8 +692,8 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
                 <Eye className="w-4 h-4 mr-2" />
                 Voir détails
               </Button>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -907,11 +711,17 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
           <div className="flex items-start gap-6">
             {/* Image miniature */}
             <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-              <img 
-                src={request.image} 
-                alt={request.title}
-                className="w-full h-full object-cover"
-              />
+              {request.image ? (
+                <img
+                  src={request.image}
+                  alt={request.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                  <Building2 className="w-8 h-8 text-blue-300" />
+                </div>
+              )}
             </div>
 
             {/* Contenu principal */}
@@ -919,17 +729,17 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {request.title}
+                    {request.title || 'Demande de construction'}
                   </h3>
-                  <p className="text-gray-600 mt-1">{request.location}</p>
+                  <p className="text-gray-600 mt-1">{location || '—'}</p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Badge className={statusInfo.color}>
                     {statusInfo.icon}
-                    <span className="ml-1">{request.status}</span>
+                    <span className="ml-1">{request.status || 'Non renseigné'}</span>
                   </Badge>
-                  {request.blockchain.tokenized && (
+                  {request.blockchain?.tokenized && (
                     <Badge className="bg-purple-100 text-purple-800">
                       <Blocks className="w-3 h-3 mr-1" />
                       Blockchain
@@ -941,29 +751,29 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
               <div className="grid md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <span className="text-sm text-gray-500">Budget</span>
-                  <p className="font-semibold">{(request.budget.estimated / 1000000).toFixed(0)}M FCFA</p>
+                  <p className="font-semibold">{budgetLabel}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Surface</span>
-                  <p className="font-semibold">{request.details.surface}</p>
+                  <p className="font-semibold">{request.details?.surface || '—'}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Délai</span>
-                  <p className="font-semibold">{request.timeline}</p>
+                  <p className="font-semibold">{request.timeline || '—'}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Propositions</span>
-                  <p className="font-semibold">{request.proposals}</p>
+                  <p className="font-semibold">{request.proposals != null ? request.proposals : '—'}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>Par {request.client.name}</span>
-                  <span>â€¢</span>
-                  <span>{new Date(request.created_date).toLocaleDateString('fr-FR')}</span>
-                  <span>â€¢</span>
-                  <span>{request.views} vues</span>
+                  <span>Par {request.client?.name || 'Non renseigné'}</span>
+                  <span>•</span>
+                  <span>{request.created_at ? new Date(request.created_at).toLocaleDateString('fr-FR') : '—'}</span>
+                  <span>•</span>
+                  <span>{request.views != null ? `${request.views} vues` : '— vues'}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -996,5 +806,3 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
   );
 };
 export default PromoterConstructionRequestsPage;
-
-

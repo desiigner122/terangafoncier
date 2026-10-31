@@ -177,8 +177,6 @@ const addTransformIndexHtml = {
 	},
 };
 
-console.warn = () => {};
-
 const logger = createLogger()
 const loggerError = logger.error
 
@@ -220,11 +218,29 @@ export default defineConfig({
 		},
 	},
 	define: {
-		// Définir les variables d'environnement pour éviter l'erreur "process is not defined"
-		'process.env': process.env
+		// Ne JAMAIS exposer process.env en entier : cela copierait toutes les
+		// variables de la machine de build (secrets Vercel inclus) dans le bundle.
+		// Seul process.env.NODE_ENV est fourni ; le reste passe par import.meta.env.VITE_*.
+		'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+		'process.env': '{}'
+	},
+	esbuild: {
+		drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
 	},
 	build: {
+		chunkSizeWarningLimit: 1500,
 		rollupOptions: {
+			output: {
+				manualChunks: {
+					'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+					'vendor-supabase': ['@supabase/supabase-js'],
+					'vendor-charts': ['recharts', 'chart.js', 'react-chartjs-2'],
+					'vendor-maps': ['leaflet', 'react-leaflet'],
+					'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+					'vendor-motion': ['framer-motion'],
+					'vendor-web3': ['ethers']
+				}
+			},
 			external: [
 				'@babel/parser',
 				'@babel/traverse',

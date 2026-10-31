@@ -22,9 +22,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProfileLink from '@/components/common/ProfileLink';
 import { supabase, fetchDirect } from '@/lib/supabaseClient';
-import { supabaseService } from '@/lib/supabaseServiceClient';
 import { generatePropertySlug, extractIdFromPropertySlug, isUUID as isUUIDValue } from '@/utils/propertySlug';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 
 const ParcelleDetailPage = () => {
   const { id: rawParam } = useParams();
@@ -108,14 +108,14 @@ const ParcelleDetailPage = () => {
         if (propertyData.owner_id) {
           try {
             // Use service role client to bypass RLS and fetch full profile when available
-            const { data: ownerProfile, error: ownerError } = await supabaseService
+            const { data: ownerProfile, error: ownerError } = await supabase
               .from('profiles')
               .select('id, full_name, email, role, telephone, avatar_url, is_verified, rating, review_count, properties_sold')
               .eq('id', propertyData.owner_id)
               .maybeSingle();
 
             if (ownerError) {
-              console.error('❌ Erreur supabaseService récupération profil:', ownerError);
+              console.error('❌ Erreur supabase récupération profil:', ownerError);
             }
 
             if (ownerProfile) {
@@ -321,7 +321,7 @@ const ParcelleDetailPage = () => {
         if (!viewsIncremented && propertyData?.id) {
           try {
             // Utiliser la fonction PostgreSQL pour incrémenter les vues atomiquement
-            const { error } = await supabaseService
+            const { error } = await supabase
               .rpc('increment_property_views', { property_id: propertyData.id });
             
             if (error) {
@@ -677,7 +677,7 @@ const ParcelleDetailPage = () => {
                   <Button 
                     variant="default" 
                     size="sm"
-                    onClick={() => navigate(`/parcelles/${id}/edit`)}
+                    onClick={() => navigate(`/parcelles/${parcelle?.id || rawParam}/edit`)}
                     className="bg-blue-600 hover:bg-blue-700"
                     title="Vous êtes propriétaire de cette parcelle"
                   >
@@ -798,7 +798,11 @@ const ParcelleDetailPage = () => {
                     <div 
                       className="text-gray-700 leading-relaxed whitespace-pre-line"
                       dangerouslySetInnerHTML={{ 
-                        __html: parcelle.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        // Contenu saisi par le vendeur : nettoyé contre les XSS
+                        __html: DOMPurify.sanitize(
+                          parcelle.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+                          { ALLOWED_TAGS: ['strong', 'em', 'br', 'p'] }
+                        )
                       }} 
                     />
                   </div>

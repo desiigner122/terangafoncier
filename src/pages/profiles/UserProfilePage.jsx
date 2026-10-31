@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { fetchDirect } from '@/lib/supabaseClient';
-import { supabaseService } from '@/lib/supabaseServiceClient';
+import { supabase, fetchDirect } from '@/lib/supabaseClient';
 import { 
   Star, 
   MapPin, 
@@ -51,8 +50,8 @@ const UserProfilePage = () => {
     }
     setLoading(true);
     try {
-      // Correction: Utiliser supabaseService pour contourner RLS sur les profils publics
-      const { data, error } = await supabaseService
+      // Correction: Utiliser supabase pour contourner RLS sur les profils publics
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)

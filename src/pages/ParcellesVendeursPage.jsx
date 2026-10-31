@@ -30,7 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
 import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { fetchDirect } from '@/lib/supabaseClient';
+import { supabase, fetchDirect } from '@/lib/supabaseClient';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 

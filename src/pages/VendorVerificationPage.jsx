@@ -15,6 +15,7 @@ import {
   Download
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 
 const VendorVerificationPage = () => {
   const { profile } = useAuth();

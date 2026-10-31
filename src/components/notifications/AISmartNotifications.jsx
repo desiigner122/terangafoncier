@@ -13,7 +13,8 @@ import {
   Eye,
   DollarSign,
   MapPin,
-  Clock
+  Clock,
+  Bell
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';

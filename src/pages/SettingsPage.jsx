@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ import React, { useState, useEffect } from 'react';
   Shield, 
   Palette, 
   Trash2, 
-  Globe
+  Globe,
+  FileText
 } from 'lucide-react';
     import { useAuth } from '@/contexts/UnifiedAuthContext';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

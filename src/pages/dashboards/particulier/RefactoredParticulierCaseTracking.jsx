@@ -46,6 +46,7 @@ import {
   User,
   Briefcase,
   Zap,
+  Scale
 } from 'lucide-react';
 
 const RefactoredParticulierCaseTracking = () => {

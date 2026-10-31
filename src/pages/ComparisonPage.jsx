@@ -62,7 +62,7 @@ const ComparisonPage = () => {
       setLoading(false);
     };
     fetchParcels();
-  }, [comparisonList, toast]);
+  }, [comparisonList]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

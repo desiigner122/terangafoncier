@@ -1046,7 +1046,7 @@ const PrivateInterests = () => {
               </Button>
               <Button onClick={() => {
                 // Ici, vous ajouteriez la logique pour soumettre la négociation
-                showNotification('Demande de négociation envoyée avec succès', 'success');
+                addNotification({ type: 'success', title: 'Négociation', message: 'Demande de négociation envoyée avec succès' });
                 setShowNegotiationModal(false);
               }}>
                 Envoyer la proposition
@@ -1097,7 +1097,7 @@ const PrivateInterests = () => {
                 Annuler
               </Button>
               <Button onClick={() => {
-                showNotification('Document téléchargé avec succès', 'success');
+                addNotification({ type: 'success', title: 'Document', message: 'Document téléchargé avec succès' });
                 setShowUploadModal(false);
               }}>
                 Télécharger

@@ -82,7 +82,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MapPin
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,6 +109,8 @@ import {
   useAdminProperties, 
   useAdminTickets 
 } from '@/hooks/admin';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 const CompleteSidebarAdminDashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -139,6 +142,15 @@ const CompleteSidebarAdminDashboard = () => {
   };
   
   const activeTab = getActiveTabFromRoute();
+  // Changer d'onglet = naviguer vers la route correspondante
+  const ADMIN_TAB_ROUTES = {
+    overview: '/admin',
+    cms: '/admin/cms/pages',
+    leads: '/admin/marketing/leads',
+    audit: '/admin/audit-log',
+    financial: '/admin/revenue'
+  };
+  const setActiveTab = (tab) => navigate(ADMIN_TAB_ROUTES[tab] || `/admin/${tab}`);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1328,7 +1340,7 @@ const CompleteSidebarAdminDashboard = () => {
           pendingPropertiesCount={dashboardData.stats.pendingProperties || 0}
         />;
       case 'validation':
-        return renderPropertyValidation();
+        return <AdminPropertyValidationSection />;
       case 'users':
         return <ModernUsersPage />; // ✅ PAGE MODERNE AVEC DONNÉES RÉELLES
       case 'subscriptions':
@@ -1356,13 +1368,13 @@ const CompleteSidebarAdminDashboard = () => {
         return <AdminBlogPage />; // ✅ Articles blog
       // 🆕 NOUVELLES PAGES PHASE 2
       case 'notifications':
-        return renderNotifications(); // TODO: Créer AdminNotificationsPage
+        return <AdminNotificationsSection />; // TODO: Créer AdminNotificationsPage
       case 'analytics':
         return <AdminAnalyticsPage />; // ✅ PAGE ADMIN AVEC GRAPHIQUES
       case 'content':
         return <AdminBlogPage />; // ✅ NOUVELLE PAGE MODERNE
       case 'commissions':
-        return renderCommissions(); // TODO: Créer AdminCommissionsPage
+        return <AdminCommissionsSection />; // TODO: Créer AdminCommissionsPage
       case 'settings':
         return <ModernSettingsPage />; // ✅ PAGE MODERNE AVEC CONFIGURATION
       // 🆕 PAGES UTILITAIRES
@@ -1438,10 +1450,11 @@ const CompleteSidebarAdminDashboard = () => {
   };
 
   // 🔥 VALIDATION DES PROPRIÉTÉS - PAGE COMPLÈTE AVEC HOOK
-  const renderPropertyValidation = () => {
+  const AdminPropertyValidationSection = () => {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
 
     // ⭐ UTILISE realProperties du hook - filtre les propriétés en attente
     const pendingProperties = realProperties?.filter(p => p.verification_status === 'pending') || [];
@@ -2274,7 +2287,7 @@ const CompleteSidebarAdminDashboard = () => {
   // 🆕 PHASE 2 - NOUVELLES PAGES COMPLÈTES
 
   // 1️⃣ PAGE NOTIFICATIONS
-  const renderNotifications = () => {
+  const AdminNotificationsSection = () => {
     const [notifications, setNotifications] = useState([]);
     const [filter, setFilter] = useState('all');
     const [loadingNotifs, setLoadingNotifs] = useState(true);
@@ -2480,7 +2493,7 @@ const CompleteSidebarAdminDashboard = () => {
   };
 
   // 2️⃣ PAGE ANALYTICS
-  const renderAnalytics = () => {
+  const AdminAnalyticsSection = () => {
     const [period, setPeriod] = useState('30'); // 7, 30, 90 jours
     const [analyticsData, setAnalyticsData] = useState({
       userGrowth: [],
@@ -2645,7 +2658,7 @@ const CompleteSidebarAdminDashboard = () => {
   };
 
   // 3️⃣ PAGE SETTINGS
-  const renderSettings = () => {
+  const AdminSettingsSection = () => {
     const [settings, setSettings] = useState({
       platform_name: 'Teranga Foncier',
       commission_rate: 5.0,
@@ -2825,7 +2838,7 @@ const CompleteSidebarAdminDashboard = () => {
   };
 
   // 4️⃣ PAGE CONTENT (Blog)
-  const renderContent_Blog = () => {
+  const AdminContentBlogSection = () => {
     const [blogPosts, setBlogPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -2988,7 +3001,7 @@ const CompleteSidebarAdminDashboard = () => {
   };
 
   // 5️⃣ PAGE COMMISSIONS
-  const renderCommissions = () => {
+  const AdminCommissionsSection = () => {
     const [commissions, setCommissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');

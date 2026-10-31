@@ -255,7 +255,7 @@ const TestAuthPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button 
                   variant="outline" 
-                  onClick={() => window.location.href = unifiedAuth.getDefaultDashboard()}
+                  onClick={() => window.location.href = '/dashboard'}
                 >
                   Aller au Dashboard
                 </Button>

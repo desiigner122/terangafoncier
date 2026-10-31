@@ -1,4 +1,4 @@
-﻿
+
     import React, { useState, useEffect } from 'react';
     import { Link, useNavigate, useLocation } from 'react-router-dom';
     import { motion } from 'framer-motion';
@@ -47,6 +47,8 @@
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    // Comptes de démonstration : uniquement en développement
+    const localAccounts = import.meta.env.DEV ? (unifiedAuth.getTestAccounts?.() || []) : [];
     const [error, setError] = useState('');
     const [loginType, setLoginType] = useState('api');
     const { signIn, session } = useAuth();

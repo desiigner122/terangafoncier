@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 // ...existing code...
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 const getActionBadge = (action) => {

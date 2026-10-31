@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
 import { blockchainAIService } from '@/services/BlockchainAIService';
+import DOMPurify from 'dompurify';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -380,7 +381,7 @@ const AIChatbot = () => {
                     )}
                     <div 
                       className="text-sm leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatMessage(message.content), { ALLOWED_TAGS: ['strong', 'em', 'br'] }) }}
                     />
                     <div className="text-xs opacity-70 mt-2">
                       {message.timestamp.toLocaleTimeString('fr-FR', { 

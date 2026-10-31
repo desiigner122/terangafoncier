@@ -25,7 +25,6 @@ export const getEnvVar = (key, defaultValue = null) => {
 
 // Variables d'environnement spécifiques pour l'application
 export const ENV_VARS = {
-  OPENAI_API_KEY: getEnvVar('REACT_APP_OPENAI_API_KEY') || getEnvVar('VITE_OPENAI_API_KEY'),
   NODE_ENV: getEnvVar('NODE_ENV', 'development'),
   SUPABASE_URL: getEnvVar('REACT_APP_SUPABASE_URL') || getEnvVar('VITE_SUPABASE_URL'),
   SUPABASE_ANON_KEY: getEnvVar('REACT_APP_SUPABASE_ANON_KEY') || getEnvVar('VITE_SUPABASE_ANON_KEY'),

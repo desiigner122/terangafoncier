@@ -46,12 +46,16 @@ window.safeGlobalToast = (message, type = 'default') => {
         transition: all 0.3s ease;
       `;
       
-      notification.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span>${type === 'destructive' ? '❌' : '✅'}</span>
-          <span>${message}</span>
-        </div>
-      `;
+      // Pas d'innerHTML avec du texte non maîtrisé : on construit le DOM.
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+      const icon = document.createElement('span');
+      icon.textContent = type === 'destructive' ? '❌' : '✅';
+      const text = document.createElement('span');
+      text.textContent = String(message ?? '');
+      row.appendChild(icon);
+      row.appendChild(text);
+      notification.replaceChildren(row);
       
       document.body.appendChild(notification);
       

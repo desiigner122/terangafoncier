@@ -1,9 +1,11 @@
-﻿// Service IA Central pour Teranga Foncier
+// Service IA Central pour Teranga Foncier
 class AIService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || 'YOUR_API_KEY';
-    this.baseURL = 'https://api.openai.com/v1';
-    this.isEnabled = true;
+    // SÉCURITÉ : aucune clé d'API IA côté client. Un éventuel proxy serveur
+    // (VITE_AI_PROXY_URL) porte la clé ; sinon on utilise les analyses locales.
+    this.apiKey = null;
+    this.baseURL = import.meta.env.VITE_AI_PROXY_URL || '';
+    this.isEnabled = Boolean(this.baseURL);
     
     // Cache pour les analyses fréquentes
     this.cache = new Map();

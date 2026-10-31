@@ -5,18 +5,18 @@ import { ENV_VARS, logEnvStatus } from '../../utils/env';
 class OpenAIService {
   constructor() {
     // Utilisation de l'utilitaire sécurisé pour les variables d'environnement
-    this.apiKey = ENV_VARS.OPENAI_API_KEY;
-    this.baseURL = 'https://api.openai.com/v1';
+    // SÉCURITÉ : aucune clé OpenAI côté navigateur. Les appels passent par
+    // un proxy serveur (VITE_AI_PROXY_URL) ; sinon mode simulation.
+    this.apiKey = null;
+    this.baseURL = import.meta.env.VITE_AI_PROXY_URL || '';
     this.model = 'gpt-4-turbo-preview';
     
     // Mode simulation activé par défaut pour le développement
     this.simulationMode = true;
     
-    if (!this.apiKey) {
-      console.warn('⚠️ OpenAI API Key non configurée. Utilisation du mode simulation.');
-      console.info('📝 Pour activer l\'IA: Ajoutez votre clé OpenAI dans les paramètres système ou dans .env');
+    if (!this.baseURL) {
+      console.warn('⚠️ Proxy IA non configuré (VITE_AI_PROXY_URL). Utilisation du mode simulation.');
     } else {
-      console.info('✅ Clé API OpenAI détectée');
       this.simulationMode = false;
     }
     
@@ -27,12 +27,9 @@ class OpenAIService {
   }
 
   // Méthode pour configurer la clé API dynamiquement depuis les paramètres
-  setApiKey(apiKey) {
-    this.apiKey = apiKey;
-    this.simulationMode = !apiKey;
-    if (apiKey) {
-      console.info('✅ Clé API OpenAI configurée avec succès');
-    }
+  setApiKey() {
+    // Désactivé : une clé d'API ne doit jamais être manipulée côté client.
+    console.warn('setApiKey ignoré : configurez VITE_AI_PROXY_URL côté serveur.');
   }
 
   async makeRequest(endpoint, data) {
@@ -43,7 +40,6 @@ class OpenAIService {
     try {
       const response = await axios.post(`${this.baseURL}${endpoint}`, data, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         }
       });

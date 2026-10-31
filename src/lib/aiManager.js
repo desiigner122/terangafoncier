@@ -7,10 +7,13 @@ import { supabase } from './supabaseClient';
 
 class AIManager {
   constructor() {
-    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    this.baseURL = 'https://api.openai.com/v1';
+    // SÉCURITÉ : aucune clé d'API IA dans le navigateur. Les appels passent
+    // par un proxy serveur (VITE_AI_PROXY_URL) qui détient la clé.
+    // Sans proxy configuré, le service est désactivé et les fallbacks locaux s'appliquent.
+    this.apiKey = null;
+    this.baseURL = import.meta.env.VITE_AI_PROXY_URL || '';
     this.model = 'gpt-4o-mini'; // Modèle plus économique et rapide
-    this.isEnabled = Boolean(this.apiKey);
+    this.isEnabled = Boolean(this.baseURL);
     
     // Log du statut d'activation
     if (this.isEnabled) {
@@ -43,7 +46,6 @@ class AIManager {
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -211,7 +213,6 @@ class AIManager {
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -297,7 +298,6 @@ class AIManager {
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

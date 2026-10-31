@@ -496,7 +496,7 @@ export class AutonomousAIService {
 // Export de l'instance principale
 export const autonomousAI = new AutonomousAIService();
 
-// Auto-démarrage de l'IA autonome
-autonomousAI.initializeAutonomousOperations();
+// NB : l'initialisation est déjà faite dans le constructeur ;
+// le double appel créait 6 intervalles supplémentaires au chargement.
 
 export default AutonomousAIService;

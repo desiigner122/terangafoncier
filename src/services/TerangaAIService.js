@@ -211,10 +211,18 @@ class TerangaAIService {
   }
 
   initializeIntelligentCache() {
-    // Nettoyage automatique du cache expiré
-    setInterval(() => {
+    // Nettoyage automatique du cache expiré (un seul timer, arrêtable)
+    if (this._cacheTimer) return;
+    this._cacheTimer = setInterval(() => {
       this.cleanExpiredCache();
     }, 60000); // Toutes les minutes
+  }
+
+  destroy() {
+    if (this._cacheTimer) {
+      clearInterval(this._cacheTimer);
+      this._cacheTimer = null;
+    }
   }
 
   cleanExpiredCache() {

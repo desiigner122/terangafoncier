@@ -1,6 +1,15 @@
 import express from 'express';
 import { getDatabase } from '../config/database.js';
 
+// Aucun secret de secours : refuser explicitement si JWT_SECRET est absent.
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET manquant ou trop court (32 caractères minimum)');
+  }
+  return secret;
+};
+
 const router = express.Router();
 
 // Middleware simple d'authentification
@@ -12,7 +21,7 @@ const authenticate = async (req, res, next) => {
   
   try {
     const jwt = await import('jsonwebtoken');
-    const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'teranga-secret-key');
+    const decoded = jwt.default.verify(token, getJwtSecret());
     req.user = decoded;
     next();
   } catch (error) {

@@ -588,8 +588,9 @@ class PersonalizedRecommendationEngine {
   }
 
   startRealtimeUpdates() {
-    // Mise à jour des données marché toutes les 5 minutes
-    setInterval(async () => {
+    // Mise à jour des données marché toutes les 5 minutes (timer unique)
+    if (this._marketTimer) return;
+    this._marketTimer = setInterval(async () => {
       await this.updateMarketData();
     }, 300000);
 

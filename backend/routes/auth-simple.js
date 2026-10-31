@@ -3,6 +3,15 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getDatabase } from '../config/database.js';
 
+// Aucun secret de secours : refuser explicitement si JWT_SECRET est absent.
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET manquant ou trop court (32 caractères minimum)');
+  }
+  return secret;
+};
+
 const router = express.Router();
 
 // 🔐 INSCRIPTION UTILISATEUR
@@ -55,7 +64,7 @@ router.post('/inscription', async (req, res) => {
         email: email.toLowerCase(),
         nom: nom
       },
-      process.env.JWT_SECRET || 'teranga-secret-key',
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
 
@@ -130,7 +139,7 @@ router.post('/connexion', async (req, res) => {
         nom: user.nom,
         role: user.role
       },
-      process.env.JWT_SECRET || 'teranga-secret-key',
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
 
@@ -169,7 +178,7 @@ router.get('/profil', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'teranga-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     const db = await getDatabase();
 
     const user = await db.get(
@@ -227,7 +236,7 @@ router.get('/verify', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'teranga-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     
     res.json({
       success: true,

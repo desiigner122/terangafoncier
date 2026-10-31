@@ -99,7 +99,12 @@ class UnifiedAuthService {
   // Inscription avec email/password
   async signUp({ email, password, firstName, lastName, role }) {
     try {
-      console.log('📝 Tentative inscription Supabase:', { email, role });
+      // Seuls les rôles « libres » peuvent être choisis à l'inscription.
+      // Les rôles institutionnels (banque, mairie, notaire, géomètre, agent,
+      // admin) sont attribués par un administrateur après vérification.
+      const SELF_SERVICE_ROLES = ['particulier', 'particular', 'vendeur', 'investisseur', 'promoteur'];
+      const requested = String(role || 'particulier').toLowerCase();
+      role = SELF_SERVICE_ROLES.includes(requested) ? requested : 'particulier';
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -163,21 +168,34 @@ class UnifiedAuthService {
         return { success: false, error: 'Aucun utilisateur connecté' };
       }
 
+      // Les champs privilégiés (rôle, statut…) ne sont jamais modifiables ici :
+      // ils sont verrouillés côté base par un trigger, on les retire aussi côté client.
+      const safeFields = { ...fields };
+      ['role', 'user_type', 'verification_status', 'is_verified', 'banned', 'is_active', 'status', 'id', 'email']
+        .forEach((k) => delete safeFields[k]);
+
+      // Source de vérité : la table `profiles` (protégée par RLS).
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ ...safeFields, updated_at: new Date().toISOString() })
+        .eq('id', this.currentUser.id);
+
+      if (profileError) {
+        console.error('Erreur mise à jour profil Supabase:', profileError);
+        return { success: false, error: profileError.message };
+      }
+
+      // Copie d'affichage dans user_metadata (non utilisée pour les droits).
       const { data, error } = await supabase.auth.updateUser({
-        data: {
-          ...this.currentUser.user_metadata,
-          ...fields
-        }
+        data: { ...this.currentUser.user_metadata, ...safeFields }
       });
 
       if (error) {
-        console.error('Erreur mise à jour profil Supabase:', error);
-        return { success: false, error: error.message };
+        console.warn('Metadata non synchronisées:', error.message);
+        return { success: true, user: this.currentUser };
       }
 
-      console.log('✅ Profil Supabase mis à jour');
       this.currentUser = data.user;
-      
       return { success: true, user: data.user };
     } catch (error) {
       console.error('❌ Erreur inattendue mise à jour profil:', error);

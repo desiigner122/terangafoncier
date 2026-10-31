@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { unifiedAuth } from '@/services/UnifiedAuthService';
+import { supabase } from '@/lib/supabaseClient';
+
+// Colonnes de `profiles` qu'un utilisateur ne peut jamais modifier lui-même.
+// (Verrouillées aussi côté base par le trigger protect_profile_privileged_columns.)
+const PRIVILEGED_FIELDS = ['role', 'user_type', 'verification_status', 'is_verified', 'banned', 'is_active', 'status', 'id', 'email'];
 
 const AuthContext = createContext(undefined);
 
@@ -7,6 +12,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Profil chargé depuis la table `profiles` (protégée par RLS) : c'est la
+  // SEULE source de vérité pour le rôle. `user_metadata` est modifiable par
+  // l'utilisateur lui-même et ne doit jamais servir à une décision d'accès.
+  const [dbProfile, setDbProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Normaliser les rôles pour compatibilité avec l'interface existante
   const normalizeRole = useCallback((role) => {
@@ -25,32 +35,68 @@ export const AuthProvider = ({ children }) => {
     return role;
   }, []);
 
-  // Créer un profil dérivé de l'utilisateur pour compatibilité
+  // Charger le profil depuis la base à chaque changement d'utilisateur
+  const loadDbProfile = useCallback(async (authUser) => {
+    if (!authUser?.id) {
+      setDbProfile(null);
+      return null;
+    }
+    setProfileLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+      if (error) {
+        console.error('Erreur chargement profil:', error.message);
+        setDbProfile(null);
+        return null;
+      }
+      setDbProfile(data || null);
+      return data || null;
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDbProfile(user);
+  }, [user?.id, loadDbProfile]);
+
+  // Profil exposé à l'application.
+  // Priorité du rôle : profiles.role (base) > app_metadata.role (posé côté
+  // serveur uniquement). Jamais user_metadata.
   const derivedProfile = useMemo(() => {
     if (!user) return null;
     const md = user.user_metadata || {};
-    
-    // Récupérer le rôle depuis user.roles (API) ou user_metadata (local)
-    const userRole = user.roles && user.roles.length > 0 
-      ? user.roles[0] 
-      : (md.role || md.user_type || md.userType || md.user_role);
-    
-    const normalizedRole = normalizeRole(userRole);
-    
+    const appMd = user.app_metadata || {};
+    const db = dbProfile || {};
+
+    const rawRole = db.role || db.user_type || appMd.role || null;
+    const normalizedRole = normalizeRole(rawRole);
+
+    // Données d'affichage non sensibles : la base d'abord, puis les metadata.
+    const displayMd = { ...md };
+    PRIVILEGED_FIELDS.forEach((k) => delete displayMd[k]);
+
     return {
+      ...displayMd,
+      ...db,
       id: user.id,
       email: user.email,
       role: normalizedRole || 'Particulier',
       user_type: normalizedRole || 'Particulier',
-      roles: user.roles || [userRole], // Garder les rôles originaux
-      verification_status: md.verification_status || 'active',
-      banned: !!md.banned,
-      name: md.name || `${md.firstName || ''} ${md.lastName || ''}`.trim(),
-      first_name: md.firstName || md.first_name,
-      last_name: md.lastName || md.last_name,
-      ...md,
+      roles: [rawRole || 'particulier'],
+      verification_status: db.verification_status || (db.is_verified ? 'verified' : 'active'),
+      banned: !!db.banned,
+      name: db.full_name || md.name || `${md.firstName || md.first_name || ''} ${md.lastName || md.last_name || ''}`.trim(),
+      first_name: db.first_name || md.firstName || md.first_name,
+      last_name: db.last_name || md.lastName || md.last_name,
+      full_name: db.full_name || md.full_name || md.name,
+      avatar_url: db.avatar_url || md.avatar_url,
     };
-  }, [user, normalizeRole]);
+  }, [user, dbProfile, normalizeRole]);
 
   // Gérer les changements de session
   const handleSession = useCallback(async (session) => {
@@ -216,12 +262,17 @@ export const AuthProvider = ({ children }) => {
     if (!user) return { error: new Error('Aucun utilisateur connecté') };
     
     try {
-      const result = await unifiedAuth.updateProfile(fields);
+      // On n'autorise jamais la modification des champs privilégiés depuis le client.
+      const safeFields = { ...fields };
+      PRIVILEGED_FIELDS.forEach((k) => delete safeFields[k]);
+
+      const result = await unifiedAuth.updateProfile(safeFields);
       
       if (result.success) {
-        // Mettre à jour l'utilisateur local
-        const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...fields } };
+        // Mettre à jour l'utilisateur local et recharger le profil
+        const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...safeFields } };
         setUser(updatedUser);
+        await loadDbProfile(user);
         
         window.safeGlobalToast?.({
           variant: "default",
@@ -247,7 +298,7 @@ export const AuthProvider = ({ children }) => {
       });
       return { data: null, error };
     }
-  }, [user]);
+  }, [user, loadDbProfile]);
 
   // Connexion rapide (mode test)
   const quickSignIn = useCallback(async (role) => {
@@ -281,8 +332,9 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(() => ({
     user,
     session,
-    loading,
+    loading: loading || (!!user && profileLoading && !dbProfile),
     profile: derivedProfile,
+    refreshProfile: () => loadDbProfile(user),
     signUp,
     signIn,
     signOut,
@@ -295,6 +347,9 @@ export const AuthProvider = ({ children }) => {
     user, 
     session, 
     loading, 
+    profileLoading,
+    dbProfile,
+    loadDbProfile,
     derivedProfile, 
     signUp, 
     signIn, 

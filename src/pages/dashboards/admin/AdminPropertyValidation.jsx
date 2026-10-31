@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { generatePropertySlug } from '@/utils/propertySlug';
 
 const AdminPropertyValidation = () => {
   const [pendingProperties, setPendingProperties] = useState([]);
@@ -52,10 +53,11 @@ const AdminPropertyValidation = () => {
 
       if (propError) throw propError;
 
-      // Fetch all profiles to match with owner_id
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, email, full_name');
+      // Profils des propriétaires concernés uniquement (pas toute la table)
+      const ownerIds = [...new Set((properties || []).map((p) => p.owner_id).filter(Boolean))];
+      const { data: profiles } = ownerIds.length
+        ? await supabase.from('profiles').select('id, email, full_name').in('id', ownerIds)
+        : { data: [] };
 
       // Create lookup map
       const profilesMap = (profiles || []).reduce((map, p) => {
@@ -63,13 +65,23 @@ const AdminPropertyValidation = () => {
         return map;
       }, {});
 
+      // Photos : UNE requête pour toutes les propriétés (au lieu d'une par ligne)
+      const propertyIds = (properties || []).map((p) => p.id);
+      const { data: allPhotos } = propertyIds.length
+        ? await supabase
+            .from('property_photos')
+            .select('property_id, file_url, is_primary, display_order')
+            .in('property_id', propertyIds)
+            .order('display_order', { ascending: true })
+        : { data: [] };
+      const photosByProperty = (allPhotos || []).reduce((map, ph) => {
+        (map[ph.property_id] ||= []).push(ph);
+        return map;
+      }, {});
+
       // Enrichir avec les photos et owner info
-      const enrichedData = await Promise.all((properties || []).map(async (prop) => {
-        const { data: photos } = await supabase
-          .from('property_photos')
-          .select('file_url, is_primary, display_order')
-          .eq('property_id', prop.id)
-          .order('display_order', { ascending: true });
+      const enrichedData = (properties || []).map((prop) => {
+        const photos = photosByProperty[prop.id] || [];
 
         // Get owner from profiles map
         const owner = profilesMap[prop.owner_id] || {};
@@ -77,10 +89,10 @@ const AdminPropertyValidation = () => {
         return {
           ...prop,
           owner, // Add owner info manually
-          photos: photos || [],
+          photos,
           mainPhoto: photos?.find(p => p.is_primary)?.file_url || photos?.[0]?.file_url
         };
-      }));
+      });
 
       setPendingProperties(enrichedData);
     } catch (error) {

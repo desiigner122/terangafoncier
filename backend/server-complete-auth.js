@@ -10,7 +10,13 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'teranga_foncier_secret_key_2024';
+// Aucun secret de secours : sans JWT_SECRET, n'importe qui pourrait forger des tokens.
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error('❌ JWT_SECRET manquant ou trop court (32 caractères minimum). Arrêt.');
+  process.exit(1);
+}
+const rateLimit = require('express-rate-limit');
 
 // =================================
 // CONFIGURATION BASE DE DONNÉES
@@ -394,9 +400,30 @@ db.exec(`
 // =================================
 
 app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// CORS restreint aux origines autorisées (FRONTEND_URL, séparées par des virgules).
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',').map((o) => o.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Origine non autorisée par CORS'));
+  },
+  credentials: true
+}));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// Limitation des tentatives sur les routes d'authentification (anti brute-force).
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { code: 'RATE_LIMITED', message: 'Trop de tentatives, réessayez plus tard.' } }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // Configuration Multer pour upload de fichiers
 const storage = multer.diskStorage({
@@ -513,7 +540,9 @@ const logAction = (action, resource) => {
 // Inscription utilisateur
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, first_name, last_name, phone, role } = req.body;
+    // SÉCURITÉ : le rôle n'est JAMAIS lu depuis la requête. Tout nouvel
+    // utilisateur est « particulier » ; un admin attribue les autres rôles.
+    const { email, password, first_name, last_name, phone } = req.body;
 
     // Validation
     if (!email || !password) {
@@ -543,8 +572,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     const userId = result.lastInsertRowid;
 
-    // Assigner le rôle par défaut ou celui spécifié
-    const defaultRole = role || 'particulier';
+    // Rôle par défaut, non modifiable par le client
+    const defaultRole = 'particulier';
     const roleData = db.prepare('SELECT id FROM roles WHERE name = ?').get(defaultRole);
     
     if (roleData) {

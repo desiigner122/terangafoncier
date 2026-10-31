@@ -27,6 +27,12 @@ import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
+// Sans JWT_SECRET, les tokens seraient forgeables : on refuse de démarrer.
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('❌ JWT_SECRET manquant ou trop court (32 caractères minimum). Arrêt.');
+  process.exit(1);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -49,8 +55,11 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, _res, buf) => { req.rawBody = buf.toString('utf8'); }
+}));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

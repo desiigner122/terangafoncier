@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { asyncErrorHandler } from '../middleware/errorHandler.js';
 import { logBusiness } from '../utils/logger.js';
@@ -155,10 +156,34 @@ router.post('/mobile-money', authenticateToken, asyncErrorHandler(async (req, re
 }));
 
 // 🔔 WEBHOOK PAIEMENTS
+// Authentifié par signature HMAC-SHA256 du corps brut, calculée avec
+// PAYMENT_WEBHOOK_SECRET et transmise dans l'en-tête X-Webhook-Signature.
+const verifyWebhookSignature = (req) => {
+  const secret = process.env.PAYMENT_WEBHOOK_SECRET;
+  if (!secret) return false; // webhook désactivé tant qu'aucun secret n'est configuré
+
+  const provided = String(req.get('x-webhook-signature') || '').replace(/^sha256=/, '');
+  if (!provided) return false;
+
+  const rawBody = req.rawBody || JSON.stringify(req.body);
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+
+  const a = Buffer.from(provided, 'hex');
+  const b = Buffer.from(expected, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+const ALLOWED_WEBHOOK_STATUSES = new Set(['pending', 'completed', 'failed', 'cancelled', 'refunded']);
+
 router.post('/webhook', asyncErrorHandler(async (req, res) => {
+  if (!verifyWebhookSignature(req)) {
+    logBusiness('payment_webhook_rejected', { ip: req.ip, reason: 'invalid_signature' });
+    return res.status(401).json({ success: false, message: 'Signature webhook invalide' });
+  }
+
   const { reference, status, transactionId, amount } = req.body;
 
-  if (!reference || !status) {
+  if (!reference || !status || !ALLOWED_WEBHOOK_STATUSES.has(status)) {
     return res.status(400).json({
       success: false,
       message: 'Paramètres webhook manquants'
@@ -177,6 +202,17 @@ router.post('/webhook', asyncErrorHandler(async (req, res) => {
   }
 
   const payment = paymentResult.rows[0];
+
+  // Idempotence : un paiement déjà finalisé ne change plus d'état.
+  if (['completed', 'refunded'].includes(payment.status) && payment.status !== status) {
+    return res.json({ success: true, ignored: true });
+  }
+
+  // Le montant notifié doit correspondre au montant enregistré.
+  if (amount !== undefined && Number(amount) !== Number(payment.amount)) {
+    logBusiness('payment_webhook_rejected', { paymentId: payment.id, reason: 'amount_mismatch', amount });
+    return res.status(400).json({ success: false, message: 'Montant incohérent' });
+  }
 
   // Mettre à jour le statut
   await db.query(`

@@ -270,8 +270,9 @@ class BlockchainAIService {
     // Surveiller les transactions de nos contrats
     this.monitorContractTransactions();
     
-    // Vérifications de sécurité périodiques
-    setInterval(async () => {
+    // Vérifications de sécurité périodiques (timer unique, arrêtable via stopMonitoring)
+    if (this._securityTimer) clearInterval(this._securityTimer);
+    this._securityTimer = setInterval(async () => {
       await this.performSecurityChecks();
     }, 60000); // Toutes les minutes
   }

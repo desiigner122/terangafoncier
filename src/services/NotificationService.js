@@ -404,8 +404,9 @@ export class NotificationService {
       if (error) throw error;
 
       // Envoyer via Realtime si l'utilisateur est connecté
+      // (canal retiré après envoi pour ne pas fuir une souscription par notification)
       const channel = supabase.channel(`user-${notification.user_id}`);
-      channel.send({
+      await channel.send({
         type: 'broadcast',
         event: 'new_notification',
         payload: {

@@ -126,7 +126,8 @@ class ErrorManager {
 const errorManager = new ErrorManager();
 
 // Nettoyage automatique toutes les 5 minutes
-setInterval(() => errorManager.cleanup(), 300000);
+const cleanupTimer = setInterval(() => errorManager.cleanup(), 300000);
+window.addEventListener('beforeunload', () => clearInterval(cleanupTimer));
 
 // Gestionnaire global d'erreurs pour les erreurs non capturées
 window.addEventListener('error', (event) => {

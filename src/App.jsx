@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Route, Routes, Outlet, Link, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { ToastProvider } from '@/components/ui/NotificationToast';
@@ -11,131 +11,9 @@ import MaintenanceWrapper from '@/components/MaintenanceWrapper';
 import { useTitleByRoute } from '@/hooks/usePageTitle';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 import PremiumAIChatbot from '@/components/ai/PremiumAIChatbot';
-import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import ModernHeader from '@/components/layout/ModernHeader';
 import BlockchainFooter from '@/components/layout/BlockchainFooter';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import HomePage from '@/pages/HomePage';
-import ModernHomePage from '@/pages/ModernHomePage';
-import LoginPage from '@/pages/LoginPage';
-import ModernLoginPage from '@/pages/ModernLoginPage';
-import BlockchainLoginPage from '@/pages/BlockchainLoginPage';
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import RegisterPage from '@/pages/RegisterPage';
-import ModernRegisterPage from '@/pages/ModernRegisterPage';
-import BlockchainRegisterPage from '@/pages/BlockchainRegisterPage';
-import MultiStepRegisterPage from '@/pages/MultiStepRegisterPage';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
-import DebugDashboard from '@/pages/DebugDashboard';
-import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
-import ProjectDetailPage from '@/pages/ProjectDetailPage';
-import PromoterConstructionRequestsPage from '@/pages/PromoterConstructionRequestsPageNew';
-import ConstructionRequestDetailPage from '@/pages/ConstructionRequestDetailPage';
-import ProfilePage from '@/pages/ProfilePage';
-import ContactPage from '@/pages/ContactPage';
-import BlockchainContactPage from '@/pages/BlockchainContactPage';
-import AboutPage from '@/pages/AboutPage';
-
-// Imports des sous-pages de suivi Particulier
-import { 
-  PrivateInterests, 
-  MunicipalApplications, 
-  PromoterReservations, 
-  OwnedProperties 
-} from '@/pages/dashboards/particulier/tracking';
-import ConstructionRequest from '@/pages/dashboards/particulier/tracking/ConstructionRequest';
-import AcheteurMessagesPage from '@/pages/dashboards/particulier/AcheteurMessagesPage';
-import AcheteurCalendarPage from '@/pages/dashboards/particulier/AcheteurCalendarPage';
-import AcheteurDocumentsPage from '@/pages/dashboards/particulier/AcheteurDocumentsPage';
-import AcheteurSettingsPage from '@/pages/dashboards/particulier/AcheteurSettingsPage';
-import AcheteurNotificationsPage from '@/pages/dashboards/particulier/AcheteurNotificationsPage';
-import AIFeaturesPage from '@/pages/AIFeaturesPage';
-import UserProfilePage from '@/pages/profiles/UserProfilePage';
-import ModernAboutPage from '@/pages/ModernAboutPage';
-import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
-import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
-import TestAuthPage from '@/pages/TestAuthPage';
-import FoncierSenegalPage from '@/pages/FoncierSenegalPage';
-import MapPage from '@/pages/MapPage';
-import MyRequestsPage from '@/pages/MyRequestsPage';
-import SettingsPage from '@/pages/SettingsPage';
-import BlogPage from '@/pages/BlogPage';
-import BlogPostPage from '@/pages/BlogPostPage';
-import LegalPage from '@/pages/LegalPage';
-import PrivacyPage from '@/pages/PrivacyPage';
-import CookiePolicyPage from '@/pages/CookiePolicyPage';
-import HowItWorksPage from '@/pages/HowItWorksPage';
-import FaqPage from '@/pages/FaqPage';
-import PartnersPage from '@/pages/PartnersPage';
-import SuccessPage from '@/pages/SuccessPage';
-import ParcellesVendeursPage from '@/pages/ParcellesVendeursPage';
-import TerrainsVendeursPage from '@/pages/TerrainsVendeursPage';
-import ParcellesCommunalesPage from '@/pages/ParcellesCommunalesPage';
-import ParcelleDetailPage from '@/pages/ParcelleDetailPage';
-import ZoneCommunaleDetailPage from '@/pages/ZoneCommunaleDetailPage';
-import MunicipalRequestsPage from '@/pages/MunicipalRequestsPage';
-import GuideAttributionPage from '@/pages/GuideAttributionPage';
-import SellPropertyPage from '@/pages/SellPropertyPage';
-import AddPropertyAdvanced from '@/pages/AddPropertyAdvanced';
-import EditPropertySimple from '@/pages/EditPropertySimple';
-import EditPropertyComplete from '@/pages/EditPropertyComplete';
-import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
-import DocumentsFonciersPage from '@/pages/DocumentsFonciersPage';
-import LoisFoncieresPage from '@/pages/LoisFoncieresPage';
-import GuidesTutorielsPage from '@/pages/GuidesTutorielsPage';
-import ProjectsGuidePage from '@/pages/ProjectsGuidePage';
-import RequestsGuidePage from '@/pages/RequestsGuidePage';
-import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage';
-import ConstructionRequestFormPage from '@/pages/ConstructionRequestFormPage';
-import CommunalZonesPage from '@/pages/CommunalZonesPage';
-import DiasporaInvestmentPage from '@/pages/solutions/DiasporaInvestmentPage';
-import ProjectMonitoringPage from '@/pages/solutions/ProjectMonitoringPage';
-import BlockchainSolutionsPage from '@/pages/BlockchainSolutionsPage';
-import NFTPropertiesPage from '@/pages/NFTPropertiesPage';
-import SmartContractsPage from '@/pages/SmartContractsPage';
-import EscrowPage from '@/pages/EscrowPage';
-import AgentsFonciersPage from '@/pages/solutions/AgentsFonciersPage';
-import GeometresPage from '@/pages/solutions/GeometresPage';
-import PriceCalculatorPage from '@/pages/tools/PriceCalculatorPage';
-import InteractiveMapPage from '@/pages/tools/InteractiveMapPage';
-import ToolsMarketAnalysisPage from '@/pages/tools/MarketAnalysisPage';
-import PropertyVerificationPage from '@/pages/tools/PropertyVerificationPage';
-import CartePage from '@/pages/CartePage';
-import MyListingsPage from '@/pages/MyListingsPage';
-import MyFavoritesPage from '@/pages/MyFavoritesPage';
-import NotificationsPage from '@/pages/NotificationsPage';
-import SavedSearchesPage from '@/pages/SavedSearchesPage';
-import ComparisonPage from '@/pages/ComparisonPage';
-import SuccessStoriesPage from '@/pages/SuccessStoriesPage';
-import PromoterNewBuyersPage from '@/pages/promoteur/PromoterNewBuyersPage';
-import PromoterNewQuotePage from '@/pages/promoteur/PromoterNewQuotePage';
-import SecureMessagingPage from '@/pages/SecureMessagingPage';
-import SimpleDashboard from '@/pages/SimpleDashboard';
-import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
-
-// Pages IA et Analytics
-import TerangaAIPage from '@/pages/TerangaAIPage';
-import AIAnalyticsDashboard from '@/components/analytics/AIAnalyticsDashboard';
-
-// Pages communes nouvelles
-import MessagesPageNew from '@/pages/common/MessagesPage';
-import DocumentsPageNew from '@/pages/common/DocumentsPage';
-import NotificationsPageNew from '@/pages/common/NotificationsPage';
-import MyRequestsPageNew from '@/pages/common/MyRequestsPage';
-import CalendarPageNew from '@/pages/common/CalendarPage';
-import SettingsPageNew from '@/pages/common/SettingsPageNew';
-import MesTerrainsPageNew from '@/pages/common/MesTerrainsPage';
-import PurchaseSuccessPage from '@/pages/PurchaseSuccessPage';
-import MessagesPage from '@/pages/MessagesPage';
-import DocumentsPage from '@/pages/DocumentsPage';
-import CRMPageModernNew from '@/pages/CRM/CRMPageNew';
-import ExportPage from '@/pages/ExportPage';
-import UploadsPage from '@/pages/UploadsPage';
-import CityDetailPage from '@/pages/CityDetailPage';
-import CommunalLandsPage from '@/pages/CommunalLandsPage';
-import TermsPage from '@/pages/TermsPage';
-import DataProtectionPage from '@/pages/DataProtectionPage';
-import TerrainProgressPage from '@/pages/TerrainProgressPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute, BuyerOnlyRoute } from '@/components/layout/ProtectedRoute';
 import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
@@ -146,222 +24,350 @@ import { ComparisonProvider } from '@/context/ComparisonContext';
 import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import './lib/errorManager';
 import './lib/securityConfig';
-import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
+import { HelmetProvider } from 'react-helmet-async';
+import AccessDeniedPage from '@/components/AccessDeniedPage';
+import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
+
+const FonctionnalitesAvanceesPage = lazy(() => import('@/pages/FonctionnalitesAvanceesPage'));
+const HomePage = lazy(() => import('@/pages/HomePage'));
+const ModernHomePage = lazy(() => import('@/pages/ModernHomePage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const ModernLoginPage = lazy(() => import('@/pages/ModernLoginPage'));
+const BlockchainLoginPage = lazy(() => import('@/pages/BlockchainLoginPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
+const ModernRegisterPage = lazy(() => import('@/pages/ModernRegisterPage'));
+const BlockchainRegisterPage = lazy(() => import('@/pages/BlockchainRegisterPage'));
+const MultiStepRegisterPage = lazy(() => import('@/pages/MultiStepRegisterPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
+const DebugDashboard = lazy(() => import('@/pages/DebugDashboard'));
+const PromoterProjectsPage = lazy(() => import('@/pages/PromoterProjectsPage'));
+const ProjectDetailPage = lazy(() => import('@/pages/ProjectDetailPage'));
+const PromoterConstructionRequestsPage = lazy(() => import('@/pages/PromoterConstructionRequestsPageNew'));
+const ConstructionRequestDetailPage = lazy(() => import('@/pages/ConstructionRequestDetailPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const ContactPage = lazy(() => import('@/pages/ContactPage'));
+const BlockchainContactPage = lazy(() => import('@/pages/BlockchainContactPage'));
+const AboutPage = lazy(() => import('@/pages/AboutPage'));
+
+// Imports des sous-pages de suivi Particulier
+const PrivateInterests = lazy(() => import('@/pages/dashboards/particulier/tracking').then((m) => ({ default: m.PrivateInterests })));
+const MunicipalApplications = lazy(() => import('@/pages/dashboards/particulier/tracking').then((m) => ({ default: m.MunicipalApplications })));
+const PromoterReservations = lazy(() => import('@/pages/dashboards/particulier/tracking').then((m) => ({ default: m.PromoterReservations })));
+const OwnedProperties = lazy(() => import('@/pages/dashboards/particulier/tracking').then((m) => ({ default: m.OwnedProperties })));
+const ConstructionRequest = lazy(() => import('@/pages/dashboards/particulier/tracking/ConstructionRequest'));
+const AcheteurMessagesPage = lazy(() => import('@/pages/dashboards/particulier/AcheteurMessagesPage'));
+const AcheteurCalendarPage = lazy(() => import('@/pages/dashboards/particulier/AcheteurCalendarPage'));
+const AcheteurDocumentsPage = lazy(() => import('@/pages/dashboards/particulier/AcheteurDocumentsPage'));
+const AcheteurSettingsPage = lazy(() => import('@/pages/dashboards/particulier/AcheteurSettingsPage'));
+const AcheteurNotificationsPage = lazy(() => import('@/pages/dashboards/particulier/AcheteurNotificationsPage'));
+const AIFeaturesPage = lazy(() => import('@/pages/AIFeaturesPage'));
+const UserProfilePage = lazy(() => import('@/pages/profiles/UserProfilePage'));
+const ModernAboutPage = lazy(() => import('@/pages/ModernAboutPage'));
+const BlockchainAboutPage = lazy(() => import('@/pages/BlockchainAboutPage'));
+const FoncierBlockchainPage = lazy(() => import('@/pages/FoncierBlockchainPage'));
+const TestAuthPage = lazy(() => import('@/pages/TestAuthPage'));
+const FoncierSenegalPage = lazy(() => import('@/pages/FoncierSenegalPage'));
+const MapPage = lazy(() => import('@/pages/MapPage'));
+const MyRequestsPage = lazy(() => import('@/pages/MyRequestsPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const BlogPage = lazy(() => import('@/pages/BlogPage'));
+const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
+const LegalPage = lazy(() => import('@/pages/LegalPage'));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
+const CookiePolicyPage = lazy(() => import('@/pages/CookiePolicyPage'));
+const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'));
+const FaqPage = lazy(() => import('@/pages/FaqPage'));
+const PartnersPage = lazy(() => import('@/pages/PartnersPage'));
+const SuccessPage = lazy(() => import('@/pages/SuccessPage'));
+const ParcellesVendeursPage = lazy(() => import('@/pages/ParcellesVendeursPage'));
+const TerrainsVendeursPage = lazy(() => import('@/pages/TerrainsVendeursPage'));
+const ParcellesCommunalesPage = lazy(() => import('@/pages/ParcellesCommunalesPage'));
+const ParcelleDetailPage = lazy(() => import('@/pages/ParcelleDetailPage'));
+const ZoneCommunaleDetailPage = lazy(() => import('@/pages/ZoneCommunaleDetailPage'));
+const MunicipalRequestsPage = lazy(() => import('@/pages/MunicipalRequestsPage'));
+const GuideAttributionPage = lazy(() => import('@/pages/GuideAttributionPage'));
+const SellPropertyPage = lazy(() => import('@/pages/SellPropertyPage'));
+const AddPropertyAdvanced = lazy(() => import('@/pages/AddPropertyAdvanced'));
+const EditPropertySimple = lazy(() => import('@/pages/EditPropertySimple'));
+const EditPropertyComplete = lazy(() => import('@/pages/EditPropertyComplete'));
+const DiasporaGuidePage = lazy(() => import('@/pages/DiasporaGuidePage'));
+const DocumentsFonciersPage = lazy(() => import('@/pages/DocumentsFonciersPage'));
+const LoisFoncieresPage = lazy(() => import('@/pages/LoisFoncieresPage'));
+const GuidesTutorielsPage = lazy(() => import('@/pages/GuidesTutorielsPage'));
+const ProjectsGuidePage = lazy(() => import('@/pages/ProjectsGuidePage'));
+const RequestsGuidePage = lazy(() => import('@/pages/RequestsGuidePage'));
+const ConstructionDistancePage = lazy(() => import('@/pages/solutions/ConstructionDistancePage'));
+const ConstructionRequestFormPage = lazy(() => import('@/pages/ConstructionRequestFormPage'));
+const CommunalZonesPage = lazy(() => import('@/pages/CommunalZonesPage'));
+const DiasporaInvestmentPage = lazy(() => import('@/pages/solutions/DiasporaInvestmentPage'));
+const ProjectMonitoringPage = lazy(() => import('@/pages/solutions/ProjectMonitoringPage'));
+const BlockchainSolutionsPage = lazy(() => import('@/pages/BlockchainSolutionsPage'));
+const NFTPropertiesPage = lazy(() => import('@/pages/NFTPropertiesPage'));
+const SmartContractsPage = lazy(() => import('@/pages/SmartContractsPage'));
+const EscrowPage = lazy(() => import('@/pages/EscrowPage'));
+const AgentsFonciersPage = lazy(() => import('@/pages/solutions/AgentsFonciersPage'));
+const GeometresPage = lazy(() => import('@/pages/solutions/GeometresPage'));
+const PriceCalculatorPage = lazy(() => import('@/pages/tools/PriceCalculatorPage'));
+const InteractiveMapPage = lazy(() => import('@/pages/tools/InteractiveMapPage'));
+const ToolsMarketAnalysisPage = lazy(() => import('@/pages/tools/MarketAnalysisPage'));
+const PropertyVerificationPage = lazy(() => import('@/pages/tools/PropertyVerificationPage'));
+const CartePage = lazy(() => import('@/pages/CartePage'));
+const MyListingsPage = lazy(() => import('@/pages/MyListingsPage'));
+const MyFavoritesPage = lazy(() => import('@/pages/MyFavoritesPage'));
+const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
+const SavedSearchesPage = lazy(() => import('@/pages/SavedSearchesPage'));
+const ComparisonPage = lazy(() => import('@/pages/ComparisonPage'));
+const SuccessStoriesPage = lazy(() => import('@/pages/SuccessStoriesPage'));
+const PromoterNewBuyersPage = lazy(() => import('@/pages/promoteur/PromoterNewBuyersPage'));
+const PromoterNewQuotePage = lazy(() => import('@/pages/promoteur/PromoterNewQuotePage'));
+const SecureMessagingPage = lazy(() => import('@/pages/SecureMessagingPage'));
+const SimpleDashboard = lazy(() => import('@/pages/SimpleDashboard'));
+const PurchaseProcessPage = lazy(() => import('@/pages/PurchaseProcessPage'));
+
+// Pages IA et Analytics
+const TerangaAIPage = lazy(() => import('@/pages/TerangaAIPage'));
+const AIAnalyticsDashboard = lazy(() => import('@/components/analytics/AIAnalyticsDashboard'));
+
+// Pages communes nouvelles
+const MessagesPageNew = lazy(() => import('@/pages/common/MessagesPage'));
+const DocumentsPageNew = lazy(() => import('@/pages/common/DocumentsPage'));
+const NotificationsPageNew = lazy(() => import('@/pages/common/NotificationsPage'));
+const MyRequestsPageNew = lazy(() => import('@/pages/common/MyRequestsPage'));
+const CalendarPageNew = lazy(() => import('@/pages/common/CalendarPage'));
+const SettingsPageNew = lazy(() => import('@/pages/common/SettingsPageNew'));
+const MesTerrainsPageNew = lazy(() => import('@/pages/common/MesTerrainsPage'));
+const PurchaseSuccessPage = lazy(() => import('@/pages/PurchaseSuccessPage'));
+const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
+const DocumentsPage = lazy(() => import('@/pages/DocumentsPage'));
+const CRMPageModernNew = lazy(() => import('@/pages/CRM/CRMPageNew'));
+const ExportPage = lazy(() => import('@/pages/ExportPage'));
+const UploadsPage = lazy(() => import('@/pages/UploadsPage'));
+const CityDetailPage = lazy(() => import('@/pages/CityDetailPage'));
+const CommunalLandsPage = lazy(() => import('@/pages/CommunalLandsPage'));
+const TermsPage = lazy(() => import('@/pages/TermsPage'));
+const DataProtectionPage = lazy(() => import('@/pages/DataProtectionPage'));
+const TerrainProgressPage = lazy(() => import('@/pages/TerrainProgressPage'));
+const DashboardMunicipalRequestPage = lazy(() => import('@/pages/DashboardMunicipalRequestPage'));
 // DASHBOARDS ADMIN - NETTOYÉ (1 dashboard principal uniquement)
-import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
-import AdminPropertyValidation from '@/pages/dashboards/admin/AdminPropertyValidation';
-import ModernAdminOverview from '@/components/admin/ModernAdminOverview';
+const CompleteSidebarAdminDashboard = lazy(() => import('@/pages/dashboards/admin/CompleteSidebarAdminDashboard'));
+const AdminPropertyValidation = lazy(() => import('@/pages/dashboards/admin/AdminPropertyValidation'));
+const ModernAdminOverview = lazy(() => import('@/components/admin/ModernAdminOverview'));
 
 // PAGES ADMIN MODERNISÉES AVEC DONNÉES RÉELLES
-import ModernUsersPage from '@/pages/dashboards/admin/ModernUsersPage';
-import ModernTransactionsPage from '@/pages/dashboards/admin/ModernTransactionsPage';
-import ModernPropertiesManagementPage from '@/pages/dashboards/admin/ModernPropertiesManagementPage';
-import ModernAnalyticsPage from '@/pages/dashboards/admin/ModernAnalyticsPage';
-import ModernSettingsPage from '@/pages/dashboards/admin/ModernSettingsPage';
-import AdminProjectsPage from '@/pages/admin/AdminProjectsPage';
-import AdminPricingPage from '@/pages/admin/AdminPricingPage';
-import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
+const ModernUsersPage = lazy(() => import('@/pages/dashboards/admin/ModernUsersPage'));
+const ModernTransactionsPage = lazy(() => import('@/pages/dashboards/admin/ModernTransactionsPage'));
+const ModernPropertiesManagementPage = lazy(() => import('@/pages/dashboards/admin/ModernPropertiesManagementPage'));
+const ModernAnalyticsPage = lazy(() => import('@/pages/dashboards/admin/ModernAnalyticsPage'));
+const ModernSettingsPage = lazy(() => import('@/pages/dashboards/admin/ModernSettingsPage'));
+const AdminProjectsPage = lazy(() => import('@/pages/admin/AdminProjectsPage'));
+const AdminPricingPage = lazy(() => import('@/pages/admin/AdminPricingPage'));
+const AdminParcelsPage = lazy(() => import('@/pages/admin/AdminParcelsPage'));
 
 // NOUVELLES PAGES ADMIN - PRIORITÉ 1
-import RevenueManagementPage from '@/pages/admin/RevenueManagementPage';
-import PropertyManagementPage from '@/pages/admin/PropertyManagementPage';
-import SupportTicketsPage from '@/pages/admin/SupportTicketsPage';
-import BulkExportPage from '@/pages/admin/BulkExportPage';
-import UserManagementPage from '@/pages/admin/UserManagementPage';
-import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
-import AdminContractsPage from '@/pages/admin/AdminContractsPage';
-import SubscriptionManagementPage from '@/pages/admin/SubscriptionManagementPage';
+const RevenueManagementPage = lazy(() => import('@/pages/admin/RevenueManagementPage'));
+const PropertyManagementPage = lazy(() => import('@/pages/admin/PropertyManagementPage'));
+const SupportTicketsPage = lazy(() => import('@/pages/admin/SupportTicketsPage'));
+const BulkExportPage = lazy(() => import('@/pages/admin/BulkExportPage'));
+const UserManagementPage = lazy(() => import('@/pages/admin/UserManagementPage'));
+const AdminSystemRequestsPage = lazy(() => import('@/pages/admin/AdminSystemRequestsPage'));
+const AdminContractsPage = lazy(() => import('@/pages/admin/AdminContractsPage'));
+const SubscriptionManagementPage = lazy(() => import('@/pages/admin/SubscriptionManagementPage'));
 
 // PHASE 1 - PAGES CMS & MARKETING
-import AdminPagesList from '@/pages/admin/AdminPagesList';
-import AdminPageEditor from '@/pages/admin/AdminPageEditor';
-import AdminLeadsList from '@/pages/admin/AdminLeadsList';
-import AuthDebugPage from '@/pages/AuthDebugPage';
+const AdminPagesList = lazy(() => import('@/pages/admin/AdminPagesList'));
+const AdminPageEditor = lazy(() => import('@/pages/admin/AdminPageEditor'));
+const AdminLeadsList = lazy(() => import('@/pages/admin/AdminLeadsList'));
+const AuthDebugPage = lazy(() => import('@/pages/AuthDebugPage'));
 
 // Import des dashboards
-import ParticularDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
-import CompleteSidebarGeometreDashboard from '@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard';
-import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
-import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
-import CompleteSidebarAgentFoncierDashboard from '@/pages/dashboards/agent-foncier/CompleteSidebarAgentFoncierDashboard';
-import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
-import AdminReportsPage from '@/pages/admin/AdminReportsPage';
-import AdminLoginPage from '@/pages/AdminLoginPage';
-import AdminBlogPage from '@/pages/admin/AdminBlogPage';
-import AdminBlogFormPage from '@/pages/admin/AdminBlogFormPage';
-import AdminAuditLogPage from '@/pages/admin/AdminAuditLogPage';
-import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
-import AdminUserRequestsPage from '@/pages/admin/AdminUserRequestsPage';
-import AdminUserVerificationsPage from '@/pages/admin/AdminUserVerificationsPage';
-import AgentDashboardPage from '@/pages/agent/AgentDashboardPage';
-import AgentClientsPage from '@/pages/agent/AgentClientsPage';
-import AgentParcelsPage from '@/pages/agent/AgentParcelsPage';
-import AgentTasksPage from '@/pages/agent/AgentTasksPage';
-import SolutionsBanquesPage from '@/pages/solutions/SolutionsBanquesPage';
-import SolutionsNotairesPage from '@/pages/solutions/SolutionsNotairesPage';
-import SolutionsPromoteursPage from '@/pages/solutions/SolutionsPromoteursPage';
-import SolutionsInvestisseursPage from '@/pages/solutions/SolutionsInvestisseursPage';
-import SolutionsVendeursPage from '@/pages/solutions/SolutionsVendeursPage';
-import InvestmentsPage from '@/pages/dashboards/investisseur/InvestmentsPage';
-import DashboardMarketAnalysisPage from '@/pages/dashboards/investisseur/MarketAnalysisPage';
-import OpportunitiesPage from '@/pages/dashboards/investisseur/OpportunitiesPage';
-import RoiCalculatorPage from '@/pages/dashboards/investisseur/RoiCalculatorPage';
-import DueDiligencePage from '@/pages/dashboards/investisseur/DueDiligencePage';
-import ProjectsPage from '@/pages/dashboards/promoteur/ProjectsPage';
-import ConstructionTrackingPage from '@/pages/dashboards/promoteur/ConstructionTrackingPage';
-import SalesPage from '@/pages/dashboards/promoteur/SalesPage';
-import FundingRequestsPage from '@/pages/dashboards/banque/FundingRequestsPage';
-import GuaranteesPage from '@/pages/dashboards/banque/GuaranteesPage';
-import VendorVerificationPage from '@/pages/VendorVerificationPage';
-import LandValuationPage from '@/pages/dashboards/banque/LandValuationPage';
-import CompliancePage from '@/pages/dashboards/banque/CompliancePage';
-import CompleteSidebarMairieDashboard from '@/pages/dashboards/mairie/CompleteSidebarMairieDashboard';
-import CompleteSidebarBanqueDashboard from '@/pages/dashboards/banque/CompleteSidebarBanqueDashboard';
-import CompleteSidebarNotaireDashboard from '@/pages/dashboards/notaire/CompleteSidebarNotaireDashboard';
+const ParticularDashboard = lazy(() => import('@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard'));
+const CompleteSidebarGeometreDashboard = lazy(() => import('@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard'));
+const PromoteurDashboard = lazy(() => import('@/pages/dashboards/promoteur/PromoteurDashboard'));
+const MunicipaliteDashboard = lazy(() => import('@/pages/dashboards/MunicipaliteDashboard'));
+const CompleteSidebarAgentFoncierDashboard = lazy(() => import('@/pages/dashboards/agent-foncier/CompleteSidebarAgentFoncierDashboard'));
+const ModernMairieDashboard = lazy(() => import('@/pages/dashboards/ModernMairieDashboard'));
+const AdminReportsPage = lazy(() => import('@/pages/admin/AdminReportsPage'));
+const AdminLoginPage = lazy(() => import('@/pages/AdminLoginPage'));
+const AdminBlogPage = lazy(() => import('@/pages/admin/AdminBlogPage'));
+const AdminBlogFormPage = lazy(() => import('@/pages/admin/AdminBlogFormPage'));
+const AdminAuditLogPage = lazy(() => import('@/pages/admin/AdminAuditLogPage'));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage'));
+const AdminUserRequestsPage = lazy(() => import('@/pages/admin/AdminUserRequestsPage'));
+const AdminUserVerificationsPage = lazy(() => import('@/pages/admin/AdminUserVerificationsPage'));
+const AgentDashboardPage = lazy(() => import('@/pages/agent/AgentDashboardPage'));
+const AgentClientsPage = lazy(() => import('@/pages/agent/AgentClientsPage'));
+const AgentParcelsPage = lazy(() => import('@/pages/agent/AgentParcelsPage'));
+const AgentTasksPage = lazy(() => import('@/pages/agent/AgentTasksPage'));
+const SolutionsBanquesPage = lazy(() => import('@/pages/solutions/SolutionsBanquesPage'));
+const SolutionsNotairesPage = lazy(() => import('@/pages/solutions/SolutionsNotairesPage'));
+const SolutionsPromoteursPage = lazy(() => import('@/pages/solutions/SolutionsPromoteursPage'));
+const SolutionsInvestisseursPage = lazy(() => import('@/pages/solutions/SolutionsInvestisseursPage'));
+const SolutionsVendeursPage = lazy(() => import('@/pages/solutions/SolutionsVendeursPage'));
+const InvestmentsPage = lazy(() => import('@/pages/dashboards/investisseur/InvestmentsPage'));
+const DashboardMarketAnalysisPage = lazy(() => import('@/pages/dashboards/investisseur/MarketAnalysisPage'));
+const OpportunitiesPage = lazy(() => import('@/pages/dashboards/investisseur/OpportunitiesPage'));
+const RoiCalculatorPage = lazy(() => import('@/pages/dashboards/investisseur/RoiCalculatorPage'));
+const DueDiligencePage = lazy(() => import('@/pages/dashboards/investisseur/DueDiligencePage'));
+const ProjectsPage = lazy(() => import('@/pages/dashboards/promoteur/ProjectsPage'));
+const ConstructionTrackingPage = lazy(() => import('@/pages/dashboards/promoteur/ConstructionTrackingPage'));
+const SalesPage = lazy(() => import('@/pages/dashboards/promoteur/SalesPage'));
+const FundingRequestsPage = lazy(() => import('@/pages/dashboards/banque/FundingRequestsPage'));
+const GuaranteesPage = lazy(() => import('@/pages/dashboards/banque/GuaranteesPage'));
+const VendorVerificationPage = lazy(() => import('@/pages/VendorVerificationPage'));
+const LandValuationPage = lazy(() => import('@/pages/dashboards/banque/LandValuationPage'));
+const CompliancePage = lazy(() => import('@/pages/dashboards/banque/CompliancePage'));
+const CompleteSidebarMairieDashboard = lazy(() => import('@/pages/dashboards/mairie/CompleteSidebarMairieDashboard'));
+const CompleteSidebarBanqueDashboard = lazy(() => import('@/pages/dashboards/banque/CompleteSidebarBanqueDashboard'));
+const CompleteSidebarNotaireDashboard = lazy(() => import('@/pages/dashboards/notaire/CompleteSidebarNotaireDashboard'));
 // Modules Notaire modernisés avec données réelles Supabase
-import NotaireOverviewModernized from '@/pages/dashboards/notaire/NotaireOverviewModernized';
-import NotaireCRMModernized from '@/pages/dashboards/notaire/NotaireCRMModernized';
-import NotaireCommunicationModernized from '@/pages/dashboards/notaire/NotaireCommunicationModernized';
-import NotaireTransactionsModernized from '@/pages/dashboards/notaire/NotaireTransactionsModernized';
-import NotaireAuthenticationModernized from '@/pages/dashboards/notaire/NotaireAuthenticationModernized';
-import NotaireCasesModernized from '@/pages/dashboards/notaire/NotaireCasesModernized';
-import NotaireArchivesModernized from '@/pages/dashboards/notaire/NotaireArchivesModernized';
-import NotaireComplianceModernized from '@/pages/dashboards/notaire/NotaireComplianceModernized';
-import NotaireAnalyticsModernized from '@/pages/dashboards/notaire/NotaireAnalyticsModernized';
-import NotaireAIModernized from '@/pages/dashboards/notaire/NotaireAIModernized';
-import NotaireBlockchainModernized from '@/pages/dashboards/notaire/NotaireBlockchainModernized';
-import NotaireSettingsModernized from '@/pages/dashboards/notaire/NotaireSettingsModernized';
+const NotaireOverviewModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireOverviewModernized'));
+const NotaireCRMModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireCRMModernized'));
+const NotaireCommunicationModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireCommunicationModernized'));
+const NotaireTransactionsModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireTransactionsModernized'));
+const NotaireAuthenticationModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireAuthenticationModernized'));
+const NotaireCasesModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireCasesModernized'));
+const NotaireArchivesModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireArchivesModernized'));
+const NotaireComplianceModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireComplianceModernized'));
+const NotaireAnalyticsModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireAnalyticsModernized'));
+const NotaireAIModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireAIModernized'));
+const NotaireBlockchainModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireBlockchainModernized'));
+const NotaireSettingsModernized = lazy(() => import('@/pages/dashboards/notaire/NotaireSettingsModernized'));
 
 // Phase 2 - Pages Prioritaires (Sprint 5)
-import NotaireSupportPage from '@/pages/dashboards/notaire/NotaireSupportPage.jsx';
-import NotaireSubscriptionsPage from '@/pages/dashboards/notaire/NotaireSubscriptionsPage.jsx';
-import NotaireHelpPage from '@/pages/dashboards/notaire/NotaireHelpPage.jsx';
-import NotaireNotificationsPage from '@/pages/dashboards/notaire/NotaireNotificationsPage.jsx';
+const NotaireSupportPage = lazy(() => import('@/pages/dashboards/notaire/NotaireSupportPage.jsx'));
+const NotaireSubscriptionsPage = lazy(() => import('@/pages/dashboards/notaire/NotaireSubscriptionsPage.jsx'));
+const NotaireHelpPage = lazy(() => import('@/pages/dashboards/notaire/NotaireHelpPage.jsx'));
+const NotaireNotificationsPage = lazy(() => import('@/pages/dashboards/notaire/NotaireNotificationsPage.jsx'));
 
 // Phase 3 - Features Avancées
-import NotaireVisioPage from '@/pages/dashboards/notaire/NotaireVisioPage.jsx';
-import NotaireELearningPage from '@/pages/dashboards/notaire/NotaireELearningPage.jsx';
-import NotaireMarketplacePage from '@/pages/dashboards/notaire/NotaireMarketplacePage.jsx';
-import NotaireAPICadastrePage from '@/pages/dashboards/notaire/NotaireAPICadastrePage.jsx';
-import NotaireFinancialDashboardPage from '@/pages/dashboards/notaire/NotaireFinancialDashboardPage.jsx';
-import NotaireMultiOfficePage from '@/pages/dashboards/notaire/NotaireMultiOfficePage.jsx';
+const NotaireVisioPage = lazy(() => import('@/pages/dashboards/notaire/NotaireVisioPage.jsx'));
+const NotaireELearningPage = lazy(() => import('@/pages/dashboards/notaire/NotaireELearningPage.jsx'));
+const NotaireMarketplacePage = lazy(() => import('@/pages/dashboards/notaire/NotaireMarketplacePage.jsx'));
+const NotaireAPICadastrePage = lazy(() => import('@/pages/dashboards/notaire/NotaireAPICadastrePage.jsx'));
+const NotaireFinancialDashboardPage = lazy(() => import('@/pages/dashboards/notaire/NotaireFinancialDashboardPage.jsx'));
+const NotaireMultiOfficePage = lazy(() => import('@/pages/dashboards/notaire/NotaireMultiOfficePage.jsx'));
 
-import TerrainOversightPage from '@/pages/solutions/dashboards/mairies/TerrainOversightPage';
-import TerrainAnalyticsPage from '@/pages/solutions/dashboards/mairies/TerrainAnalyticsPage';
-import CasesPage from '@/pages/dashboards/notaire/CasesPage';
-import AuthenticationPage from '@/pages/dashboards/notaire/AuthenticationPage';
-import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
-import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
+const TerrainOversightPage = lazy(() => import('@/pages/solutions/dashboards/mairies/TerrainOversightPage'));
+const TerrainAnalyticsPage = lazy(() => import('@/pages/solutions/dashboards/mairies/TerrainAnalyticsPage'));
+const CasesPage = lazy(() => import('@/pages/dashboards/notaire/CasesPage'));
+const AuthenticationPage = lazy(() => import('@/pages/dashboards/notaire/AuthenticationPage'));
+const ArchivesPage = lazy(() => import('@/pages/dashboards/notaire/ArchivesPage'));
+const ComplianceCheckPage = lazy(() => import('@/pages/dashboards/notaire/ComplianceCheckPage'));
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 // import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import CompleteSidebarParticulierDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
+const CompleteSidebarParticulierDashboard = lazy(() => import('@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard'));
 
 // Nouvelles pages dashboard particulier refonte avec sidebar moderne
-import DashboardParticulierRefonte from '@/pages/dashboards/particulier/DashboardParticulierRefonte';
-import DashboardParticulierHome from '@/pages/dashboards/particulier/DashboardParticulierHome';
-import ParticulierTicketsSupport from '@/pages/dashboards/particulier/ParticulierTicketsSupport';
-import ParticulierAnalytics from '@/pages/dashboards/particulier/ParticulierAnalytics';
+const DashboardParticulierRefonte = lazy(() => import('@/pages/dashboards/particulier/DashboardParticulierRefonte'));
+const DashboardParticulierHome = lazy(() => import('@/pages/dashboards/particulier/DashboardParticulierHome'));
+const ParticulierTicketsSupport = lazy(() => import('@/pages/dashboards/particulier/ParticulierTicketsSupport'));
+const ParticulierAnalytics = lazy(() => import('@/pages/dashboards/particulier/ParticulierAnalytics'));
 
 // Sous-pages particulier refondues pour suivi administratif
-import ParticulierOverview from '@/pages/dashboards/particulier/ParticulierOverview_FIXED_ERRORS';
-import ParticulierRechercheTerrain from '@/pages/dashboards/particulier/ParticulierRechercheTerrain';
-import ParticulierMesOffres from '@/pages/dashboards/particulier/ParticulierMesOffres';
-import ParticulierMesAchats from '@/pages/dashboards/particulier/ParticulierMesAchats';
-import ParticulierVisites from '@/pages/dashboards/particulier/ParticulierVisites';
-import ParticulierFinancement from '@/pages/dashboards/particulier/ParticulierFinancement';
-import ParticulierZonesCommunales from '@/pages/dashboards/particulier/ParticulierZonesCommunales_FUNCTIONAL_FIXED';
-import ParticulierDemandesTerrains from '@/pages/dashboards/particulier/ParticulierDemandesTerrains';
-import ParticulierTerrainsPrive from '@/pages/dashboards/particulier/ParticulierTerrainsPrive';
-import ParticulierPromoteurs from '@/pages/dashboards/particulier/ParticulierPromoteurs';
-import ParticulierFavoris from '@/pages/dashboards/particulier/ParticulierFavoris';
-import ParticulierMessages from '@/pages/dashboards/particulier/ParticulierMessages';
-import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments_FUNCTIONAL';
-import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications_FUNCTIONAL';
-import ParticulierConstructions from '@/pages/dashboards/particulier/ParticulierConstructions';
-import ParticulierCalendar from '@/pages/dashboards/particulier/ParticulierCalendar';
-import ParticulierTickets from '@/pages/dashboards/particulier/ParticulierTickets';
-import ParticulierAI from '@/pages/dashboards/particulier/ParticulierAI';
-import ParticulierBlockchain from '@/pages/dashboards/particulier/ParticulierBlockchain';
-import ParticulierSettings from '@/pages/dashboards/particulier/ParticulierSettings_FUNCTIONAL';
+const ParticulierOverview = lazy(() => import('@/pages/dashboards/particulier/ParticulierOverview_FIXED_ERRORS'));
+const ParticulierRechercheTerrain = lazy(() => import('@/pages/dashboards/particulier/ParticulierRechercheTerrain'));
+const ParticulierMesOffres = lazy(() => import('@/pages/dashboards/particulier/ParticulierMesOffres'));
+const ParticulierMesAchats = lazy(() => import('@/pages/dashboards/particulier/ParticulierMesAchats'));
+const ParticulierVisites = lazy(() => import('@/pages/dashboards/particulier/ParticulierVisites'));
+const ParticulierFinancement = lazy(() => import('@/pages/dashboards/particulier/ParticulierFinancement'));
+const ParticulierZonesCommunales = lazy(() => import('@/pages/dashboards/particulier/ParticulierZonesCommunales_FUNCTIONAL_FIXED'));
+const ParticulierDemandesTerrains = lazy(() => import('@/pages/dashboards/particulier/ParticulierDemandesTerrains'));
+const ParticulierTerrainsPrive = lazy(() => import('@/pages/dashboards/particulier/ParticulierTerrainsPrive'));
+const ParticulierPromoteurs = lazy(() => import('@/pages/dashboards/particulier/ParticulierPromoteurs'));
+const ParticulierFavoris = lazy(() => import('@/pages/dashboards/particulier/ParticulierFavoris'));
+const ParticulierMessages = lazy(() => import('@/pages/dashboards/particulier/ParticulierMessages'));
+const ParticulierDocuments = lazy(() => import('@/pages/dashboards/particulier/ParticulierDocuments_FUNCTIONAL'));
+const ParticulierNotifications = lazy(() => import('@/pages/dashboards/particulier/ParticulierNotifications_FUNCTIONAL'));
+const ParticulierConstructions = lazy(() => import('@/pages/dashboards/particulier/ParticulierConstructions'));
+const ParticulierCalendar = lazy(() => import('@/pages/dashboards/particulier/ParticulierCalendar'));
+const ParticulierTickets = lazy(() => import('@/pages/dashboards/particulier/ParticulierTickets'));
+const ParticulierAI = lazy(() => import('@/pages/dashboards/particulier/ParticulierAI'));
+const ParticulierBlockchain = lazy(() => import('@/pages/dashboards/particulier/ParticulierBlockchain'));
+const ParticulierSettings = lazy(() => import('@/pages/dashboards/particulier/ParticulierSettings_FUNCTIONAL'));
 
-import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
-import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
-import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
+const ModernVendeurDashboard = lazy(() => import('@/pages/dashboards/vendeur/ModernVendeurDashboard'));
+const CompleteSidebarVendeurDashboard = lazy(() => import('@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard'));
+const VendeurDashboard = lazy(() => import('@/pages/dashboards/vendeur/VendeurDashboard'));
 
 // Imports pages vendeur RealData
-import VendeurOverviewRealDataModern from '@/pages/dashboards/vendeur/VendeurOverviewRealDataModern';
-import VendeurCRMModernized from '@/pages/dashboards/vendeur/VendeurCRMModernized';
-import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropertiesRealData';
-import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
-import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
-import ParticulierCaseTracking from '@/pages/dashboards/particulier/ParticulierCaseTracking';
-import RefactoredParticulierCaseTracking from '@/pages/dashboards/particulier/RefactoredParticulierCaseTracking';
-import RefactoredVendeurCaseTracking from '@/pages/dashboards/vendeur/RefactoredVendeurCaseTracking';
-import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
-import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
-import VendeurServicesDigitauxRealData from '@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData';
-import VendeurAddTerrainRealData from '@/pages/dashboards/vendeur/VendeurAddTerrainRealData';
-import VendeurPhotosRealData from '@/pages/dashboards/vendeur/VendeurPhotosRealData';
-import VendeurAnalyticsRealData from '@/pages/dashboards/vendeur/VendeurAnalyticsRealData';
-import VendeurAIRealData from '@/pages/dashboards/vendeur/VendeurAIRealData';
-import VendeurBlockchainRealData from '@/pages/dashboards/vendeur/VendeurBlockchainRealData';
-import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesRealData';
-import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
-import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
-import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
-import { HelmetProvider } from 'react-helmet-async';
-import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardPage';
-import InvestisseursDashboardPage from '@/pages/solutions/dashboards/InvestisseursDashboardPage';
-import PromoteursDashboardPage from '@/pages/solutions/dashboards/PromoteursDashboardPage';
-import MairiesDashboardPage from '@/pages/solutions/dashboards/MairiesDashboardPage';
-import NotairesDashboardPage from '@/pages/solutions/dashboards/NotairesDashboardPage';
-import AccessDeniedPage from '@/components/AccessDeniedPage';
-import SecurityDiagnosticTool from '@/components/SecurityDiagnosticTool';
-import NotFoundPage from '@/pages/NotFoundPage';
-import PricingPage from '@/pages/PricingPage';
-import GlossaryPage from '@/pages/GlossaryPage';
-import TaxGuidePage from '@/pages/TaxGuidePage';
-import BannedPage from '@/pages/BannedPage';
-import DebugRole from '@/pages/DebugRole';
-import DiagnosticVendorProfilePage from '@/pages/DiagnosticVendorProfilePage';
-import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
-import CaseTrackingPage from '@/pages/CaseTrackingPage';
-import DigitalVaultPage from '@/pages/DigitalVaultPage';
-import TransactionsPage from '@/pages/TransactionsPage';
-import VendeurDashboardPage from '@/pages/solutions/dashboards/VendeurDashboardPage';
-import PaymentPage from '@/pages/PaymentPage';
-import VerificationPage from '@/pages/VerificationPage';
+const VendeurOverviewRealDataModern = lazy(() => import('@/pages/dashboards/vendeur/VendeurOverviewRealDataModern'));
+const VendeurCRMModernized = lazy(() => import('@/pages/dashboards/vendeur/VendeurCRMModernized'));
+const VendeurPropertiesRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurPropertiesRealData'));
+const VendeurPurchaseRequests = lazy(() => import('@/pages/dashboards/vendeur/VendeurPurchaseRequests'));
+const VendeurCaseTracking = lazy(() => import('@/pages/dashboards/vendeur/VendeurCaseTracking'));
+const ParticulierCaseTracking = lazy(() => import('@/pages/dashboards/particulier/ParticulierCaseTracking'));
+const RefactoredParticulierCaseTracking = lazy(() => import('@/pages/dashboards/particulier/RefactoredParticulierCaseTracking'));
+const RefactoredVendeurCaseTracking = lazy(() => import('@/pages/dashboards/vendeur/RefactoredVendeurCaseTracking'));
+const VendeurAntiFraudeRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurAntiFraudeRealData'));
+const VendeurGPSRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurGPSRealData'));
+const VendeurServicesDigitauxRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData'));
+const VendeurAddTerrainRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurAddTerrainRealData'));
+const VendeurPhotosRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurPhotosRealData'));
+const VendeurAnalyticsRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurAnalyticsRealData'));
+const VendeurAIRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurAIRealData'));
+const VendeurBlockchainRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurBlockchainRealData'));
+const VendeurMessagesRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurMessagesRealData'));
+const VendeurSettingsRealData = lazy(() => import('@/pages/dashboards/vendeur/VendeurSettingsRealData'));
+const VendeurSupport = lazy(() => import('@/pages/dashboards/vendeur/VendeurSupport'));
+const CompleteSidebarInvestisseurDashboard = lazy(() => import('@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard'));
+const BanquesDashboardPage = lazy(() => import('@/pages/solutions/dashboards/BanquesDashboardPage'));
+const InvestisseursDashboardPage = lazy(() => import('@/pages/solutions/dashboards/InvestisseursDashboardPage'));
+const PromoteursDashboardPage = lazy(() => import('@/pages/solutions/dashboards/PromoteursDashboardPage'));
+const MairiesDashboardPage = lazy(() => import('@/pages/solutions/dashboards/MairiesDashboardPage'));
+const NotairesDashboardPage = lazy(() => import('@/pages/solutions/dashboards/NotairesDashboardPage'));
+const SecurityDiagnosticTool = lazy(() => import('@/components/SecurityDiagnosticTool'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+const PricingPage = lazy(() => import('@/pages/PricingPage'));
+const GlossaryPage = lazy(() => import('@/pages/GlossaryPage'));
+const TaxGuidePage = lazy(() => import('@/pages/TaxGuidePage'));
+const BannedPage = lazy(() => import('@/pages/BannedPage'));
+const DebugRole = lazy(() => import('@/pages/DebugRole'));
+const DiagnosticVendorProfilePage = lazy(() => import('@/pages/DiagnosticVendorProfilePage'));
+const CaseTrackingPage = lazy(() => import('@/pages/CaseTrackingPage'));
+const DigitalVaultPage = lazy(() => import('@/pages/DigitalVaultPage'));
+const TransactionsPage = lazy(() => import('@/pages/TransactionsPage'));
+const VendeurDashboardPage = lazy(() => import('@/pages/solutions/dashboards/VendeurDashboardPage'));
+const PaymentPage = lazy(() => import('@/pages/PaymentPage'));
+const VerificationPage = lazy(() => import('@/pages/VerificationPage'));
 
 // ===== PAGES IA AUTONOME =====
-import AIAssistedTerrainConfigPage from '@/pages/AIAssistedTerrainConfigPage';
-import AutonomousAIDashboard from '@/pages/AutonomousAIDashboard';
-import PendingVerificationPage from '@/pages/PendingVerificationPage';
-import MunicipalLandInfoPage from '@/pages/MunicipalLandInfoPage';
-import AddParcelPage from '@/pages/AddParcelPage';
-import ParcelDetailPage from '@/pages/ParcelDetailPage';
+const AIAssistedTerrainConfigPage = lazy(() => import('@/pages/AIAssistedTerrainConfigPage'));
+const AutonomousAIDashboard = lazy(() => import('@/pages/AutonomousAIDashboard'));
+const PendingVerificationPage = lazy(() => import('@/pages/PendingVerificationPage'));
+const MunicipalLandInfoPage = lazy(() => import('@/pages/MunicipalLandInfoPage'));
+const AddParcelPage = lazy(() => import('@/pages/AddParcelPage'));
+const ParcelDetailPage = lazy(() => import('@/pages/ParcelDetailPage'));
 
-import CheckoutPage from '@/pages/CheckoutPage';
-import AnalyticsPage from '@/pages/AnalyticsPage';
-import MairiePage from '@/pages/MairiePage';
-import RegionInvestmentPage from '@/pages/RegionInvestmentPage';
-import SolutionsAgriculteursPage from '@/pages/solutions/SolutionsAgriculteursPage';
-import BecomeSellerPage from '@/pages/BecomeSellerPage';
-import DiasporaPage from '@/pages/DiasporaPage';
-import BanquesPage from '@/pages/BanquesPage';
-import NotairesPage from '@/pages/NotairesPage';
-import VendeursPage from '@/pages/VendeursPage';
-import PromoteursPage from '@/pages/PromoteursPage';
-import RejoignezNousPage from '@/pages/RejoignezNousPage';
-import SolutionsPage from '@/pages/SolutionsPage';
-import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
+const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'));
+const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'));
+const MairiePage = lazy(() => import('@/pages/MairiePage'));
+const RegionInvestmentPage = lazy(() => import('@/pages/RegionInvestmentPage'));
+const SolutionsAgriculteursPage = lazy(() => import('@/pages/solutions/SolutionsAgriculteursPage'));
+const BecomeSellerPage = lazy(() => import('@/pages/BecomeSellerPage'));
+const DiasporaPage = lazy(() => import('@/pages/DiasporaPage'));
+const BanquesPage = lazy(() => import('@/pages/BanquesPage'));
+const NotairesPage = lazy(() => import('@/pages/NotairesPage'));
+const VendeursPage = lazy(() => import('@/pages/VendeursPage'));
+const PromoteursPage = lazy(() => import('@/pages/PromoteursPage'));
+const RejoignezNousPage = lazy(() => import('@/pages/RejoignezNousPage'));
+const SolutionsPage = lazy(() => import('@/pages/SolutionsPage'));
+const SolutionsParticuliersPage = lazy(() => import('@/pages/solutions/SolutionsParticuliersPage'));
 
-import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPage';
-import InstallmentsPaymentPage from '@/pages/buy/InstallmentsPaymentPage';
-import BankFinancingPage from '@/pages/buy/BankFinancingPage';
-import BuyerBlockchainDashboard from '@/pages/dashboards/blockchain/BuyerBlockchainDashboard';
-import BuyerFinancingDashboard from '@/pages/buyer/BuyerFinancingDashboard';
-import PurchaseUnitsPage from '@/pages/promoters/PurchaseUnitsPage';
-import PaymentPlansPage from '@/pages/promoters/PaymentPlansPage';
+const OneTimePaymentPage = lazy(() => import('@/pages/buy/OneTimePaymentPage'));
+const InstallmentsPaymentPage = lazy(() => import('@/pages/buy/InstallmentsPaymentPage'));
+const BankFinancingPage = lazy(() => import('@/pages/buy/BankFinancingPage'));
+const BuyerBlockchainDashboard = lazy(() => import('@/pages/dashboards/blockchain/BuyerBlockchainDashboard'));
+const BuyerFinancingDashboard = lazy(() => import('@/pages/buyer/BuyerFinancingDashboard'));
+const PurchaseUnitsPage = lazy(() => import('@/pages/promoters/PurchaseUnitsPage'));
+const PaymentPlansPage = lazy(() => import('@/pages/promoters/PaymentPlansPage'));
+
+// Écran d'attente pendant le chargement à la demande d'une page
+const RouteFallback = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+  </div>
+);
 
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -386,6 +392,7 @@ function App() {
                   <AIProvider>
             <ScrollToTop />
             <TitleUpdater />
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
@@ -868,7 +875,8 @@ function App() {
 
             <Route path="/access-denied" element={<AccessDeniedPage />} />
             <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+            </Routes>
+            </Suspense>
           <Toaster />
           <ToastProvider />
           

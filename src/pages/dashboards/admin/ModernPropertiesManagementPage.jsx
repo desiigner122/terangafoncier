@@ -140,19 +140,15 @@ const ModernPropertiesManagementPage = () => {
       const nftReady = {};
       
       propertiesData.forEach(property => {
-        // Score IA d'évaluation (0-100)
-        const aiScore = Math.floor(Math.random() * 30) + 70; // Score élevé (70-100)
-        
-        // Évaluation IA du prix
-        const marketValue = property.price * (0.9 + Math.random() * 0.2); // ±10%
-        
-        // Préparation NFT
-        const nftScore = Math.floor(Math.random() * 40) + 60; // 60-100%
+        // Aucune valeur inventée : on reprend ce que la base connaît réellement.
+        const aiScore = property.ai_score ?? null;
+        const marketValue = property.market_value ?? property.price;
+        const nftScore = property.nft_readiness ?? 0;
         
         valuations[property.id] = {
           aiScore,
           marketValue,
-          priceAccuracy: aiScore > 80 ? 'Excellent' : aiScore > 65 ? 'Bon' : 'Moyen',
+          priceAccuracy: aiScore == null ? 'Non évalué' : aiScore > 80 ? 'Excellent' : aiScore > 65 ? 'Bon' : 'Moyen',
           lastUpdated: new Date()
         };
 
@@ -178,11 +174,12 @@ const ModernPropertiesManagementPage = () => {
       
       propertiesData.forEach(property => {
         status[property.id] = {
-          onBlockchain: Math.random() > 0.7, // 30% sur blockchain
-          transactionHash: Math.random() > 0.5 ? `0x${Math.random().toString(16).substr(2, 40)}` : null,
-          smartContractAddress: Math.random() > 0.6 ? `0x${Math.random().toString(16).substr(2, 40)}` : null,
-          nftMinted: Math.random() > 0.8,
-          tokenId: Math.random() > 0.8 ? Math.floor(Math.random() * 10000) : null
+          // Statut réel uniquement (colonnes blockchain de la propriété si elles existent)
+          onBlockchain: Boolean(property.blockchain_hash || property.transaction_hash),
+          transactionHash: property.transaction_hash || property.blockchain_hash || null,
+          smartContractAddress: property.smart_contract_address || null,
+          nftMinted: Boolean(property.nft_token_id),
+          tokenId: property.nft_token_id || null
         };
       });
       

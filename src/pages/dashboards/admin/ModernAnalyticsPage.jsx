@@ -168,8 +168,9 @@ const ModernAnalyticsPage = () => {
       return {
         date: date.toISOString().split('T')[0],
         day: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
-        transactions: Math.floor(Math.random() * (transactionData?.dailyAverage || 10)) + 1,
-        revenue: Math.floor(Math.random() * (transactionData?.dailyRevenue || 1000000)) + 100000
+        // Valeurs réelles par jour si fournies, sinon 0 (pas de chiffres inventés)
+        transactions: transactionData?.daily?.[date.toISOString().split('T')[0]]?.count || 0,
+        revenue: transactionData?.daily?.[date.toISOString().split('T')[0]]?.revenue || 0
       };
     });
     return last30Days;
@@ -181,9 +182,9 @@ const ModernAnalyticsPage = () => {
       date.setMonth(date.getMonth() - (11 - i));
       return {
         month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-        nouveaux: Math.floor(Math.random() * (userData?.monthlyGrowth || 50)) + 10,
-        actifs: Math.floor(Math.random() * (userData?.activeUsers || 200)) + 50,
-        total: (userData?.totalUsers || 100) + (i * 20)
+        nouveaux: userData?.monthly?.[i]?.nouveaux || 0,
+        actifs: userData?.monthly?.[i]?.actifs || 0,
+        total: userData?.monthly?.[i]?.total || userData?.totalUsers || 0
       };
     });
     return last12Months;
@@ -211,9 +212,9 @@ const ModernAnalyticsPage = () => {
       date.setMonth(date.getMonth() - (5 - i));
       return {
         month: date.toLocaleDateString('fr-FR', { month: 'long' }),
-        revenue: (transactionData?.monthlyRevenue || 5000000) * (0.7 + Math.random() * 0.6),
-        transactions: Math.floor((transactionData?.monthlyTransactions || 100) * (0.7 + Math.random() * 0.6)),
-        growth: (Math.random() - 0.5) * 20
+        revenue: transactionData?.months?.[i]?.revenue || 0,
+        transactions: transactionData?.months?.[i]?.transactions || 0,
+        growth: transactionData?.months?.[i]?.growth || 0
       };
     });
     return last6Months;
@@ -221,10 +222,10 @@ const ModernAnalyticsPage = () => {
 
   const generateGrowthMetrics = (dashboardData) => {
     return {
-      userGrowth: dashboardData?.userGrowth || (Math.random() * 30 + 5),
-      revenueGrowth: dashboardData?.revenueGrowth || (Math.random() * 40 + 10),
-      transactionGrowth: dashboardData?.transactionGrowth || (Math.random() * 25 + 8),
-      propertyGrowth: dashboardData?.propertyGrowth || (Math.random() * 20 + 5)
+      userGrowth: dashboardData?.userGrowth || 0,
+      revenueGrowth: dashboardData?.revenueGrowth || 0,
+      transactionGrowth: dashboardData?.transactionGrowth || 0,
+      propertyGrowth: dashboardData?.propertyGrowth || 0
     };
   };
 
@@ -273,8 +274,9 @@ const ModernAnalyticsPage = () => {
         nextMonthRevenue: data.overview.totalRevenue * 1.15,
         nextMonthUsers: data.overview.totalUsers * 1.08,
         nextMonthTransactions: data.overview.totalTransactions * 1.12,
-        riskScore: Math.floor(Math.random() * 30) + 10,
-        opportunityScore: Math.floor(Math.random() * 40) + 60
+        // Pas de score inventé : 0 tant qu'aucun modèle réel ne les calcule
+        riskScore: 0,
+        opportunityScore: 0
       });
 
     } catch (error) {

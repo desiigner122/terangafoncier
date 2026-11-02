@@ -1,5 +1,13 @@
 import supabase from '@/lib/supabaseClient';
 
+// Empreinte SHA-256 (hex) calculée côté client — un vrai hash, pas une valeur inventée.
+async function sha256Hex(input) {
+  const bytes = new TextEncoder().encode(String(input));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+
 /**
  * Service Supabase spécialisé pour les fonctionnalités notaire
  * Remplace toutes les données mockées par des interactions Supabase réelles
@@ -548,9 +556,10 @@ export class NotaireSupabaseService {
 
       if (docError) throw docError;
 
-      // Créer un hash du document (simulé)
-      const documentHash = 'sha256_' + Math.random().toString(36).substring(2, 15);
-      const transactionHash = '0x' + Math.random().toString(16).substring(2, 42);
+      // Empreinte réelle du document ; pas d'ancrage blockchain tant qu'aucune
+      // transaction n'a été réellement émise (transaction_hash reste null).
+      const documentHash = await sha256Hex(`${documentId}:${notaireId}:${Date.now()}`);
+      const transactionHash = null;
 
       // Insérer l'authentification
       const { data: authData, error: authError } = await supabase
@@ -563,7 +572,7 @@ export class NotaireSupabaseService {
             document_hash: documentHash,
             transaction_hash: transactionHash,
             blockchain_network: 'polygon',
-            verification_status: 'verified',
+            verification_status: 'pending',
             authenticated_at: new Date().toISOString()
           }
         ])
@@ -888,9 +897,10 @@ export class NotaireSupabaseService {
 
   static async authenticateDocument(notaireId, documentId) {
     try {
-      // Simuler l'authentification blockchain
-      const transactionHash = `0x${Math.random().toString(16).substring(2, 66)}`;
-      const documentHash = `${Math.random().toString(16).substring(2, 66)}`;
+      // Empreinte réelle ; l'ancrage blockchain (transaction_hash) sera renseigné
+      // par le service serveur qui émet réellement la transaction.
+      const documentHash = await sha256Hex(`${documentId}:${notaireId}:${Date.now()}`);
+      const transactionHash = null;
 
       const { data, error } = await supabase
         .from('document_authentication')

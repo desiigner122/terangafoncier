@@ -134,9 +134,9 @@ const ModernVendeurDashboard = () => {
       id: `TX${Date.now()}`,
       propertyId: property.id,
       type: 'verification',
-      status: 'confirmed',
-      blockHeight: Math.floor(Math.random() * 100000),
-      hash: `0x${Math.random().toString(16).slice(2, 18)}`,
+      status: 'simulation', // aucune transaction réelle n'est émise
+      blockHeight: null,
+      hash: null,
       timestamp: new Date().toISOString()
     };
     setBlockchainTransactions(prev => [transaction, ...prev]);
@@ -149,10 +149,10 @@ const ModernVendeurDashboard = () => {
       id: `SC${Date.now()}`,
       propertyId: property.id,
       type: 'sale_contract',
-      status: 'deployed',
-      address: `0x${Math.random().toString(16).slice(2, 42)}`,
+      status: 'simulation', // aucun contrat réel n'est déployé
+      address: null,
       network: 'TerangaChain',
-      gasUsed: Math.floor(Math.random() * 50000),
+      gasUsed: null,
       timestamp: new Date().toISOString()
     };
     setBlockchainTransactions(prev => [contract, ...prev]);
@@ -222,8 +222,8 @@ const ModernVendeurDashboard = () => {
         id: `TX${Date.now()}`,
         propertyId: property.id,
         type: 'property_deleted',
-        status: 'confirmed',
-        hash: `0x${Math.random().toString(16).slice(2, 18)}`,
+        status: 'simulation',
+        hash: null,
         timestamp: new Date().toISOString()
       };
       setBlockchainTransactions(prev => [transaction, ...prev]);
@@ -262,16 +262,17 @@ const ModernVendeurDashboard = () => {
     // Simuler analyse IA complète
     const analysis = {
       property: property,
-      score: 92 + Math.floor(Math.random() * 8),
+      // Sans modèle IA branché, on n'invente ni score ni tendance.
+      score: null,
       pricing: {
         current: property.price,
-        recommended: property.price * (0.95 + Math.random() * 0.1),
-        confidence: 85 + Math.floor(Math.random() * 10)
+        recommended: property.price,
+        confidence: null
       },
       market: {
-        demand: ['Élevé', 'Moyen', 'Faible'][Math.floor(Math.random() * 3)],
-        competition: Math.floor(Math.random() * 20) + 10,
-        averageSaleTime: Math.floor(Math.random() * 60) + 30
+        demand: 'Indéterminé',
+        competition: null,
+        averageSaleTime: null
       },
       recommendations: [
         'Ajoutez plus de photos haute qualité',
@@ -287,9 +288,9 @@ const ModernVendeurDashboard = () => {
     const recommendations = dashboardData.properties.map(p => ({
       property: p,
       currentPrice: p.price,
-      recommendedPrice: Math.floor(p.price * (0.95 + Math.random() * 0.1)),
-      expectedIncrease: Math.floor(Math.random() * 15) + 5,
-      confidence: 80 + Math.floor(Math.random() * 15)
+      recommendedPrice: p.price,
+      expectedIncrease: 0,
+      confidence: null
     }));
     setPriceOptimizationModal({ open: true, recommendations });
   };
@@ -301,12 +302,12 @@ const ModernVendeurDashboard = () => {
   const handleBlockchainStatus = (property) => {
     // Simuler statut blockchain
     const status = {
-      verified: property.blockchainVerified || Math.random() > 0.3,
-      transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
-      blockNumber: Math.floor(Math.random() * 1000000),
+      verified: Boolean(property.blockchainVerified || property.transaction_hash),
+      transactionHash: property.transaction_hash || property.blockchain_hash || null,
+      blockNumber: property.block_number || null,
       timestamp: new Date().toISOString(),
       network: 'TerangaChain',
-      confirmations: Math.floor(Math.random() * 50) + 10
+      confirmations: property.confirmations ?? 0
     };
     setBlockchainStatusModal({ open: true, property, status });
   };
@@ -415,11 +416,12 @@ const ModernVendeurDashboard = () => {
     
     try {
       const blockchainData = {
-        transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
-        blockNumber: Math.floor(Math.random() * 1000000),
+        // Seules les données réellement connues figurent sur le certificat
+        transactionHash: targetProperty.transaction_hash || targetProperty.blockchain_hash || null,
+        blockNumber: targetProperty.block_number || null,
         network: 'TerangaChain',
-        confirmations: Math.floor(Math.random() * 50) + 10,
-        verified: true
+        confirmations: targetProperty.confirmations ?? null,
+        verified: Boolean(targetProperty.transaction_hash || targetProperty.blockchain_hash)
       };
 
       await pdfGenerator.generateBlockchainCertificate(targetProperty, blockchainData);

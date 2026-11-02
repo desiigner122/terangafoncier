@@ -68,11 +68,13 @@ const AIAnalysisModal = ({ open, onOpenChange, property, analysis }) => {
         <div className="space-y-6">
           {/* Score Global */}
           <div className="text-center p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-            <div className={`text-6xl font-bold mb-2 ${getScoreColor(analysis.score)}`}>
-              {analysis.score}
+            <div className={`text-6xl font-bold mb-2 ${getScoreColor(analysis.score ?? 0)}`}>
+              {analysis.score ?? '—'}
             </div>
-            <p className="text-gray-600 font-medium">Score IA Global</p>
-            <Progress value={analysis.score} className="h-2 mt-3" />
+            <p className="text-gray-600 font-medium">
+              {analysis.score == null ? 'Score IA non disponible (modèle non connecté)' : 'Score IA Global'}
+            </p>
+            <Progress value={analysis.score ?? 0} className="h-2 mt-3" />
           </div>
 
           {/* Optimisation Prix */}
@@ -95,7 +97,7 @@ const AIAnalysisModal = ({ open, onOpenChange, property, analysis }) => {
             </div>
             <div className="flex items-center justify-between bg-blue-50 p-3 rounded">
               <span className="text-sm font-medium">Confiance IA</span>
-              <Badge className="bg-blue-600">{analysis.pricing.confidence}%</Badge>
+              <Badge className="bg-blue-600">{analysis.pricing.confidence == null ? '—' : `${analysis.pricing.confidence}%`}</Badge>
             </div>
           </div>
 
@@ -115,13 +117,13 @@ const AIAnalysisModal = ({ open, onOpenChange, property, analysis }) => {
               <div className="text-center p-3 bg-gray-50 rounded">
                 <p className="text-sm text-gray-600 mb-1">Concurrence</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {analysis.market.competition}
+                  {analysis.market.competition ?? '—'}
                 </p>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded">
                 <p className="text-sm text-gray-600 mb-1">Délai Vente</p>
                 <p className="text-xl font-bold text-gray-900">
-                  {analysis.market.averageSaleTime}j
+                  {analysis.market.averageSaleTime == null ? '—' : `${analysis.market.averageSaleTime}j`}
                 </p>
               </div>
             </div>

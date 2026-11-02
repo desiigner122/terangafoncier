@@ -144,8 +144,8 @@ class TerangaBlockchainService {
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       
       // Initialize provider and signer
-      this.provider = new ethers.providers.Web3Provider(window.ethereum);
-      this.signer = this.provider.getSigner();
+      this.provider = new ethers.BrowserProvider(window.ethereum);
+      this.signer = await this.provider.getSigner();
 
       // Check current network
       const network = await this.provider.getNetwork();
@@ -270,7 +270,7 @@ class TerangaBlockchainService {
 
     // Property events
     this.contracts.property.on('PropertyCreated', (tokenId, owner, title, price) => {
-      console.log('🏠 New property created:', { tokenId: tokenId.toString(), owner, title, price: ethers.utils.formatEther(price) });
+      console.log('🏠 New property created:', { tokenId: tokenId.toString(), owner, title, price: ethers.formatEther(price) });
       toast.success(`Propriété "${title}" créée avec succès!`);
     });
 
@@ -281,24 +281,24 @@ class TerangaBlockchainService {
 
     // Token events
     this.contracts.token.on('Transfer', (from, to, amount) => {
-      console.log('💰 Token transfer:', { from, to, amount: ethers.utils.formatEther(amount) });
+      console.log('💰 Token transfer:', { from, to, amount: ethers.formatEther(amount) });
     });
 
     // Marketplace events
     this.contracts.marketplace.on('PropertyListed', (listingId, tokenId, seller, price) => {
-      console.log('🏪 Property listed:', { listingId: listingId.toString(), tokenId: tokenId.toString(), seller, price: ethers.utils.formatEther(price) });
+      console.log('🏪 Property listed:', { listingId: listingId.toString(), tokenId: tokenId.toString(), seller, price: ethers.formatEther(price) });
       toast.success('Propriété mise en vente!');
     });
 
     this.contracts.marketplace.on('PropertySold', (listingId, tokenId, buyer, price) => {
-      console.log('🎉 Property sold:', { listingId: listingId.toString(), tokenId: tokenId.toString(), buyer, price: ethers.utils.formatEther(price) });
+      console.log('🎉 Property sold:', { listingId: listingId.toString(), tokenId: tokenId.toString(), buyer, price: ethers.formatEther(price) });
       toast.success('Propriété vendue avec succès!');
     });
 
     // Escrow deposit event if available
     try {
       this.contracts.marketplace.on('EscrowDeposited', (payer, amount, reference) => {
-        console.log('💼 Escrow deposit:', { payer, amount: ethers.utils.formatEther(amount), reference });
+        console.log('💼 Escrow deposit:', { payer, amount: ethers.formatEther(amount), reference });
         toast.success('Dépôt d\'escrow confirmé');
       });
     } catch (e) {
@@ -314,7 +314,7 @@ class TerangaBlockchainService {
       }
 
       const { title, description, price, location, imageHash } = propertyData;
-      const priceInWei = ethers.utils.parseEther(price.toString());
+      const priceInWei = ethers.parseEther(price.toString());
 
       const tx = await this.contracts.property.createProperty(
         title,
@@ -351,7 +351,7 @@ class TerangaBlockchainService {
       return {
         title: property.title,
         description: property.description,
-        price: ethers.utils.formatEther(property.price),
+        price: ethers.formatEther(property.price),
         location: property.location,
         imageHash: property.imageHash,
         owner: property.owner,
@@ -400,7 +400,7 @@ class TerangaBlockchainService {
   async getTokenBalance(address) {
     try {
       const balance = await this.contracts.token.balanceOf(address);
-      return ethers.utils.formatEther(balance);
+      return ethers.formatEther(balance);
     } catch (error) {
       console.error('❌ Get token balance failed:', error);
       throw error;
@@ -409,7 +409,7 @@ class TerangaBlockchainService {
 
   async transferTokens(to, amount) {
     try {
-      const amountInWei = ethers.utils.parseEther(amount.toString());
+      const amountInWei = ethers.parseEther(amount.toString());
       const tx = await this.contracts.token.transfer(to, amountInWei);
       
       toast.loading('Transfert en cours...', { id: 'transfer-tokens' });
@@ -426,7 +426,7 @@ class TerangaBlockchainService {
 
   async stakeTokens(amount) {
     try {
-      const amountInWei = ethers.utils.parseEther(amount.toString());
+      const amountInWei = ethers.parseEther(amount.toString());
       
       // Approve staking contract first
       const approveTx = await this.contracts.token.approve(
@@ -460,9 +460,9 @@ class TerangaBlockchainService {
       ]);
 
       return {
-        stakedAmount: ethers.utils.formatEther(stakedAmount),
-        pendingRewards: ethers.utils.formatEther(pendingRewards),
-        totalStaked: ethers.utils.formatEther(totalStaked),
+        stakedAmount: ethers.formatEther(stakedAmount),
+        pendingRewards: ethers.formatEther(pendingRewards),
+        totalStaked: ethers.formatEther(totalStaked),
         apy: apy.toNumber() / 100 // Convert from basis points
       };
     } catch (error) {
@@ -482,7 +482,7 @@ class TerangaBlockchainService {
       await approveTx.wait();
 
       // List property
-      const priceInWei = ethers.utils.parseEther(price.toString());
+      const priceInWei = ethers.parseEther(price.toString());
       const listTx = await this.contracts.marketplace.listProperty(tokenId, priceInWei);
       
       toast.loading('Mise en vente...', { id: 'list-property' });
@@ -499,7 +499,7 @@ class TerangaBlockchainService {
 
   async buyProperty(listingId, price) {
     try {
-      const priceInWei = ethers.utils.parseEther(price.toString());
+      const priceInWei = ethers.parseEther(price.toString());
       const tx = await this.contracts.marketplace.buyProperty(listingId, {
         value: priceInWei
       });
@@ -528,7 +528,7 @@ class TerangaBlockchainService {
             listingId: listingId.toString(),
             tokenId: listing.tokenId.toString(),
             seller: listing.seller,
-            price: ethers.utils.formatEther(listing.price),
+            price: ethers.formatEther(listing.price),
             isActive: listing.isActive,
             createdAt: new Date(listing.createdAt.toNumber() * 1000),
             property
@@ -582,11 +582,11 @@ class TerangaBlockchainService {
       if (!this.isInitialized) {
         await this.initialize();
       }
-      const valueWei = ethers.utils.parseEther(amount.toString());
+      const valueWei = ethers.parseEther(amount.toString());
       const marketplaceAddr = this.networks[this.currentNetwork].contracts.terangaMarketplace;
       let tx;
       if (this.contracts.marketplace?.depositEscrow) {
-        const refBytes32 = ethers.utils.id(String(reference ?? ''));
+        const refBytes32 = ethers.id(String(reference ?? ''));
         tx = await this.contracts.marketplace.depositEscrow(refBytes32, { value: valueWei });
       } else {
         tx = await this.signer.sendTransaction({ to: marketplaceAddr, value: valueWei });
@@ -677,8 +677,8 @@ class TerangaBlockchainService {
 
   async getGasPrice() {
     try {
-      const gasPrice = await this.provider.getGasPrice();
-      return ethers.utils.formatUnits(gasPrice, 'gwei');
+      const { gasPrice } = await this.provider.getFeeData();
+      return gasPrice == null ? null : ethers.formatUnits(gasPrice, 'gwei');
     } catch (error) {
       console.error('❌ Get gas price failed:', error);
       return null;

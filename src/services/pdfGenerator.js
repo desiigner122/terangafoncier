@@ -275,11 +275,12 @@ class PDFGenerator {
     pdf.setFont(undefined, 'normal');
     
     const blockchainInfo = [
-      ['Hash Transaction:', blockchainData.transactionHash || '0x' + Math.random().toString(16).slice(2, 42)],
-      ['Numéro de Bloc:', (blockchainData.blockNumber || Math.floor(Math.random() * 1000000)).toLocaleString()],
-      ['Réseau:', blockchainData.network || 'TerangaChain'],
-      ['Confirmations:', blockchainData.confirmations || Math.floor(Math.random() * 50) + 10],
-      ['Statut:', blockchainData.verified ? '✅ Vérifié' : '⏳ En attente']
+      // Aucune valeur n'est inventée : un certificat sans ancrage réel l'indique clairement.
+      ['Hash Transaction:', blockchainData.transactionHash || 'Non ancré sur la blockchain'],
+      ['Numéro de Bloc:', blockchainData.blockNumber ? Number(blockchainData.blockNumber).toLocaleString() : '—'],
+      ['Réseau:', blockchainData.network || '—'],
+      ['Confirmations:', blockchainData.confirmations ?? '—'],
+      ['Statut:', blockchainData.verified && blockchainData.transactionHash ? '✅ Vérifié' : '⏳ En attente d\'ancrage']
     ];
 
     blockchainInfo.forEach(([label, value]) => {

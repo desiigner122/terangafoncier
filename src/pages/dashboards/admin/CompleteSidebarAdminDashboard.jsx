@@ -450,7 +450,7 @@ const CompleteSidebarAdminDashboard = () => {
           minute: '2-digit' 
         }),
         type: i === 3 ? 'Base de données' : 'Complète',
-        size: i === 3 ? `${Math.floor(Math.random() * 500 + 500)} MB` : `${(Math.random() * 1 + 1.5).toFixed(1)} GB`,
+        size: 'N/A',
         status: 'Succès'
       });
     }
@@ -743,7 +743,7 @@ const CompleteSidebarAdminDashboard = () => {
       // Stats additionnelles
       setAdditionalStats({
         totalViews: (totalUsers || 0) * 15,
-        todayActions: Math.floor(Math.random() * 50),
+        todayActions: 0, // nécessite un vrai journal d'activité
         uniqueIPs: Math.floor((totalUsers || 0) * 0.8),
         diskUsage: Math.floor((totalUsers || 0) * 0.1),
         backupSize: `${((totalUsers || 0) * 0.05).toFixed(1)} GB`

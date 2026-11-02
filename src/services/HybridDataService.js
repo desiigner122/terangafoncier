@@ -694,7 +694,7 @@ class HybridDataService {
         region,
         transactions: regionTransactions.length,
         revenue,
-        growth: 10 + Math.random() * 20 - 10 // Simulation pour l'instant
+        growth: 0 // nécessite l'historique des transactions
       };
     });
   }
@@ -727,8 +727,9 @@ class HybridDataService {
     const hours = Array.from({ length: 6 }, (_, i) => i * 4); // 0h, 4h, 8h, 12h, 16h, 20h
     
     return hours.map(hour => {
-      const visits = Math.floor(users.length * (0.1 + Math.random() * 0.2));
-      const conversions = Math.floor(visits * (0.05 + Math.random() * 0.1));
+      // Pas de journal de visites : on ne fabrique pas de chiffres.
+      const visits = 0;
+      const conversions = 0;
       
       return {
         hour: `${hour.toString().padStart(2, '0')}h`,

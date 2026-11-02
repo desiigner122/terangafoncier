@@ -78,7 +78,7 @@ const ModernAdminOverview = ({
   const [realtimeStats, setRealtimeStats] = useState({
     onlineUsers: dashboardData?.stats?.activeUsers || 0,
     activeTransactions: dashboardData?.stats?.activeTransactions || 0,
-    systemLoad: Math.round(Math.random() * 100), // Real system load would need actual monitoring
+    systemLoad: 0, // nécessite un vrai monitoring serveur
     alertsCount: pendingPropertiesCount + pendingVerificationsCount + urgentTicketsCount
   });
 

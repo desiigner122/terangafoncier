@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaHome, FaCheckCircle, FaTimesCircle, FaClock, FaUser, FaMapMarkerAlt, FaEye, FaEdit } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const PropertyManagementPage = () => {
   const [properties, setProperties] = useState([]);

@@ -1,32 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FaChartLine, FaMoneyBillWave, FaCreditCard, FaArrowUp, FaCalendarAlt, FaDownload } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { toast } from 'sonner';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
+  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
 
-// Enregistrer les composants Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+const CATEGORY_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
 const RevenueManagementPage = () => {
   const [revenueData, setRevenueData] = useState(null);
@@ -104,50 +84,12 @@ const RevenueManagementPage = () => {
     }
   };
 
-  // Configuration des graphiques
-  const lineChartData = {
-    labels: revenueData?.dailyRevenue?.map(d => new Date(d.date).toLocaleDateString()) || [],
-    datasets: [
-      {
-        label: 'Revenus quotidiens',
-        data: revenueData?.dailyRevenue?.map(d => d.amount) || [],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ]
-  };
-
-  const doughnutData = {
-    labels: Object.keys(revenueData?.revenueByCategory || {}),
-    datasets: [
-      {
-        data: Object.values(revenueData?.revenueByCategory || {}),
-        backgroundColor: [
-          '#3B82F6',
-          '#10B981',
-          '#F59E0B',
-          '#EF4444',
-          '#8B5CF6',
-          '#F97316'
-        ],
-        borderWidth: 2
-      }
-    ]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false,
-      },
-    },
-  };
+  // Données des graphiques (recharts)
+  const dailySeries = (revenueData?.dailyRevenue || []).map(d => ({
+    date: new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+    amount: d.amount
+  }));
+  const categorySeries = Object.entries(revenueData?.revenueByCategory || {}).map(([name, value]) => ({ name, value }));
 
   if (loading) {
     return (
@@ -301,7 +243,16 @@ const RevenueManagementPage = () => {
             Évolution des Revenus
           </h3>
           <div className="h-80">
-            <Line data={lineChartData} options={chartOptions} />
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailySeries}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(v) => `${Number(v).toLocaleString('fr-FR')} FCFA`} />
+                <Legend />
+                <Line type="monotone" dataKey="amount" name="Revenus quotidiens" stroke="#3B82F6" fill="#3B82F6" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -310,8 +261,16 @@ const RevenueManagementPage = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Répartition par Catégorie
           </h3>
-          <div className="h-80 flex items-center justify-center">
-            <Doughnut data={doughnutData} options={chartOptions} />
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={categorySeries} dataKey="value" nameKey="name" innerRadius="55%" outerRadius="80%" paddingAngle={2}>
+                  {categorySeries.map((_, i) => <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />)}
+                </Pie>
+                <Tooltip formatter={(v) => `${Number(v).toLocaleString('fr-FR')} FCFA`} />
+                <Legend verticalAlign="top" />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

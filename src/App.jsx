@@ -20,7 +20,7 @@ import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import TitleUpdater from '@/components/layout/TitleUpdater';
 import { motion } from 'framer-motion';
-import { ComparisonProvider } from '@/context/ComparisonContext';
+import { ComparisonProvider } from '@/contexts/ComparisonContext';
 import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import './lib/errorManager';
 import './lib/securityConfig';

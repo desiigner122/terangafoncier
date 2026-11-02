@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurAI = () => {

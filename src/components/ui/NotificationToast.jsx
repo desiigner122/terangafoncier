@@ -1,36 +1,25 @@
 /**
  * NOTIFICATION TOAST SYSTEM
- * Système de notifications réutilisable avec react-hot-toast
+ * Système de notifications réutilisable avec sonner (seul système de toast du projet)
  */
 
-import toast, { Toaster } from 'react-hot-toast';
+import { toast, Toaster } from 'sonner';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
 // Configuration personnalisée du toast
 export const ToastProvider = () => (
   <Toaster
     position="top-right"
+    richColors
+    closeButton
+    duration={4000}
     toastOptions={{
-      duration: 4000,
       style: {
         background: '#fff',
         color: '#363636',
-        padding: '16px',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         maxWidth: '500px',
-      },
-      success: {
-        iconTheme: {
-          primary: '#10b981',
-          secondary: '#fff',
-        },
-      },
-      error: {
-        iconTheme: {
-          primary: '#ef4444',
-          secondary: '#fff',
-        },
       },
     }}
   />
@@ -43,7 +32,7 @@ export const notify = {
       (t) => (
         <div
           className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
+            'animate-in fade-in slide-in-from-right'
           } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
@@ -63,7 +52,7 @@ export const notify = {
           </div>
           <div className="flex border-l border-gray-200">
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={() => toast.dismiss(t)}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
             >
               <X className="h-5 w-5" />
@@ -80,7 +69,7 @@ export const notify = {
       (t) => (
         <div
           className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
+            'animate-in fade-in slide-in-from-right'
           } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
@@ -100,7 +89,7 @@ export const notify = {
           </div>
           <div className="flex border-l border-gray-200">
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={() => toast.dismiss(t)}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
             >
               <X className="h-5 w-5" />
@@ -117,7 +106,7 @@ export const notify = {
       (t) => (
         <div
           className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
+            'animate-in fade-in slide-in-from-right'
           } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
@@ -137,7 +126,7 @@ export const notify = {
           </div>
           <div className="flex border-l border-gray-200">
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={() => toast.dismiss(t)}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
             >
               <X className="h-5 w-5" />
@@ -154,7 +143,7 @@ export const notify = {
       (t) => (
         <div
           className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
+            'animate-in fade-in slide-in-from-right'
           } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
@@ -174,7 +163,7 @@ export const notify = {
           </div>
           <div className="flex border-l border-gray-200">
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={() => toast.dismiss(t)}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
             >
               <X className="h-5 w-5" />
@@ -192,7 +181,7 @@ export const notify = {
       (t) => (
         <div
           className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
+            'animate-in fade-in slide-in-from-right'
           } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
@@ -205,7 +194,7 @@ export const notify = {
                 <button
                   onClick={() => {
                     onAction();
-                    toast.dismiss(t.id);
+                    toast.dismiss(t);
                   }}
                   className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-500"
                 >
@@ -216,7 +205,7 @@ export const notify = {
           </div>
           <div className="flex border-l border-gray-200">
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={() => toast.dismiss(t)}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500"
             >
               <X className="h-5 w-5" />

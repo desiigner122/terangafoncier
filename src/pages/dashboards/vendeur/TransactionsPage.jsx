@@ -28,7 +28,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 /**
  * Page historique complet des transactions blockchain

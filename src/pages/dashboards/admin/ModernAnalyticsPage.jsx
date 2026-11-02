@@ -54,7 +54,7 @@ import {
   Area,
   AreaChart as RechartsAreaChart
 } from 'recharts';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
 import { useAnalytics } from '@/hooks/admin/usePageTracking';
 

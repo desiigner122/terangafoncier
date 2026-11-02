@@ -43,7 +43,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import StatsService from '@/services/StatsService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const AgentFoncierAI = () => {
   const { user } = useAuth();

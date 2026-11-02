@@ -31,7 +31,7 @@ import { useDropzone } from 'react-dropzone';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const VendeurPhotosRealData = () => {
   const { user } = useAuth();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaEye, FaEdit, FaBan, FaUserCheck, FaSearch, FaUserPlus, FaChartLine } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);

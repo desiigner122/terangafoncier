@@ -234,7 +234,7 @@ export default defineConfig({
 				manualChunks: {
 					'vendor-react': ['react', 'react-dom', 'react-router-dom'],
 					'vendor-supabase': ['@supabase/supabase-js'],
-					'vendor-charts': ['recharts', 'chart.js', 'react-chartjs-2'],
+					'vendor-charts': ['recharts'],
 					'vendor-maps': ['leaflet', 'react-leaflet'],
 					'vendor-pdf': ['jspdf', 'jspdf-autotable'],
 					'vendor-motion': ['framer-motion'],

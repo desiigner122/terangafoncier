@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import React from 'react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,8 +12,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
  * @param {React.ReactNode} [props.fallback=null] - Optional content to render if the user does not have the required role.
  */
 export const Can = ({ children, allowedRoles, fallback = null }) => {
-    const { user } = useAuth();
-    if (!user || !allowedRoles.includes(user.role)) {
+    const { user, profile } = useAuth();
+    if (!user || !allowedRoles.includes(profile?.role)) {
         return fallback;
     }
     return children;
@@ -28,15 +28,14 @@ export const Can = ({ children, allowedRoles, fallback = null }) => {
  */
 export const withRoleProtection = (Component, allowedRoles) => {
     return (props) => {
-        const { user, loading } = useAuth();
+        const { user, profile, loading } = useAuth();
         const navigate = useNavigate();
-        // toast remplacé par window.safeGlobalToast
 
         if (loading) {
             return null; // Or a loading spinner
         }
 
-        if (!user || !allowedRoles.includes(user.role)) {
+        if (!user || !allowedRoles.includes(profile?.role)) {
             window.safeGlobalToast({
                 variant: 'destructive',
                 title: 'Accès non autorisé',
@@ -59,9 +58,9 @@ export const withRoleProtection = (Component, allowedRoles) => {
  * @param {string} [props.tooltipMessage="Action non autorisée pour votre rôle."] - The message to show in the tooltip.
  */
 export const Forbid = ({ children, forbiddenRoles, tooltipMessage = "Action non autorisée pour votre rôle." }) => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     
-    if (user && forbiddenRoles.includes(user.role)) {
+    if (user && forbiddenRoles.includes(profile?.role)) {
         return (
             <TooltipProvider>
                 <Tooltip>

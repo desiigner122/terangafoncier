@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 class TerangaBlockchainService {
   constructor() {

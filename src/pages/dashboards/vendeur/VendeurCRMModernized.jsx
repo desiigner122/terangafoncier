@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const VendeurCRMModernized = () => {
   const { user } = useAuth();

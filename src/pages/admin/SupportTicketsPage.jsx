@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTicketAlt, FaReply, FaClock, FaCheckCircle, FaExclamationTriangle, FaUser, FaCalendarAlt } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 
 const SupportTicketsPage = () => {

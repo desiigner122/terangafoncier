@@ -39,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const ParticulierAI = () => {
   const { user } = useAuth();

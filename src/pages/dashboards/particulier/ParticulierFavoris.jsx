@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const ParticulierFavoris = () => {
   const outletContext = useOutletContext();

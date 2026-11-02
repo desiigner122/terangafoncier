@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ComparisonContext } from '@/context/ComparisonContext';
+import { ComparisonContext } from '@/contexts/ComparisonContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';

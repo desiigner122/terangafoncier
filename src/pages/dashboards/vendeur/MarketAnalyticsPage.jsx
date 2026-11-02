@@ -10,18 +10,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+  ResponsiveContainer, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
 import { 
   TrendingUp,
   TrendingDown,
@@ -42,20 +33,8 @@ import { fr } from 'date-fns/locale';
 import pdfGenerator from '@/services/pdfGenerator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
-// Enregistrer les composants Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
 
 /**
  * Page analytics marché avec graphiques et prédictions IA
@@ -439,112 +418,26 @@ const MarketAnalyticsPage = () => {
     });
   };
 
-  // Options des graphiques
-  const lineOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: false,
-      },
-    },
-  };
-
-  const barOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-    },
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'right',
-      },
-    },
-  };
-
   const zoneColors = useMemo(() => [
-    'rgba(249, 115, 22, 0.8)',
-    'rgba(59, 130, 246, 0.8)',
-    'rgba(147, 51, 234, 0.8)',
-    'rgba(16, 185, 129, 0.8)',
-    'rgba(239, 68, 68, 0.8)',
-    'rgba(107, 114, 128, 0.8)'
+    '#F97316', '#3B82F6', '#9333EA', '#10B981', '#EF4444', '#6B7280'
   ], []);
 
-  const priceData = useMemo(() => {
-    const labels = analytics.monthLabels.length > 0 ? analytics.monthLabels : [''];
-    const dataPoints = analytics.priceSeries.length > 0 ? analytics.priceSeries : [0];
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Prix moyen/m²',
-          data: dataPoints,
-          borderColor: 'rgb(249, 115, 22)',
-          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-          tension: 0.4,
-        },
-      ],
-    };
-  }, [analytics.monthLabels, analytics.priceSeries]);
+  // Séries recharts (une ligne par mois)
+  const priceData = useMemo(() => analytics.monthLabels.map((month, i) => ({
+    month,
+    prix: analytics.priceSeries[i] ?? 0,
+  })), [analytics.monthLabels, analytics.priceSeries]);
 
-  const salesData = useMemo(() => {
-    const labels = analytics.monthLabels.length > 0 ? analytics.monthLabels : [''];
-    const salesPoints = analytics.salesSeries.length > 0 ? analytics.salesSeries : [0];
-    const listingPoints = analytics.listingSeries.length > 0 ? analytics.listingSeries : [0];
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Ventes',
-          data: salesPoints,
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        },
-        {
-          label: 'Annonces',
-          data: listingPoints,
-          backgroundColor: 'rgba(147, 51, 234, 0.8)',
-        },
-      ],
-    };
-  }, [analytics.monthLabels, analytics.salesSeries, analytics.listingSeries]);
+  const salesData = useMemo(() => analytics.monthLabels.map((month, i) => ({
+    month,
+    ventes: analytics.salesSeries[i] ?? 0,
+    annonces: analytics.listingSeries[i] ?? 0,
+  })), [analytics.monthLabels, analytics.salesSeries, analytics.listingSeries]);
 
-  const zonesData = useMemo(() => {
-    if (analytics.zoneDistribution.length === 0) {
-      return {
-        labels: ['Aucune donnée'],
-        datasets: [
-          {
-            data: [1],
-            backgroundColor: ['rgba(148, 163, 184, 0.6)'],
-          },
-        ],
-      };
-    }
-
-    return {
-      labels: analytics.zoneDistribution.map(item => item.zone),
-      datasets: [
-        {
-          data: analytics.zoneDistribution.map(item => item.count),
-          backgroundColor: analytics.zoneDistribution.map((_, idx) => zoneColors[idx % zoneColors.length]),
-        },
-      ],
-    };
-  }, [analytics.zoneDistribution, zoneColors]);
+  const zonesData = useMemo(() => analytics.zoneDistribution.map(item => ({
+    name: item.zone,
+    value: item.count,
+  })), [analytics.zoneDistribution]);
 
   const exportReport = async () => {
     try {
@@ -787,7 +680,18 @@ const MarketAnalyticsPage = () => {
             <CardDescription>Prix moyen par m² sur {months} mois</CardDescription>
           </CardHeader>
           <CardContent>
-            <Line data={priceData} options={lineOptions} />
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={priceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(v) => `${Number(v).toLocaleString('fr-FR')} FCFA/m²`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="prix" name="Prix moyen/m²" stroke="#F97316" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -798,7 +702,19 @@ const MarketAnalyticsPage = () => {
             <CardDescription>Ventes vs Annonces</CardDescription>
           </CardHeader>
           <CardContent>
-            <Bar data={salesData} options={barOptions} />
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="ventes" name="Ventes" fill="#3B82F6" />
+                  <Bar dataKey="annonces" name="Annonces" fill="#9333EA" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -812,7 +728,19 @@ const MarketAnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="h-80">
-              <Doughnut data={zonesData} options={doughnutOptions} />
+              {zonesData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Aucune donnée</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={zonesData} dataKey="value" nameKey="name" innerRadius="55%" outerRadius="80%" paddingAngle={2}>
+                      {zonesData.map((_, i) => <Cell key={i} fill={zoneColors[i % zoneColors.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                    <Legend layout="vertical" align="right" verticalAlign="middle" />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>

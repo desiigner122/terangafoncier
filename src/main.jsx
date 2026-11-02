@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection
@@ -22,11 +21,9 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <HelmetProvider>
-      <AuthProvider>
-        <Router>
-          <App />
-        </Router>
-      </AuthProvider>
+      <Router>
+        <App />
+      </Router>
     </HelmetProvider>
   </React.StrictMode>
 );

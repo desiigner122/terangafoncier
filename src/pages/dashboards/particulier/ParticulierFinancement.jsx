@@ -70,7 +70,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { 
   getBankStatusBadge, 
   getVendorStatusBadge, 

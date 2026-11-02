@@ -27,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierSettings = () => {
   const { user } = useOutletContext();

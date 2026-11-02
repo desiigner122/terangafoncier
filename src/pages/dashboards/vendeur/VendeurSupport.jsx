@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 // La table réelle `support_tickets` n'a pas de colonne `type` : le type

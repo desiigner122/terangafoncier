@@ -64,7 +64,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
 
 const ModernUsersPage = () => {

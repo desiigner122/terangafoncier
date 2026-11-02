@@ -16,7 +16,7 @@
  * - support_tickets / support_ticket_messages
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 class VendeurSupabaseService {
   /**

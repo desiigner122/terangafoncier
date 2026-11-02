@@ -25,7 +25,7 @@
  * - profiles (id, full_name, email, phone, avatar_url...) : profil
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 class ParticulierSupabaseService {
   // ===== FAVORIS =====

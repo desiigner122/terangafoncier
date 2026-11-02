@@ -48,7 +48,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
 // Composants rendus via Outlet - pas besoin d'imports

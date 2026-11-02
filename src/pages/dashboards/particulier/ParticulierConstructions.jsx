@@ -34,7 +34,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const ParticulierConstructions = () => {
   const outletContext = useOutletContext();

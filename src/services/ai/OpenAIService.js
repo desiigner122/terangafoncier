@@ -244,7 +244,7 @@ class OpenAIService {
 
   getSimulatedAnalysis(data) {
     return {
-      score: Math.floor(Math.random() * 30) + 70, // Score entre 70-100
+      score: null, // mode simulation : aucun score inventé
       estimation: 'Estimation simulée',
       trends: ['Croissance prévue', 'Demande forte', 'Bon potentiel'],
       recommendations: ['Conseil simulé 1', 'Conseil simulé 2'],

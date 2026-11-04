@@ -136,14 +136,14 @@ class FraudDetectionAI {
     for (const doc of documents) {
       // Vérification authenticité
       const authenticity = await this.verifyDocumentAuthenticity(doc);
-      if (!authenticity.isValid) {
+      if (authenticity.isValid === false) {
         documentFlags.push(`invalid_${doc.type}`);
         maxRiskScore = Math.max(maxRiskScore, 0.9);
       }
 
       // Détection altération
       const alteration = await this.detectDocumentAlteration(doc);
-      if (alteration.isAltered) {
+      if (alteration.isAltered === true) {
         documentFlags.push(`altered_${doc.type}`);
         maxRiskScore = Math.max(maxRiskScore, 0.95);
       }
@@ -406,23 +406,23 @@ class FraudDetectionAI {
 
   // === MÉTHODES D'ANALYSE SPÉCIALISÉES ===
   async verifyDocumentAuthenticity(document) {
-    // Simulation de vérification IA de documents
-    // En réalité, utiliserait des modèles de Computer Vision
-    const randomFactor = Math.random();
+    // Aucun modèle de vision branché : on ne tranche pas au hasard.
+    // Le document est marqué « à vérifier manuellement ».
     return {
-      isValid: randomFactor > 0.1, // 90% des docs sont valides
-      confidence: randomFactor,
-      checks: ['signature_verification', 'stamp_analysis', 'paper_type']
+      isValid: null,
+      confidence: null,
+      requiresManualReview: true,
+      checks: []
     };
   }
 
   async detectDocumentAlteration(document) {
-    // Détection d'altération par IA
-    const alterationRisk = Math.random();
+    // Pas de détection automatique disponible : résultat indéterminé.
     return {
-      isAltered: alterationRisk > 0.95, // 5% sont altérés
-      confidence: 1 - alterationRisk,
-      alterationType: alterationRisk > 0.95 ? 'digital_manipulation' : null
+      isAltered: null,
+      confidence: null,
+      requiresManualReview: true,
+      alterationType: null
     };
   }
 

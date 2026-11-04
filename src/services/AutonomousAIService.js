@@ -348,13 +348,13 @@ export class AutonomousAIService {
   // ===== MÉTHODES UTILITAIRES POUR L'IA AUTONOME =====
 
   async analyzeZoneAvailability(zone) {
-    // Simulation d'analyse IA de zone
-    const availability = Math.random();
+    // Aucun modèle de demande branché : pas d'alerte inventée.
     return {
-      shouldCreateAlert: availability > 0.7,
-      recommendation: `Forte demande détectée à ${zone}`,
-      suggestedAction: 'Activer surveillance IA renforcée',
-      confidence: availability
+      shouldCreateAlert: false,
+      recommendation: null,
+      suggestedAction: null,
+      confidence: null,
+      zone
     };
   }
 
@@ -369,11 +369,7 @@ export class AutonomousAIService {
   }
 
   async checkCurrentAvailability(zone) {
-    return {
-      available: Math.floor(Math.random() * 10),
-      coming_soon: Math.floor(Math.random() * 5),
-      under_construction: Math.floor(Math.random() * 8)
-    };
+    return { available: 0, coming_soon: 0, under_construction: 0 };
   }
 
   async generateHumanLikeResponse(input, context) {

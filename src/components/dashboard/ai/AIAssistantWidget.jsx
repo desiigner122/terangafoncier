@@ -33,7 +33,7 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
     
     const recommendations = getRecommendationsByRole(userRole);
     setAiRecommendations(recommendations);
-    setConfidenceScore(Math.floor(Math.random() * 20) + 80); // 80-100%
+    setConfidenceScore(null); // aucun modèle réel : pas de score inventé
     setAiProcessing(false);
   };
 
@@ -176,7 +176,7 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="bg-blue-50">
-              Confiance: {confidenceScore}%
+              Confiance: {confidenceScore == null ? '—' : `${confidenceScore}%`}
             </Badge>
             {aiProcessing && (
               <div className="flex items-center space-x-1">
@@ -186,7 +186,7 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
             )}
           </div>
         </div>
-        <Progress value={confidenceScore} className="h-1" />
+        <Progress value={confidenceScore ?? 0} className="h-1" />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

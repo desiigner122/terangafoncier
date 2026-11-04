@@ -337,30 +337,14 @@ class BlockchainAIService {
   }
 
   // === MÉTHODES UTILITAIRES ===
-  async getTotalTransactions() {
-    // Simulation - Ï  remplacer par vraie logique
-    return Math.floor(Math.random() * 10000) + 15000;
-  }
-
-  async getActiveSmartContracts() {
-    return Math.floor(Math.random() * 50) + 80;
-  }
-
-  async getDailyTransactionVolume() {
-    return (Math.random() * 5 + 2).toFixed(1); // En millions FCFA
-  }
-
-  async getNFTPropertyCount() {
-    return Math.floor(Math.random() * 100) + 300;
-  }
-
-  async calculateNetworkHealth() {
-    return 0.95 + Math.random() * 0.04; // 95-99%
-  }
-
-  async calculateSecurityScore() {
-    return 0.96 + Math.random() * 0.03; // 96-99%
-  }
+  // Aucune lecture on-chain réelle n'est branchée : ces méthodes renvoient
+  // des valeurs nulles plutôt que des chiffres inventés.
+  async getTotalTransactions() { return 0; }
+  async getActiveSmartContracts() { return 0; }
+  async getDailyTransactionVolume() { return 0; }
+  async getNFTPropertyCount() { return 0; }
+  async calculateNetworkHealth() { return null; }
+  async calculateSecurityScore() { return null; }
 
   getFallbackMetrics() {
     return {
@@ -376,8 +360,8 @@ class BlockchainAIService {
 
   // === MÉTHODES YOUR_API_KEY (À IMPLÉMENTER) ===
   async uploadToIPFS(data) { return 'ipfs://QmExample...'; }
-  async mintPropertyNFT(uri, owner) { return Math.floor(Math.random() * 10000); }
-  async deployEscrowContract(params) { return '0x' + Math.random().toString(16).substr(2, 40); }
+  async mintPropertyNFT() { throw new Error('Mint NFT non disponible : aucun contrat déployé'); }
+  async deployEscrowContract() { throw new Error('Escrow non disponible : aucun contrat déployé'); }
   async registerWithAIOracle(address, assessment) { return true; }
   async submitToOracle(data) { return { hash: '0x123...', gasUsed: 21000 }; }
   async analyzeNewBlock(blockNumber) { /* À implémenter */ }

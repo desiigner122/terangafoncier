@@ -83,10 +83,11 @@ const FonctionnalitesAvanceesPage = () => {
   const [aiResponse, setAiResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [marketData, setMarketData] = useState({
-    totalTransactions: 1247,
-    blockchainVerifications: 892,
-    aiPredictions: 156,
-    securityAlerts: 3
+    // Aucun compteur inventé : à brancher sur StatsService
+    totalTransactions: 0,
+    blockchainVerifications: 0,
+    aiPredictions: 0,
+    securityAlerts: 0
   });
 
   const features = [
@@ -172,20 +173,6 @@ const FonctionnalitesAvanceesPage = () => {
       expectedResponse: "🔗 **Vérification Blockchain**\n\n✅ **Statut**: Propriété vérifiée\n🏷️ **NFT ID**: TER-NFT-2024-001247\n📍 **Localisation**: Almadies, Lot 45\n\n**Historique blockchain:**\n• 15/01/2024: Tokenisation initiale\n• 20/01/2024: Vérification cadastrale\n• 25/01/2024: Audit géomètre\n\n**Documents vérifiés:**\n✓ Titre foncier original\n✓ Certificat d'urbanisme\n✓ Plan géomètre\n✓ Quitus fiscal\n\n🛡️ **Sécurité**: Niveau Maximum"
     }
   ];
-
-  useEffect(() => {
-    // Simulation de mise à jour des données en temps réel
-    const interval = setInterval(() => {
-      setMarketData(prev => ({
-        totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 3),
-        blockchainVerifications: prev.blockchainVerifications + Math.floor(Math.random() * 2),
-        aiPredictions: prev.aiPredictions + Math.floor(Math.random() * 1),
-        securityAlerts: Math.max(0, prev.securityAlerts + Math.floor(Math.random() * 2) - 1)
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const simulateAIResponse = async (query) => {
     setIsProcessing(true);

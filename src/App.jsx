@@ -400,11 +400,16 @@ function App() {
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<MultiStepRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
-              <Route path="debug-dashboard" element={<DebugDashboard />} />
-              <Route path="auth-debug" element={<AuthDebugPage />} />
-              <Route path="debug-role" element={<DebugRole />} />
-              <Route path="diagnostic-vendor-profile" element={<DiagnosticVendorProfilePage />} />
-              <Route path="test-auth" element={<TestAuthPage />} />
+              {/* Pages de diagnostic : jamais servies en production */}
+              {import.meta.env.DEV && (
+                <>
+                  <Route path="debug-dashboard" element={<DebugDashboard />} />
+                  <Route path="auth-debug" element={<AuthDebugPage />} />
+                  <Route path="debug-role" element={<DebugRole />} />
+                  <Route path="diagnostic-vendor-profile" element={<DiagnosticVendorProfilePage />} />
+                  <Route path="test-auth" element={<TestAuthPage />} />
+                </>
+              )}
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
@@ -735,7 +740,7 @@ function App() {
                 <Route path="blog/edit/:id" element={<AdminBlogFormPage />} />
                 <Route path="audit-log" element={<AdminAuditLogPage />} />
                 <Route path="admin-settings" element={<AdminSettingsPage />} />
-                <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
+                {import.meta.env.DEV && <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />}
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Route>

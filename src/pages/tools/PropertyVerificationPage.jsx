@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Shield, Search, CheckCircle, AlertTriangle, XCircle, FileText, Eye, Lock, Zap, Users, Award } from 'lucide-react';

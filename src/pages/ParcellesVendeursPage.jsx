@@ -109,7 +109,7 @@ const ParcellesVendeursPage = () => {
 
         // FETCH DIRECT via helper centralisé
         const propertiesData = await fetchDirect(
-          'properties?select=*&status=eq.active&verification_status=eq.verified&order=created_at.desc'
+          'properties?select=*&status=eq.active&verification_status=eq.verified&order=created_at.desc&limit=200'
         );
 
         if (!propertiesData || propertiesData.length === 0) {

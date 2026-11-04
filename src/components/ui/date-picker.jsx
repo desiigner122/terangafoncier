@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Input } from './input';
 
 const DatePicker = ({ value, onChange, YOUR_API_KEY = "Sélectionner une date", className = "" }) => {

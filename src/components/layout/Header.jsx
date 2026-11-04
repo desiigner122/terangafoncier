@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import HeaderLogo from '@/components/layout/header/HeaderLogo';
 import DesktopNavigation from '@/components/layout/header/DesktopNavigation';

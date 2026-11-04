@@ -1,4 +1,4 @@
-﻿// Service Blockchain pour Teranga Foncier avec intégration IA
+// Service Blockchain pour Teranga Foncier avec intégration IA
 import { ethers } from 'ethers';
 
 class BlockchainAIService {

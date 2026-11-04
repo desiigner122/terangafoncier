@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
-import { sampleAgentData } from '@/data';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -22,14 +23,39 @@ const AgentParcelsPage = () => {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
 
+  // Parcelles réellement confiées à l'agent connecté (colonne agent_id).
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParcels(sampleAgentData.parcels);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    let cancelled = false;
+    const load = async () => {
+      if (!user?.id) { setLoading(false); return; }
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, status, owner_id, created_at')
+          .eq('agent_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(200);
+        if (error) throw error;
+        if (!cancelled) {
+          setParcels((data || []).map((p) => ({
+            id: String(p.id),
+            name: p.title || `Parcelle ${p.id}`,
+            status: p.status || 'Disponible',
+            client: null
+          })));
+        }
+      } catch (err) {
+        console.error('Erreur chargement parcelles agent:', err.message);
+        if (!cancelled) setParcels([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const handleAction = (message) => {
     window.safeGlobalToast({ title: "Action Simulée", description: message });

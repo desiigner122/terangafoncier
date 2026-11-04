@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import {
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { sampleAgentData } from '@/data';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -21,14 +21,29 @@ const AgentTasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const { user } = useAuth();
+  // Pas de table de tâches côté serveur : liste personnelle conservée sur l'appareil.
+  const storageKey = user?.id ? `agent-tasks:${user.id}` : null;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTasks(sampleAgentData.tasks);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!storageKey) { setLoading(false); return; }
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setTasks(saved ? JSON.parse(saved) : []);
+    } catch {
+      setTasks([]);
+    }
+    setLoading(false);
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!storageKey || loading) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    } catch {
+      /* stockage indisponible : la liste reste en mémoire */
+    }
+  }, [tasks, storageKey, loading]);
 
   const handleAction = (message) => {
     window.safeGlobalToast({ title: "Action Simulée", description: message });

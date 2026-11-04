@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';

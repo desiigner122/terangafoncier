@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -66,7 +66,8 @@ const TerrainsVendeursPage = () => {
             full_name,
             role
           )
-        `);
+        `)
+        .limit(200);
 
       if (error) {
         console.error('Error fetching properties:', error);

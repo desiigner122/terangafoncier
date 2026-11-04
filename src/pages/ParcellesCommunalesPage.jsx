@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Building2, FileText, Calendar, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react';

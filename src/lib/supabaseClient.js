@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Client Supabase centralisé - SOURCE UNIQUE DE VÉRITÉ
  * 
  * ⚠️ Ce fichier doit être le SEUL endroit où createClient() est appelé.

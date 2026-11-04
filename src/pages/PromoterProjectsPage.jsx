@@ -80,7 +80,8 @@ const PromoterProjectsPage = () => {
         const { data, error } = await supabase
           .from('developer_projects')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(100);
 
         if (error) throw error;
         setProjects(data || []);

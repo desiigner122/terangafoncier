@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ðŸ” TERANGA BLOCKCHAIN SECURITY SERVICE - PRIORITÉ 1 COMPLETE
  * ============================================================
  * 

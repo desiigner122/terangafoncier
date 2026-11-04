@@ -1,4 +1,4 @@
-﻿// Système de gestion en temps réel des changements d'utilisateur - Version Mock
+// Système de gestion en temps réel des changements d'utilisateur - Version Mock
 // Mode test uniquement - Supabase désactivé
 
 class UserStatusManager {

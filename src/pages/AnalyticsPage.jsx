@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AnalyticsPage - Wrapper pour la version RealData
  * 
  * Ce fichier garantit que tous les imports pointent vers la version

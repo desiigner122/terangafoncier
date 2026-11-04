@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
-import { sampleAgentData } from '@/data';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AgentClientsPage = () => {
@@ -23,14 +24,41 @@ const AgentClientsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const { user } = useAuth();
 
+  // Clients réellement rattachés à l'agent connecté (profiles.assigned_agent_id).
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setClients(sampleAgentData.clients);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    let cancelled = false;
+    const load = async () => {
+      if (!user?.id) { setLoading(false); return; }
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, user_type, updated_at, is_active')
+          .eq('assigned_agent_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(200);
+        if (error) throw error;
+        if (!cancelled) {
+          setClients((data || []).map((c) => ({
+            id: String(c.id),
+            name: c.full_name || 'Client',
+            type: c.role || c.user_type || 'Particulier',
+            lastContact: c.updated_at ? c.updated_at.split('T')[0] : '—',
+            status: c.is_active === false ? 'Inactif' : 'Actif',
+            assignedParcels: []
+          })));
+        }
+      } catch (err) {
+        console.error('Erreur chargement clients agent:', err.message);
+        if (!cancelled) setClients([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const handleAction = (message) => {
     window.safeGlobalToast({ title: "Action Simulée", description: message });

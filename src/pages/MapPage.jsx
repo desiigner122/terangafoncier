@@ -96,7 +96,7 @@ const MapPage = () => {
       setLoading(true);
       setFetchError(null);
       try {
-        const { data, error } = await supabase.from('parcels').select('*');
+        const { data, error } = await supabase.from('parcels').select('*').limit(1000);
         if (error) throw error;
         setParcels(data);
       } catch (err) {

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Calculator, TrendingUp, MapPin, Home, DollarSign, Info, Zap, Shield, Target } from 'lucide-react';

@@ -290,62 +290,6 @@ export class NotaireSupabaseService {
   }
 
   /**
-   * 📄 CRÉATION D'UN NOUVEL ACTE
-   */
-  static async createNotarialAct(notaireId, actData) {
-    try {
-      // Générer un numéro d'acte automatique
-      const { data: lastAct } = await supabase
-        .from('notarial_acts')
-        .select('act_number')
-        .eq('notaire_id', notaireId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      const year = new Date().getFullYear();
-      let sequence = 1;
-      
-      if (lastAct && lastAct.length > 0 && lastAct[0].act_number) {
-        const lastNumber = lastAct[0].act_number;
-        if (lastNumber.startsWith(year.toString())) {
-          const lastSequence = parseInt(lastNumber.split('-')[1]) || 0;
-          sequence = lastSequence + 1;
-        }
-      }
-
-      const actNumber = `${year}-${String(sequence).padStart(3, '0')}`;
-
-      const newAct = {
-        notaire_id: notaireId,
-        act_number: actNumber,
-        title: actData.title || `Nouvel Acte - ${new Date().toLocaleDateString('fr-FR')}`,
-        act_type: actData.act_type || 'vente_immobiliere',
-        description: actData.description,
-        property_description: actData.property_description,
-        property_value: actData.property_value,
-        status: 'draft',
-        priority: actData.priority || 'medium',
-        progress: 0,
-        client_id: actData.client_id,
-        estimated_completion: actData.estimated_completion
-      };
-
-      const { data, error } = await supabase
-        .from('notarial_acts')
-        .insert([newAct])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return { success: true, data };
-    } catch (error) {
-      console.error('Erreur création acte notarié:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
    * 🏢 GESTION DES TRANSACTIONS
    */
   static async getTransactions(notaireId, filters = {}) {
@@ -538,63 +482,6 @@ export class NotaireSupabaseService {
       return { success: true, data: data || [] };
     } catch (error) {
       console.error('Erreur récupération partenaires bancaires:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
-   * 🔐 AUTHENTIFICATION DOCUMENTS
-   */
-  static async authenticateDocument(notaireId, documentId, method = 'blockchain') {
-    try {
-      // Récupérer le document
-      const { data: document, error: docError } = await supabase
-        .from('notarial_documents')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
-      if (docError) throw docError;
-
-      // Empreinte réelle du document ; pas d'ancrage blockchain tant qu'aucune
-      // transaction n'a été réellement émise (transaction_hash reste null).
-      const documentHash = await sha256Hex(`${documentId}:${notaireId}:${Date.now()}`);
-      const transactionHash = null;
-
-      // Insérer l'authentification
-      const { data: authData, error: authError } = await supabase
-        .from('document_authentication')
-        .insert([
-          {
-            document_id: documentId,
-            notaire_id: notaireId,
-            authentication_method: method,
-            document_hash: documentHash,
-            transaction_hash: transactionHash,
-            blockchain_network: 'polygon',
-            verification_status: 'pending',
-            authenticated_at: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single();
-
-      if (authError) throw authError;
-
-      // Mettre à jour le document
-      await supabase
-        .from('notarial_documents')
-        .update({
-          authenticated: true,
-          authentication_date: new Date().toISOString(),
-          blockchain_hash: transactionHash,
-          verification_status: 'verified'
-        })
-        .eq('id', documentId);
-
-      return { success: true, data: authData };
-    } catch (error) {
-      console.error('Erreur authentification document:', error);
       return { success: false, error: error.message };
     }
   }

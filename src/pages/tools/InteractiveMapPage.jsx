@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Map, MapPin, Search, Filter, Eye, Shield, Zap, Target, Home, DollarSign, Phone, Star } from 'lucide-react';

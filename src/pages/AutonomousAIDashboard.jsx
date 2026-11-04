@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 🧠 DASHBOARD IA AUTONOME UNIVERSEL
  * Interface unique adaptée à tous les rôles (Particuliers, Banques, Vendeurs, etc.)
  * L'IA gère tout automatiquement et fournit des insights personnalisés

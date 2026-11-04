@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ðŸ§  PAGE CONFIGURATION IA ASSISTÉE POUR TERRAINS
  * Système 100% autonome pour configuration de veille et alertes
  */

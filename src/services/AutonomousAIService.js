@@ -269,29 +269,6 @@ export class AutonomousAIService {
   }
 
   /**
-   * 🔄 ADMINISTRATION AUTONOME DE LA PLATEFORME
-   */
-  async startPlatformAdministration() {
-    setInterval(async () => {
-      // Gestion automatique des utilisateurs
-      await this.manageUserAccounts();
-      
-      // Modération automatique du contenu
-      await this.moderateContent();
-      
-      // Optimisation des performances
-      await this.optimizePlatformPerformance();
-      
-      // Mise à jour des recommandations
-      await this.updateRecommendations();
-      
-      // Gestion des conflits et litiges
-      await this.resolveDisputes();
-      
-    }, 300000); // Toutes les 5 minutes
-  }
-
-  /**
    * 🎯 PRÉDICTION ET CONFIGURATION ASSISTÉE
    */
   async createAssistedConfiguration(userRequest) {

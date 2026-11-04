@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 
 class HybridDataService {
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.apiUrl = import.meta.env.VITE_API_URL || '';
     this.enableBlockchain = import.meta.env.VITE_ENABLE_BLOCKCHAIN === 'true';
     this.enableAI = import.meta.env.VITE_ENABLE_AI === 'true';
     this.enablePayments = import.meta.env.VITE_ENABLE_PAYMENTS === 'true';

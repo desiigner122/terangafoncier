@@ -3,6 +3,9 @@ import { FaHome, FaCheckCircle, FaTimesCircle, FaClock, FaUser, FaMapMarkerAlt, 
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 
+// URL de l'API backend (jamais codée en dur) ; vide => même origine
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const PropertyManagementPage = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,7 @@ const PropertyManagementPage = () => {
   const fetchPendingProperties = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/api/admin/properties/pending-approval?page=${currentPage}&limit=20`, {
+      const response = await fetch(`${API_URL}/api/admin/properties/pending-approval?page=${currentPage}&limit=20`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -49,7 +52,7 @@ const PropertyManagementPage = () => {
     if (!selectedProperty || !approvalAction) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/admin/properties/approve/${selectedProperty.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/properties/approve/${selectedProperty.id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

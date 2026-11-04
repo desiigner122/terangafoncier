@@ -7,6 +7,9 @@ import {
 } from 'recharts';
 import { logger } from '@/lib/logger';
 
+// URL de l'API backend (jamais codée en dur) ; vide => même origine
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const CATEGORY_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
 const RevenueManagementPage = () => {
@@ -31,7 +34,7 @@ const RevenueManagementPage = () => {
       if (dateRange.startDate) params.append('startDate', dateRange.startDate);
       if (dateRange.endDate) params.append('endDate', dateRange.endDate);
 
-      const response = await fetch(`http://localhost:3000/api/admin/revenue/detailed?${params}`, {
+      const response = await fetch(`${API_URL}/api/admin/revenue/detailed?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'

@@ -81,6 +81,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { logger } from '@/lib/logger';
 
 // Libellés des statuts (valeurs techniques -> affichage)
 const getStatusLabel = (status) => {
@@ -126,7 +127,7 @@ const PromoterConstructionRequestsPage = () => {
         const { data, error } = await supabase
           .from('construction_requests')
           .select('*, property:properties(id,title,name,location)')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
 
@@ -145,7 +146,7 @@ const PromoterConstructionRequestsPage = () => {
           setFilteredRequests(mapped);
         }
       } catch (err) {
-        console.error('Erreur chargement demandes de construction:', err);
+        logger.error('Erreur chargement demandes de construction:', err);
         if (isMounted) {
           setRequests([]);
           setFilteredRequests([]);

@@ -31,6 +31,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatMoney = (value) => {
   if (value === null || value === undefined || value === '') return '—';
@@ -93,18 +94,18 @@ const ConstructionPage = () => {
             .from('developer_projects')
             .select('id, title, client, location, status, progress, budget, spent, start_date, estimated_completion, current_phase, updated_at, created_at')
             .eq('developer_id', user.id)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('construction_requests')
             .select('id, title, status, budget, created_at')
             .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }).limit(500)
         ]);
 
         setProjects(projectRows || []);
         setRequests(requestRows || []);
       } catch (err) {
-        console.error('Erreur chargement construction:', err);
+        logger.error('Erreur chargement construction:', err);
         setProjects([]);
         setRequests([]);
       } finally {

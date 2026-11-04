@@ -34,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const BuyerFinancingDashboard = () => {
   const { user } = useAuth();
@@ -124,13 +125,13 @@ const BuyerFinancingDashboard = () => {
         `)
         .eq('user_id', user.id)
         .eq('payment_type', 'bank_financing')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       setMyRequests(data || []);
     } catch (error) {
-      console.error('Erreur chargement demandes:', error);
+      logger.error('Erreur chargement demandes:', error);
     } finally {
       setLoadingRequests(false);
     }
@@ -789,7 +790,7 @@ const BuyerFinancingDashboard = () => {
                               className="flex-1"
                               onClick={() => {
                                 // TODO: Navigate to detailed view
-                                console.log('View request details:', request.id);
+                                logger.debug('View request details:', request.id);
                               }}
                             >
                               <FileText className="w-4 h-4 mr-2" />
@@ -801,7 +802,7 @@ const BuyerFinancingDashboard = () => {
                               className="flex-1"
                               onClick={() => {
                                 // TODO: Open chat with bank
-                                console.log('Message bank for request:', request.id);
+                                logger.debug('Message bank for request:', request.id);
                               }}
                             >
                               <Building2 className="w-4 h-4 mr-2" />
@@ -813,7 +814,7 @@ const BuyerFinancingDashboard = () => {
                               className="flex-1"
                               onClick={() => {
                                 // TODO: Open chat with vendor
-                                console.log('Message vendor for request:', request.id);
+                                logger.debug('Message vendor for request:', request.id);
                               }}
                             >
                               <Users className="w-4 h-4 mr-2" />

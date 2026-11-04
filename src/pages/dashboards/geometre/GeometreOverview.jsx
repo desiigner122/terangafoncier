@@ -89,19 +89,19 @@ const GeometreOverview = () => {
           supabase
             .from('survey_missions')
             .select('id, title, client_name, location, status, scheduled_date, price, progress, mission_type, created_at')
-            .eq('geometre_id', geometreId),
+            .eq('geometre_id', geometreId).limit(500),
           supabase
             .from('crm_contacts')
             .select('id, created_at')
-            .eq('owner_id', geometreId),
+            .eq('owner_id', geometreId).limit(500),
           supabase
             .from('field_measurements')
             .select('id, property_id, data, created_at')
-            .eq('geometre_id', geometreId),
+            .eq('geometre_id', geometreId).limit(500),
           supabase
             .from('documents')
             .select('id, name, type, created_at')
-            .eq('owner_id', geometreId)
+            .eq('owner_id', geometreId).limit(500)
         ]);
 
         if (!active) return;

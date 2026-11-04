@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierMessages = () => {
   const outletContext = useOutletContext();
@@ -57,14 +58,14 @@ const ParticulierMessages = () => {
 
   const loadMessages = async () => {
     if (!user?.id) {
-      console.log('❌ Utilisateur non disponible');
+      logger.debug('❌ Utilisateur non disponible');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des conversations...');
+      logger.debug('📊 Chargement des conversations...');
 
       // 1. Conversations réelles de l'utilisateur (via conversation_participants)
       const convRes = await ParticulierSupabaseService.getConversations(user.id);
@@ -83,7 +84,7 @@ const ParticulierMessages = () => {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, full_name, first_name, last_name, email, company')
-          .in('id', Array.from(otherIds));
+          .in('id', Array.from(otherIds)).limit(500);
         (profiles || []).forEach((p) => { profileMap[p.id] = p; });
       }
 
@@ -122,9 +123,9 @@ const ParticulierMessages = () => {
       );
 
       setMessages(enriched);
-      console.log(`✅ ${enriched.length} conversation(s) chargée(s)`);
+      logger.debug(`✅ ${enriched.length} conversation(s) chargée(s)`);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des messages:', error);
+      logger.error('❌ Erreur lors du chargement des messages:', error);
       setMessages([]);
     } finally {
       setLoading(false);
@@ -173,7 +174,7 @@ const ParticulierMessages = () => {
         )
       );
     } catch (error) {
-      console.error('❌ Erreur lors du marquage comme lu:', error);
+      logger.error('❌ Erreur lors du marquage comme lu:', error);
     }
   };
 

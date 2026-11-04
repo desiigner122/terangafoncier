@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurGPSRealData = () => {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ const VendeurGPSRealData = () => {
       if (!result.success) throw new Error(result.error || 'Erreur chargement des photos');
       setCoordinates(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement GPS:', error);
+      logger.error('Erreur chargement GPS:', error);
       toast.error('Erreur lors du chargement des coordonnées GPS');
     }
   };
@@ -75,12 +76,12 @@ const VendeurGPSRealData = () => {
         .from('properties')
         .select('id, title, location, status')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setProperties(data || []);
     } catch (error) {
-      console.error('Erreur chargement propriétés:', error);
+      logger.error('Erreur chargement propriétés:', error);
     }
   };
 
@@ -90,7 +91,7 @@ const VendeurGPSRealData = () => {
       if (!result.success) throw new Error(result.error || 'Erreur chargement des litiges');
       setDisputes(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement litiges:', error);
+      logger.error('Erreur chargement litiges:', error);
     }
   };
 
@@ -135,7 +136,7 @@ const VendeurGPSRealData = () => {
 
       return data;
     } catch (error) {
-      console.error('Erreur mise à jour GPS:', error);
+      logger.error('Erreur mise à jour GPS:', error);
       toast.error('❌ Erreur lors de la mise à jour des coordonnées');
     }
   };
@@ -169,7 +170,7 @@ const VendeurGPSRealData = () => {
       },
       (error) => {
         toast.dismiss();
-        console.error('Erreur géolocalisation:', error);
+        logger.error('Erreur géolocalisation:', error);
         toast.error('❌ Impossible d\'obtenir la position GPS');
       },
       {
@@ -199,7 +200,7 @@ const VendeurGPSRealData = () => {
       },
       (error) => {
         toast.dismiss();
-        console.error('Erreur géolocalisation:', error);
+        logger.error('Erreur géolocalisation:', error);
         toast.error('❌ Impossible d\'obtenir la position GPS');
       },
       {
@@ -350,7 +351,7 @@ const VendeurGPSRealData = () => {
       }
       loadGPSData();
     } catch (error) {
-      console.error('Erreur import KML:', error);
+      logger.error('Erreur import KML:', error);
       toast.error('❌ Erreur lors de l\'import KML');
     }
   };
@@ -413,7 +414,7 @@ Rapport généré par Teranga Foncier
 
       toast.success('📄 Rapport GPS généré et téléchargé');
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      logger.error('Erreur génération rapport:', error);
       toast.error('❌ Erreur lors de la génération du rapport');
     }
   };

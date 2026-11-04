@@ -37,6 +37,7 @@ import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParticulierTicketsSupport = () => {
   const { user } = useAuth();
@@ -92,7 +93,7 @@ const ParticulierTicketsSupport = () => {
       setTickets(ticketsData || []);
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement tickets:', error);
+      logger.error('Erreur chargement tickets:', error);
       toast.error('Erreur lors du chargement des tickets');
       setLoading(false);
     }
@@ -158,7 +159,7 @@ const ParticulierTicketsSupport = () => {
       // Recharger les tickets
       loadTickets();
     } catch (error) {
-      console.error('Erreur création ticket:', error);
+      logger.error('Erreur création ticket:', error);
       toast.error('Erreur lors de la création du ticket');
     }
   };
@@ -185,7 +186,7 @@ const ParticulierTicketsSupport = () => {
       // Recharger les tickets pour mettre à jour les messages
       loadTickets();
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     }
   };

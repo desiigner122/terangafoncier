@@ -34,6 +34,7 @@ import {
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const getStatusInfo = (status) => {
     switch (status) {
@@ -68,10 +69,10 @@ const MyListingsPage = () => {
             .from('parcels')
             .select('*')
             .eq('seller_id', user.id)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
         
         if (error) {
-            console.error("Error fetching listings:", error);
+            logger.error("Error fetching listings:", error);
             window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger vos annonces.", variant: "destructive" });
         } else {
             setListings(data);
@@ -121,7 +122,7 @@ const MyListingsPage = () => {
            setListings(prev => [data, ...prev]);
            
        } catch (error) {
-           console.error('Erreur duplication:', error);
+           logger.error('Erreur duplication:', error);
            window.safeGlobalToast({
                title: "Erreur",
                description: "Impossible de dupliquer l'annonce.",

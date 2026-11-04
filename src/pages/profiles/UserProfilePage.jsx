@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { logger } from '@/lib/logger';
 
 const UserProfilePage = () => {
   const { userId, userType } = useParams();
@@ -58,7 +59,7 @@ const UserProfilePage = () => {
         .single();
       
       if (error || !data) {
-        console.warn(`⚠️ Profil non trouvé pour ID ${userId}`);
+        logger.warn(`⚠️ Profil non trouvé pour ID ${userId}`);
         setProfile(null);
         return;
       }
@@ -85,7 +86,7 @@ const UserProfilePage = () => {
       };
       setProfile(mappedProfile);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement du profil:', error);
+      logger.error('❌ Erreur lors du chargement du profil:', error);
       setProfile(null);
     } finally {
       setLoading(false);
@@ -98,12 +99,12 @@ const UserProfilePage = () => {
       // Charger les propriétés pour tout utilisateur qui a des propriétés (vendeur, agent, promoteur, particulier)
       if (role && ['vendeur', 'particulier', 'agent-foncier', 'promoteur', 'seller'].includes(role)) {
         // Compter les propriétés
-        console.log(`📊 Loading properties for ${role} user ${userId}`);
+        logger.debug(`📊 Loading properties for ${role} user ${userId}`);
         const properties = await fetchDirect(
           `properties?select=id,status&owner_id=eq.${userId}`
         );
         
-        console.log(`✅ Found ${properties.length} properties`);
+        logger.debug(`✅ Found ${properties.length} properties`);
         
         const sold = properties.filter(p => p.status === 'sold').length;
         const available = properties.filter(p => p.status === 'active').length;
@@ -117,7 +118,7 @@ const UserProfilePage = () => {
       }
       return {};
     } catch (error) {
-      console.error('Erreur chargement stats:', error);
+      logger.error('Erreur chargement stats:', error);
       return {};
     }
   };

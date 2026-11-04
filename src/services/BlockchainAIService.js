@@ -1,5 +1,6 @@
 // Service Blockchain pour Teranga Foncier avec intégration IA
 import { ethers } from 'ethers';
+import { logger } from '@/lib/logger';
 
 class BlockchainAIService {
   constructor() {
@@ -40,13 +41,13 @@ class BlockchainAIService {
       
       // Vérifier la connexion
       const network = await this.provider.getNetwork();
-      console.log('✅ Connecté au réseau:', network.name);
+      logger.debug('✅ Connecté au réseau:', network.name);
 
       // Démarrer le monitoring temps réel
       this.startRealtimeMonitoring();
       
     } catch (error) {
-      console.error('âŒ Erreur initialisation blockchain:', error);
+      logger.error('âŒ Erreur initialisation blockchain:', error);
     }
   }
 
@@ -81,7 +82,7 @@ class BlockchainAIService {
       return metrics;
 
     } catch (error) {
-      console.error('Erreur métriques blockchain:', error);
+      logger.error('Erreur métriques blockchain:', error);
       return this.getFallbackMetrics();
     }
   }
@@ -118,7 +119,7 @@ class BlockchainAIService {
       return analysis;
 
     } catch (error) {
-      console.error('Erreur analyse transactions:', error);
+      logger.error('Erreur analyse transactions:', error);
       return null;
     }
   }
@@ -177,7 +178,7 @@ class BlockchainAIService {
       };
 
     } catch (error) {
-      console.error('Erreur création NFT:', error);
+      logger.error('Erreur création NFT:', error);
       return {
         success: false,
         error: error.message
@@ -224,7 +225,7 @@ class BlockchainAIService {
       };
 
     } catch (error) {
-      console.error('Erreur création escrow:', error);
+      logger.error('Erreur création escrow:', error);
       return {
         success: false,
         error: error.message
@@ -255,7 +256,7 @@ class BlockchainAIService {
       };
 
     } catch (error) {
-      console.error('Erreur mise Ï  jour oracle:', error);
+      logger.error('Erreur mise Ï  jour oracle:', error);
       return { success: false, error: error.message };
     }
   }
@@ -294,7 +295,7 @@ class BlockchainAIService {
       return checks;
 
     } catch (error) {
-      console.error('Erreur vérifications sécurité:', error);
+      logger.error('Erreur vérifications sécurité:', error);
       return null;
     }
   }
@@ -310,7 +311,7 @@ class BlockchainAIService {
         averageInvestmentSize: await this.getAverageInvestmentSize()
       };
     } catch (error) {
-      console.error('Erreur analytics cross-border:', error);
+      logger.error('Erreur analytics cross-border:', error);
       return null;
     }
   }
@@ -330,7 +331,7 @@ class BlockchainAIService {
       return { success: true };
 
     } catch (error) {
-      console.error('Erreur intégration IA:', error);
+      logger.error('Erreur intégration IA:', error);
       return { success: false, error: error.message };
     }
   }

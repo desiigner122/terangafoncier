@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook personnalisé pour les statistiques du dashboard admin
@@ -66,28 +67,28 @@ export const useAdminStats = () => {
       // 1. Statistiques utilisateurs
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
-        .select('id, role, created_at, suspended_at');
+        .select('id, role, created_at, suspended_at').limit(500);
 
       if (usersError) throw usersError;
 
       // 2. Statistiques propriétés
       const { data: allProperties, error: propertiesError } = await supabase
         .from('properties')
-        .select('id, verification_status, reported, created_at');
+        .select('id, verification_status, reported, created_at').limit(500);
 
       if (propertiesError) throw propertiesError;
 
       // 3. Statistiques tickets
       const { data: allTickets, error: ticketsError } = await supabase
         .from('support_tickets')
-        .select('id, status, priority');
+        .select('id, status, priority').limit(500);
 
       if (ticketsError) throw ticketsError;
 
       // 4. Statistiques signalements
       const { data: allReports, error: reportsError } = await supabase
         .from('property_reports')
-        .select('id, status');
+        .select('id, status').limit(500);
 
       if (reportsError) throw reportsError;
 
@@ -159,7 +160,7 @@ export const useAdminStats = () => {
 
       setStats(calculatedStats);
     } catch (err) {
-      console.error('Erreur lors de la récupération des statistiques:', err);
+      logger.error('Erreur lors de la récupération des statistiques:', err);
       setError(err.message);
     } finally {
       setLoading(false);

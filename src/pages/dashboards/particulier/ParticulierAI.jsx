@@ -40,6 +40,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParticulierAI = () => {
   const { user } = useAuth();
@@ -106,7 +107,7 @@ const ParticulierAI = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (chatError) throw chatError;
       setChatMessages(chatData || []);
 
@@ -115,11 +116,11 @@ const ParticulierAI = () => {
         .from('ai_analyses')
         .select('*, property:properties(id, title, name, location, region, ai_score, estimated_value, market_value, price)')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (analysesError) throw analysesError;
       setAiAnalyses(analysesData || []);
     } catch (error) {
-      console.error('Erreur chargement données IA:', error);
+      logger.error('Erreur chargement données IA:', error);
       setChatMessages([]);
       setAiAnalyses([]);
     } finally {
@@ -150,7 +151,7 @@ const ParticulierAI = () => {
       setMessage('');
       toast('Message enregistré. La réponse automatique de l\'assistant sera disponible prochainement.', { icon: 'ℹ️' });
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       toast.error('Impossible d\'enregistrer votre message.');
     } finally {
       setSending(false);

@@ -9,6 +9,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { terangaAI } from './TerangaAIService';
 import { terangaBlockchain } from './TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 class FraudDetectionAI {
   constructor() {
@@ -49,16 +50,16 @@ class FraudDetectionAI {
   }
 
   async initialize() {
-    console.log('🛡️ Initialisation système anti-fraude...');
+    logger.debug('🛡️ Initialisation système anti-fraude...');
     
     try {
       await this.loadFraudModels();
       await this.setupRealtimeMonitoring();
       await this.loadHistoricalFraudData();
       
-      console.log('✅ Système anti-fraude opérationnel');
+      logger.debug('✅ Système anti-fraude opérationnel');
     } catch (error) {
-      console.error('❌ Erreur initialisation anti-fraude:', error);
+      logger.error('❌ Erreur initialisation anti-fraude:', error);
     }
   }
 
@@ -66,7 +67,7 @@ class FraudDetectionAI {
   async analyzeTransaction(transactionData) {
     // Mode silencieux: retourne un score par défaut sans lever d'erreurs
     try {
-      console.log('🔍 Analyse anti-fraude transaction:', transactionData.id);
+      logger.debug('🔍 Analyse anti-fraude transaction:', transactionData.id);
       
       const startTime = Date.now();
       
@@ -118,7 +119,7 @@ class FraudDetectionAI {
       return result;
 
     } catch (error) {
-      console.warn('⚠️ Analyse anti-fraude en mode dégradé');
+      logger.warn('⚠️ Analyse anti-fraude en mode dégradé');
       return this.getFallbackFraudAnalysis(transactionData);
     }
   }
@@ -220,7 +221,7 @@ class FraudDetectionAI {
       };
 
     } catch (error) {
-      console.warn('⚠️ Analyse comportementale ignorée:', error.message);
+      logger.warn('⚠️ Analyse comportementale ignorée:', error.message);
       return { score: 0, flags: [], confidence: 0.3, safe: true };
     }
   }
@@ -311,7 +312,7 @@ class FraudDetectionAI {
       };
 
     } catch (error) {
-      console.warn('⚠️ Analyse blockchain ignorée:', error.message);
+      logger.warn('⚠️ Analyse blockchain ignorée:', error.message);
       return { score: 0, flags: [], confidence: 0.2, safe: true };
     }
   }
@@ -355,7 +356,7 @@ class FraudDetectionAI {
 
   // === ACTIONS ANTI-FRAUDE ===
   async triggerFraudAlert(fraudAnalysis) {
-    console.log('🚨 ALERTE FRAUDE DÉCLENCHÉE:', fraudAnalysis.transactionId);
+    logger.debug('🚨 ALERTE FRAUDE DÉCLENCHÉE:', fraudAnalysis.transactionId);
 
     try {
       // 1. Blocage automatique de la transaction
@@ -376,7 +377,7 @@ class FraudDetectionAI {
       }
 
     } catch (error) {
-      console.error('❌ Erreur déclenchement alerte fraude:', error);
+      logger.error('❌ Erreur déclenchement alerte fraude:', error);
     }
   }
 
@@ -486,14 +487,14 @@ class FraudDetectionAI {
       await this.scanRecentTransactions();
     }, 30000); // Toutes les 30 secondes
 
-    console.log('🔍 Monitoring anti-fraude temps réel activé');
+    logger.debug('🔍 Monitoring anti-fraude temps réel activé');
   }
 
   async scanRecentTransactions() {
     try {
       const recentTransactions = await supabase
         .from('transactions')
-        .select('*')
+        .select('*').limit(500)
         .gte('created_at', new Date(Date.now() - 60000).toISOString()) // Dernière minute
         .eq('fraud_checked', false);
 
@@ -507,19 +508,19 @@ class FraudDetectionAI {
           .eq('id', transaction.id);
       }
     } catch (error) {
-      console.error('❌ Erreur scan transactions récentes:', error);
+      logger.error('❌ Erreur scan transactions récentes:', error);
     }
   }
 
   // Méthodes utilitaires supplémentaires...
   async loadFraudModels() {
     // Charger les modèles IA pré-entraînés
-    console.log('🧠 Chargement modèles anti-fraude...');
+    logger.debug('🧠 Chargement modèles anti-fraude...');
   }
 
   async loadHistoricalFraudData() {
     // Charger données historiques de fraude
-    console.log('📊 Chargement données fraude historiques...');
+    logger.debug('📊 Chargement données fraude historiques...');
   }
 
   async getUserHistory(userId) {
@@ -564,23 +565,23 @@ class FraudDetectionAI {
   }
 
   async blockTransaction(transactionId) {
-    console.log('🚫 Transaction bloquée:', transactionId);
+    logger.debug('🚫 Transaction bloquée:', transactionId);
   }
 
   async notifySecurityTeam(analysis) {
-    console.log('📧 Équipe sécurité notifiée');
+    logger.debug('📧 Équipe sécurité notifiée');
   }
 
   async flagSuspiciousUser(transactionId) {
-    console.log('⚠️ Utilisateur marqué comme suspect');
+    logger.debug('⚠️ Utilisateur marqué comme suspect');
   }
 
   async logSecurityIncident(analysis) {
-    console.log('📝 Incident de sécurité enregistré');
+    logger.debug('📝 Incident de sécurité enregistré');
   }
 
   async alertAuthorities(analysis) {
-    console.log('🚨 Autorités alertées - Score extrême:', analysis.fraudScore);
+    logger.debug('🚨 Autorités alertées - Score extrême:', analysis.fraudScore);
   }
 }
 

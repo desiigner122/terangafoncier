@@ -30,6 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logger } from '@/lib/logger';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
@@ -114,7 +115,7 @@ const ParcellesVendeursPage = () => {
           `)
           .eq('status', 'active')
           .eq('verification_status', 'verified')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (fetchError) throw fetchError;
 
@@ -164,7 +165,7 @@ const ParcellesVendeursPage = () => {
 
         setParcelles(mappedData);
       } catch (err) {
-        console.error('Erreur chargement parcelles:', err);
+        logger.error('Erreur chargement parcelles:', err);
         setError(err.message);
       } finally {
         setLoading(false);

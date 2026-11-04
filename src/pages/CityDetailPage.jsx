@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const CityDetailPage = () => {
   const { cityId } = useParams();
@@ -77,7 +78,7 @@ const CityDetailPage = () => {
           }
         }
       } catch (err) {
-        console.error('Erreur chargement ville:', err);
+        logger.error('Erreur chargement ville:', err);
         if (!cancelled) setCity(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -108,7 +109,7 @@ const CityDetailPage = () => {
       setSubmitStatus({ type: 'success', message: 'Votre demande a bien été envoyée à la mairie.' });
       setFormData({ name: '', email: '', phone: '', message: '', parcelInterest: '' });
     } catch (err) {
-      console.error('Erreur soumission demande:', err);
+      logger.error('Erreur soumission demande:', err);
       setSubmitStatus({ type: 'error', message: "Une erreur est survenue lors de l'envoi de la demande." });
     } finally {
       setSubmitting(false);

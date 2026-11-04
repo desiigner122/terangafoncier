@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, FileText, Users, ArrowUp, ArrowDown, Star, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const TYPE_COLORS = ['blue', 'green', 'purple', 'orange', 'indigo', 'pink'];
@@ -29,14 +30,14 @@ const NotaireFinancialDashboardPage = () => {
           .from('notarial_acts')
           .select('id, act_type, reference, client_id, client_name, status, notary_fees, amount, client_satisfaction, signed_at, created_at')
           .eq('notaire_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         // Source complémentaire : transactions financières réelles du compte
         const { data: txData } = await supabase
           .from('financial_transactions')
           .select('id, reference, client_name, type, transaction_type, category, amount, fees, status, created_at')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         const acts = actsData || [];
         const txs = txData || [];
@@ -159,7 +160,7 @@ const NotaireFinancialDashboardPage = () => {
             .slice(0, 6)
         );
       } catch (err) {
-        console.error('Erreur chargement dashboard financier notaire:', err);
+        logger.error('Erreur chargement dashboard financier notaire:', err);
       } finally {
         setLoading(false);
       }

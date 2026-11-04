@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Gestion centralisée des erreurs Supabase
  * Convertit les codes d'erreur en messages utilisateur clairs
@@ -121,7 +122,7 @@ export function useSupabaseError() {
     const parsed = parseSupabaseError(error);
 
     // Log pour debug
-    console.error(`[Supabase ${context}]`, {
+    logger.error(`[Supabase ${context}]`, {
       code: parsed?.code,
       message: parsed?.message,
       detail: parsed?.detail,

@@ -56,6 +56,7 @@ import ProfileLink from '@/components/common/ProfileLink';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { logger } from '@/lib/logger';
 
 const ProjectDetailPage = () => {
   const { id } = useParams();
@@ -119,7 +120,7 @@ const ProjectDetailPage = () => {
             soldUnits = count;
           }
         } catch (salesErr) {
-          console.warn('Comptage des ventes indisponible:', salesErr);
+          logger.warn('Comptage des ventes indisponible:', salesErr);
         }
 
         if (!cancelled) {
@@ -150,7 +151,7 @@ const ProjectDetailPage = () => {
           });
         }
       } catch (err) {
-        console.error('Erreur chargement projet:', err);
+        logger.error('Erreur chargement projet:', err);
         if (!cancelled) setProject(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -271,7 +272,7 @@ const ProjectDetailPage = () => {
       navigate(`/dashboard/particulier/projects/${vefaCase.id}/tracking`);
 
     } catch (error) {
-      console.error('Erreur initiation achat projet:', error);
+      logger.error('Erreur initiation achat projet:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible d'initier l'achat. Veuillez réessayer.",
@@ -345,7 +346,7 @@ const ProjectDetailPage = () => {
       navigate(`/dashboard/particulier/projects/${vefaCase.id}/tracking`);
 
     } catch (error) {
-      console.error('Erreur réservation projet:', error);
+      logger.error('Erreur réservation projet:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de faire la réservation. Veuillez réessayer.",

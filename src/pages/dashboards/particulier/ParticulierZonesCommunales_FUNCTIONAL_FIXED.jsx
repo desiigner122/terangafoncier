@@ -27,6 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 // Normalise les valeurs de statut réelles (FR/EN) de communal_requests
 // vers les 4 états affichés par l'interface.
@@ -57,14 +58,14 @@ const ParticulierZonesCommunales = () => {
 
   const loadCandidatures = async () => {
     if (!user?.id) {
-      console.log('❌ Utilisateur non disponible');
+      logger.debug('❌ Utilisateur non disponible');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des candidatures zones communales...');
+      logger.debug('📊 Chargement des candidatures zones communales...');
 
       // Table réelle : communal_requests (filtrée sur applicant_id)
       const result = await ParticulierSupabaseService.getCommunalRequests(user.id);
@@ -80,9 +81,9 @@ const ParticulierZonesCommunales = () => {
       }));
 
       setCandidatures(rows);
-      console.log(`✅ ${rows.length} candidatures chargées`);
+      logger.debug(`✅ ${rows.length} candidatures chargées`);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des candidatures:', error);
+      logger.error('❌ Erreur lors du chargement des candidatures:', error);
       setCandidatures([]);
     } finally {
       setLoading(false);

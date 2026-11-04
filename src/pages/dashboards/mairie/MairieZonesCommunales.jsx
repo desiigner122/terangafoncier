@@ -23,6 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const MairieZonesCommunales = ({ dashboardStats }) => {
   const { profile } = useAuth();
@@ -42,7 +43,7 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
       let query = supabase
         .from('communal_requests')
         .select('id, applicant_id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at, updated_at')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Les mairies gèrent les demandes de leur commune si connue
       if (profile?.city) {
@@ -82,7 +83,7 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
       });
       setZones(Array.from(map.values()).sort((a, b) => b.requests - a.requests));
     } catch (err) {
-      console.error('Erreur chargement zones communales:', err);
+      logger.error('Erreur chargement zones communales:', err);
       setErrorData(err.message || 'Erreur de chargement');
       setRequests([]);
       setZones([]);

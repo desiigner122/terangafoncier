@@ -17,6 +17,7 @@ import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, L
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -32,10 +33,10 @@ const AnalyticsPageComponent = () => {
       try {
         // Récupérer les données réelles depuis Supabase
         const [usersResult, parcelsResult, requestsResult, blogResult] = await Promise.all([
-          supabase.from('profiles').select('*'),
-          supabase.from('parcels').select('*'),
-          supabase.from('requests').select('*'),
-          supabase.from('blog').select('*')
+          supabase.from('profiles').select('*').limit(500),
+          supabase.from('parcels').select('*').limit(500),
+          supabase.from('requests').select('*').limit(500),
+          supabase.from('blog').select('*').limit(500)
         ]);
 
         const totalUsers = usersResult.data?.length || 0;
@@ -80,7 +81,7 @@ const AnalyticsPageComponent = () => {
         });
 
       } catch (error) {
-        console.error('Error fetching real analytics data:', error);
+        logger.error('Error fetching real analytics data:', error);
         // Fallback avec données vides
         setAnalyticsData({
           kpis: [

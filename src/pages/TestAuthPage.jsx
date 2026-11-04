@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, AlertCircle, User, Settings, Key } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const TestAuthPage = () => {
   const { 
@@ -267,7 +268,7 @@ const TestAuthPage = () => {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => console.log('Current user:', user)}
+                  onClick={() => logger.debug('Current user:', user)}
                 >
                   Debug Console
                 </Button>

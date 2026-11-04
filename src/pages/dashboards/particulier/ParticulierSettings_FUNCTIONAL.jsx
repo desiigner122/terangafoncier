@@ -28,6 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const ParticulierSettings = () => {
   const { user } = useOutletContext();
@@ -62,7 +63,7 @@ const ParticulierSettings = () => {
 
   const loadProfile = async () => {
     try {
-      console.log('📊 Chargement du profil utilisateur...');
+      logger.debug('📊 Chargement du profil utilisateur...');
 
       // Table réelle : profiles (clé = id = user.id), colonnes réelles.
       const { data, error } = await supabase
@@ -85,16 +86,16 @@ const ParticulierSettings = () => {
         nationality: data?.nationality || ''
       });
 
-      console.log('✅ Profil chargé');
+      logger.debug('✅ Profil chargé');
     } catch (error) {
-      console.error('❌ Erreur chargement profil:', error);
+      logger.error('❌ Erreur chargement profil:', error);
     }
   };
 
   const updateProfile = async () => {
     try {
       setLoading(true);
-      console.log('💾 Mise à jour du profil...');
+      logger.debug('💾 Mise à jour du profil...');
 
       // La ligne profiles existe déjà (créée à l'inscription) → update sur id.
       const { error } = await supabase
@@ -116,9 +117,9 @@ const ParticulierSettings = () => {
 
       if (error) throw error;
 
-      console.log('✅ Profil mis à jour avec succès');
+      logger.debug('✅ Profil mis à jour avec succès');
     } catch (error) {
-      console.error('❌ Erreur mise à jour profil:', error);
+      logger.error('❌ Erreur mise à jour profil:', error);
     } finally {
       setLoading(false);
     }
@@ -127,18 +128,18 @@ const ParticulierSettings = () => {
   // ⚠️ Pas de table serveur fiable pour ces préférences → mise à jour locale
   // à la session uniquement (aucune fausse persistance côté serveur).
   const updateNotificationSettings = () => {
-    console.log('ℹ️ Préférences de notification appliquées localement (session uniquement)');
+    logger.debug('ℹ️ Préférences de notification appliquées localement (session uniquement)');
   };
 
   const updatePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      console.error('❌ Les mots de passe ne correspondent pas');
+      logger.error('❌ Les mots de passe ne correspondent pas');
       return;
     }
 
     try {
       setLoading(true);
-      console.log('🔐 Mise à jour du mot de passe...');
+      logger.debug('🔐 Mise à jour du mot de passe...');
 
       const { error } = await supabase.auth.updateUser({
         password: passwordForm.newPassword
@@ -152,9 +153,9 @@ const ParticulierSettings = () => {
         confirmPassword: ''
       });
 
-      console.log('✅ Mot de passe mis à jour avec succès');
+      logger.debug('✅ Mot de passe mis à jour avec succès');
     } catch (error) {
-      console.error('❌ Erreur mise à jour mot de passe:', error);
+      logger.error('❌ Erreur mise à jour mot de passe:', error);
     } finally {
       setLoading(false);
     }

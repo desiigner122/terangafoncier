@@ -49,6 +49,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { logger } from '@/lib/logger';
 
 // Réseaux blockchain supportés — contenu ÉDITORIAL (capacités de la plateforme),
 // pas une métrique. Aucune colonne "network" n'existe dans le schéma réel.
@@ -112,12 +113,12 @@ const NotaireBlockchainModernized = () => {
           .from('document_authentication')
           .select('id, document_name, document_type, verification_status, authenticity_hash, property_id, verified_at, created_at')
           .eq('notaire_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('blockchain_transactions')
           .select('id, property_id, amount, status, transaction_hash, block_number, created_at')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }).limit(500)
       ]);
 
       if (authRes.error) throw authRes.error;
@@ -143,7 +144,7 @@ const NotaireBlockchainModernized = () => {
         totalTransactions: txs.length
       });
     } catch (error) {
-      console.error('Erreur chargement données blockchain:', error);
+      logger.error('Erreur chargement données blockchain:', error);
       window.safeGlobalToast?.({
         title: 'Erreur de chargement',
         description: 'Impossible de récupérer les données blockchain.',

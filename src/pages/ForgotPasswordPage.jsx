@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ const ForgotPasswordPage = () => {
       setEmailSent(true);
       setMessage('Un email de réinitialisation a été envoyé Ï  votre adresse email.');
     } catch (error) {
-      console.error('Password reset error:', error);
+      logger.error('Password reset error:', error);
       setError('Erreur lors de l\'envoi de l\'email. Veuillez vérifier votre adresse email.');
     } finally {
       setLoading(false);

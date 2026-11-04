@@ -30,6 +30,7 @@ import {
   Building,
   Image as ImageIcon
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const ParcelDetailPage = () => {
   const { id } = useParams();
@@ -60,7 +61,7 @@ const ParcelDetailPage = () => {
         if (error) throw error;
         setParcel(data);
       } catch (error) {
-        console.error('Erreur chargement terrain:', error);
+        logger.error('Erreur chargement terrain:', error);
         window.safeGlobalToast({
           title: 'Erreur',
           description: 'Impossible de charger les détails du terrain.',

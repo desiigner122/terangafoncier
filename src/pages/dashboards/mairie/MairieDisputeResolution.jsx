@@ -48,6 +48,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Libellés d'affichage pour les statuts réels de la table `disputes`
 const STATUS_LABELS = {
@@ -101,7 +102,7 @@ const MairieDisputeResolution = ({ dashboardStats }) => {
       const { data, error } = await supabase
         .from('disputes')
         .select('id, title, property_id, status, parties, created_at, updated_at')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
@@ -123,7 +124,7 @@ const MairieDisputeResolution = ({ dashboardStats }) => {
       });
       setDisputes(mapped);
     } catch (err) {
-      console.error('Erreur chargement litiges:', err);
+      logger.error('Erreur chargement litiges:', err);
       setErrorData(err.message || 'Erreur de chargement des litiges');
       setDisputes([]);
     } finally {
@@ -148,7 +149,7 @@ const MairieDisputeResolution = ({ dashboardStats }) => {
       await loadDisputes();
       setSelectedDispute(null);
     } catch (err) {
-      console.error('Erreur résolution litige:', err);
+      logger.error('Erreur résolution litige:', err);
       setErrorData(err.message || 'Erreur lors de la mise à jour du litige');
     } finally {
       setActioningId(null);

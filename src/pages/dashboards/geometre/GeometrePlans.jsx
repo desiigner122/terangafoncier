@@ -48,6 +48,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Normalise une ligne `documents` (type='plan') en objet d'affichage.
 // Seules les colonnes réelles existent (name, type, url, status, created_at) :
@@ -97,12 +98,12 @@ const GeometrePlans = () => {
           .select('*')
           .eq('owner_id', user.id)
           .eq('type', 'plan')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setPlans((data || []).map(mapPlan));
       } catch (err) {
-        console.error('Erreur chargement plans:', err);
+        logger.error('Erreur chargement plans:', err);
         setPlans([]);
       } finally {
         setLoading(false);

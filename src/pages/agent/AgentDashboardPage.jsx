@@ -48,6 +48,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
+import { logger } from '@/lib/logger';
 
 // Fonctions utilitaires
 const getActivityIcon = (type) => {
@@ -232,7 +233,7 @@ const AgentDashboardPage = () => {
         setFetchError(err.message);
         setAgentParcels([]);
         setAgentRequests([]);
-        console.error('Erreur lors du chargement des données agent:', err);
+        logger.error('Erreur lors du chargement des données agent:', err);
       } finally {
         setLoading(false);
       }

@@ -56,6 +56,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import CreateClientDialog from '@/components/notaire/CreateClientDialog';
+import { logger } from '@/lib/logger';
 
 // Statuts d'actes considérés comme "actifs" / "finalisés"
 const ACTIVE_STATUSES = ['draft', 'in_progress'];
@@ -105,7 +106,7 @@ const NotaireCRMModernized = () => {
         .from('clients_notaire')
         .select('id, notaire_id, client_id, name, status, created_at')
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (clientsError) throw clientsError;
 
       // 2. Actes notariaux réels (pour agréger transactions/revenus par client)
@@ -113,7 +114,7 @@ const NotaireCRMModernized = () => {
         .from('notarial_acts')
         .select('id, client_id, client_name, act_type, reference, status, notary_fees, amount, client_satisfaction, signed_at, created_at')
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (actsError) throw actsError;
       const allActs = actsData || [];
       setActs(allActs);
@@ -125,7 +126,7 @@ const NotaireCRMModernized = () => {
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, email, phone, city, region, full_name')
-          .in('id', clientProfileIds);
+          .in('id', clientProfileIds).limit(500);
         (profilesData || []).forEach(p => { profilesById[p.id] = p; });
       }
 
@@ -202,7 +203,7 @@ const NotaireCRMModernized = () => {
         retentionRate
       });
     } catch (error) {
-      console.error('Erreur chargement données CRM:', error);
+      logger.error('Erreur chargement données CRM:', error);
       window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: "Impossible de charger les données CRM",

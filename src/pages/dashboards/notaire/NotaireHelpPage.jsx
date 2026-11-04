@@ -13,6 +13,7 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const NotaireHelpPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,10 +30,10 @@ const NotaireHelpPage = () => {
       const { data, error } = await supabase
         .from('faq_items')
         .select('id, question, answer, category')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (!active) return;
       if (error) {
-        console.error('Erreur chargement FAQ:', error);
+        logger.error('Erreur chargement FAQ:', error);
         setFaqItems([]);
       } else {
         setFaqItems(data || []);

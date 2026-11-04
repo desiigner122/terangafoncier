@@ -28,6 +28,7 @@ import {
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Référentiel statique des 5 étapes du processus d'attribution
 const STEPS_REFERENTIEL = [
@@ -173,7 +174,7 @@ const TerrainProgressPage = () => {
 
         if (isMounted) setRequest(data || null);
       } catch (err) {
-        console.error('Erreur chargement demande communale:', err);
+        logger.error('Erreur chargement demande communale:', err);
         if (isMounted) setRequest(null);
       } finally {
         if (isMounted) setLoading(false);

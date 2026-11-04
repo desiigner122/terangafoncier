@@ -31,6 +31,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const AdminProjectsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -110,7 +111,7 @@ const AdminProjectsPage = () => {
         });
 
       } catch (error) {
-        console.error('Erreur lors du chargement des projets:', error);
+        logger.error('Erreur lors du chargement des projets:', error);
       } finally {
         setLoading(false);
       }

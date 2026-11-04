@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const formatCurrency = (amount) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(amount || 0);
@@ -17,7 +18,7 @@ export const logAdminAction = async (adminId, actionType, targetId, targetType, 
       created_at: new Date()
     });
   } catch (error) {
-    console.error('Erreur log action:', error);
+    logger.error('Erreur log action:', error);
   }
 };
 

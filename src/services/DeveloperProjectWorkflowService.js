@@ -4,6 +4,7 @@
  */
 import { terangaBlockchain } from './TerangaBlockchainService';
 import { NotificationService } from './NotificationService';
+import { logger } from '@/lib/logger';
 
 export class DeveloperProjectWorkflowService {
   constructor() {
@@ -247,7 +248,7 @@ export class DeveloperProjectWorkflowService {
 
       return caseData;
     } catch (error) {
-      console.error('Erreur création cas projet:', error);
+      logger.error('Erreur création cas projet:', error);
       throw error;
     }
   }
@@ -310,7 +311,7 @@ export class DeveloperProjectWorkflowService {
 
       return updateData;
     } catch (error) {
-      console.error('Erreur mise à jour statut projet:', error);
+      logger.error('Erreur mise à jour statut projet:', error);
       throw error;
     }
   }
@@ -433,7 +434,7 @@ export class DeveloperProjectWorkflowService {
     try {
       return await this.blockchainService.getCaseHistory(caseId);
     } catch (error) {
-      console.error('Erreur récupération historique projet:', error);
+      logger.error('Erreur récupération historique projet:', error);
       throw error;
     }
   }

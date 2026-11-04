@@ -77,6 +77,7 @@ import {
 import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
 import { useMaintenanceMode } from '@/contexts/MaintenanceContext';
+import { logger } from '@/lib/logger';
 
 const ModernSettingsPage = () => {
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
@@ -111,7 +112,7 @@ const ModernSettingsPage = () => {
     setError(null);
     
     try {
-      console.log('🔄 Chargement des paramètres réels...');
+      logger.debug('🔄 Chargement des paramètres réels...');
       
       // Charger les paramètres système réels
       const [
@@ -193,9 +194,9 @@ const ModernSettingsPage = () => {
       // Charger la configuration Blockchain
       await loadBlockchainConfiguration();
 
-      console.log('✅ Paramètres réels chargés avec succès');
+      logger.debug('✅ Paramètres réels chargés avec succès');
     } catch (error) {
-      console.error('❌ Erreur chargement paramètres:', error);
+      logger.error('❌ Erreur chargement paramètres:', error);
       setError(error.message);
       toast.error('Erreur lors du chargement des paramètres');
     } finally {
@@ -234,7 +235,7 @@ const ModernSettingsPage = () => {
       
       setAiConfig(aiSettings);
     } catch (error) {
-      console.error('Erreur configuration IA:', error);
+      logger.error('Erreur configuration IA:', error);
     }
   };
 
@@ -277,7 +278,7 @@ const ModernSettingsPage = () => {
       
       setBlockchainConfig(blockchainSettings);
     } catch (error) {
-      console.error('Erreur configuration blockchain:', error);
+      logger.error('Erreur configuration blockchain:', error);
     }
   };
 

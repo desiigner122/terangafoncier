@@ -40,6 +40,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { generatePropertySlug } from '@/utils/propertySlug';
+import { logger } from '@/lib/logger';
 
 const TerrainsVendeursPage = () => {
   const [properties, setProperties] = useState([]);
@@ -70,7 +71,7 @@ const TerrainsVendeursPage = () => {
         .limit(200);
 
       if (error) {
-        console.error('Error fetching properties:', error);
+        logger.error('Error fetching properties:', error);
         setProperties([]);
       } else {
         const formatted = data.map(p => ({

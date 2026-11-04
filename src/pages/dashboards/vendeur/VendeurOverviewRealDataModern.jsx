@@ -30,6 +30,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
 import StatsCard from '@/components/ui/StatsCard';
 import { notify } from '@/components/ui/NotificationToast';
+import { logger } from '@/lib/logger';
 
 const VendeurOverviewRealDataModern = () => {
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ const VendeurOverviewRealDataModern = () => {
           updated_at,
           photos:property_photos ( id, url, is_primary )
         `)
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       if (propError) throw propError;
 
@@ -164,9 +165,9 @@ const VendeurOverviewRealDataModern = () => {
         const { data: offersData, error: offersError } = await supabase
           .from('financial_transactions')
           .select('id, property_id, status, amount')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
         if (offersError) {
-          console.log('Offres non disponibles:', offersError);
+          logger.debug('Offres non disponibles:', offersError);
         } else {
           offers = offersData || [];
         }
@@ -213,12 +214,12 @@ const VendeurOverviewRealDataModern = () => {
         const { data: crmContacts } = await supabase
           .from('crm_contacts')
           .select('id, status')
-          .eq('owner_id', user.id);
+          .eq('owner_id', user.id).limit(500);
 
         stats.newProspects = crmContacts?.filter(c => c.status === 'new').length || 0;
         stats.hotLeads = crmContacts?.filter(c => c.status === 'hot').length || 0;
       } catch (error) {
-        console.log('CRM non disponible:', error);
+        logger.debug('CRM non disponible:', error);
         stats.newProspects = 0;
         stats.hotLeads = 0;
       }
@@ -262,7 +263,7 @@ const VendeurOverviewRealDataModern = () => {
       generateAlerts(properties, stats);
 
     } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
+      logger.error('Erreur chargement dashboard:', error);
       notify.error('Erreur lors du chargement du dashboard');
     } finally {
       setLoading(false);

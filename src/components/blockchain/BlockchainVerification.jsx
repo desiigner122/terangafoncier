@@ -8,6 +8,7 @@ import { Shield, Check, AlertTriangle, Download, Eye, Hash, Clock, Zap } from 'l
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
+import { logger } from '@/lib/logger';
 
 const BlockchainVerification = ({ caseId, className = '' }) => {
   const [integrity, setIntegrity] = useState(null);
@@ -35,7 +36,7 @@ const BlockchainVerification = ({ caseId, className = '' }) => {
         setHistory(historyResult.history);
       }
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ const BlockchainVerification = ({ caseId, className = '' }) => {
         window.URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Erreur génération certificat:', error);
+      logger.error('Erreur génération certificat:', error);
     }
   };
 

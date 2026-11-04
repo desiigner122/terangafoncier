@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const getStatusBadge = (status) => {
   const statusConfig = {
@@ -69,7 +70,7 @@ const ParticulierVisites = () => {
 
       setVisits(result.data || []);
     } catch (error) {
-      console.error('❌ Erreur chargement visites:', error);
+      logger.error('❌ Erreur chargement visites:', error);
       setVisits([]);
       window.safeGlobalToast?.({
         description: 'Erreur lors du chargement des visites',

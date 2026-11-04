@@ -66,6 +66,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
+import { logger } from '@/lib/logger';
 
 const ModernPropertiesManagementPage = () => {
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
@@ -97,7 +98,7 @@ const ModernPropertiesManagementPage = () => {
     setError(null);
     
     try {
-      console.log('🔄 Chargement des propriétés réelles...');
+      logger.debug('🔄 Chargement des propriétés réelles...');
       
       // Charger propriétés et statistiques en parallèle
       const [propertiesResult, statsResult] = await Promise.all([
@@ -108,14 +109,14 @@ const ModernPropertiesManagementPage = () => {
       if (propertiesResult.success) {
         setProperties(propertiesResult.data);
         setFilteredProperties(propertiesResult.data);
-        console.log(`✅ ${propertiesResult.data.length} propriétés réelles chargées`);
+        logger.debug(`✅ ${propertiesResult.data.length} propriétés réelles chargées`);
       } else {
         throw new Error(propertiesResult.error);
       }
 
       if (statsResult.success) {
         setPropertiesStats(statsResult.data);
-        console.log('✅ Statistiques propriétés chargées');
+        logger.debug('✅ Statistiques propriétés chargées');
       }
 
       // Charger l'analyse IA
@@ -125,7 +126,7 @@ const ModernPropertiesManagementPage = () => {
       await loadBlockchainStatus(propertiesResult.data);
 
     } catch (error) {
-      console.error('❌ Erreur chargement propriétés:', error);
+      logger.error('❌ Erreur chargement propriétés:', error);
       setError(error.message);
       toast.error('Erreur lors du chargement des propriétés');
     } finally {
@@ -163,7 +164,7 @@ const ModernPropertiesManagementPage = () => {
       setAiValuations(valuations);
       setNftReadiness(nftReady);
     } catch (error) {
-      console.error('Erreur évaluations IA:', error);
+      logger.error('Erreur évaluations IA:', error);
     }
   };
 
@@ -185,7 +186,7 @@ const ModernPropertiesManagementPage = () => {
       
       setBlockchainStatus(status);
     } catch (error) {
-      console.error('Erreur statut blockchain:', error);
+      logger.error('Erreur statut blockchain:', error);
     }
   };
 

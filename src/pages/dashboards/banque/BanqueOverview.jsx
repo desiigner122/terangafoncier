@@ -69,6 +69,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Formatage montant FCFA lisible
 const formatFCFA = (amount) => {
@@ -115,9 +116,9 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     if (!bankId) return;
     try {
       const [loansRes, clientsRes, guaranteesRes] = await Promise.all([
-        supabase.from('loans').select('*').eq('bank_id', bankId),
-        supabase.from('bank_clients').select('*').eq('bank_id', bankId),
-        supabase.from('guarantees').select('*').eq('bank_id', bankId)
+        supabase.from('loans').select('*').eq('bank_id', bankId).limit(500),
+        supabase.from('bank_clients').select('*').eq('bank_id', bankId).limit(500),
+        supabase.from('guarantees').select('*').eq('bank_id', bankId).limit(500)
       ]);
 
       const loans = loansRes.data || [];
@@ -350,7 +351,7 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
         }))
       );
     } catch (error) {
-      console.error('Erreur chargement aperçu banque:', error);
+      logger.error('Erreur chargement aperçu banque:', error);
     } finally {
       setLoading(false);
     }

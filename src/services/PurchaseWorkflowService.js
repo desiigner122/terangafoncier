@@ -8,6 +8,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import NotificationService from './NotificationService';
 import { terangaBlockchain } from './TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 export class PurchaseWorkflowService {
   // Définition des statuts et étapes du workflow
@@ -313,9 +314,9 @@ export class PurchaseWorkflowService {
           property_details: purchaseData.property_details || {},
           ...newCase
         });
-        console.log('🔗 Dossier enregistré sur blockchain Teranga');
+        logger.debug('🔗 Dossier enregistré sur blockchain Teranga');
       } catch (blockchainError) {
-        console.warn('⚠️ Erreur blockchain (dossier créé quand même):', blockchainError);
+        logger.warn('⚠️ Erreur blockchain (dossier créé quand même):', blockchainError);
       }
 
       // Créer l'entrée historique initiale
@@ -326,7 +327,7 @@ export class PurchaseWorkflowService {
 
       return { success: true, case: newCase };
     } catch (error) {
-      console.error('Erreur création dossier d\'achat:', error);
+      logger.error('Erreur création dossier d\'achat:', error);
       return { success: false, error: error.message };
     }
   }
@@ -377,9 +378,9 @@ export class PurchaseWorkflowService {
           updatedBy,
           { notes, attachments_count: attachments.length }
         );
-        console.log(`🔗 Changement statut enregistré sur blockchain: ${currentCase.status} → ${newStatus}`);
+        logger.debug(`🔗 Changement statut enregistré sur blockchain: ${currentCase.status} → ${newStatus}`);
       } catch (blockchainError) {
-        console.warn('⚠️ Erreur blockchain (changement de statut effectué):', blockchainError);
+        logger.warn('⚠️ Erreur blockchain (changement de statut effectué):', blockchainError);
       }
 
       // Ajouter à l'historique
@@ -395,7 +396,7 @@ export class PurchaseWorkflowService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur mise à jour statut:', error);
+      logger.error('Erreur mise à jour statut:', error);
       return { success: false, error: error.message };
     }
   }
@@ -425,7 +426,7 @@ export class PurchaseWorkflowService {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur ajout historique:', error);
+      logger.error('Erreur ajout historique:', error);
       return { success: false, error: error.message };
     }
   }
@@ -490,7 +491,7 @@ export class PurchaseWorkflowService {
           break;
       }
     } catch (error) {
-      console.error('Erreur traitement automatique:', error);
+      logger.error('Erreur traitement automatique:', error);
     }
   }
 
@@ -503,14 +504,14 @@ export class PurchaseWorkflowService {
       const result = await NotificationService.sendWorkflowNotifications(caseId, status);
       
       if (result.success) {
-        console.log(`Notifications envoyées pour le dossier ${caseId}, statut ${status}: ${result.sent} notifications`);
+        logger.debug(`Notifications envoyées pour le dossier ${caseId}, statut ${status}: ${result.sent} notifications`);
       } else {
-        console.error('Erreur envoi notifications:', result.error);
+        logger.error('Erreur envoi notifications:', result.error);
       }
 
       return result;
     } catch (error) {
-      console.error('Erreur notifications workflow:', error);
+      logger.error('Erreur notifications workflow:', error);
       return { success: false, error: error.message };
     }
   }
@@ -532,14 +533,14 @@ export class PurchaseWorkflowService {
         .from('purchase_case_history')
         .select('*')
         .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (historyError) throw historyError;
 
       const { data: documents, error: docsError } = await supabase
         .from('purchase_case_documents')
         .select('*')
-        .eq('case_id', caseId);
+        .eq('case_id', caseId).limit(500);
 
       if (docsError) throw docsError;
 
@@ -555,7 +556,7 @@ export class PurchaseWorkflowService {
         }
       };
     } catch (error) {
-      console.error('Erreur récupération dossier:', error);
+      logger.error('Erreur récupération dossier:', error);
       return { success: false, error: error.message };
     }
   }
@@ -590,7 +591,7 @@ export class PurchaseWorkflowService {
    */
   static async getCaseStatistics(userId, userRole) {
     try {
-      let query = supabase.from('purchase_cases').select('status, phase, created_at');
+      let query = supabase.from('purchase_cases').select('status, phase, created_at').limit(500);
       
       if (userRole === 'buyer') {
         query = query.eq('buyer_id', userId);
@@ -623,7 +624,7 @@ export class PurchaseWorkflowService {
 
       return { success: true, stats };
     } catch (error) {
-      console.error('Erreur statistiques:', error);
+      logger.error('Erreur statistiques:', error);
       return { success: false, error: error.message };
     }
   }
@@ -657,14 +658,14 @@ export class PurchaseWorkflowService {
       // 🔗 ENREGISTREMENT BLOCKCHAIN: Upload document
       try {
         await terangaBlockchain.recordDocumentUpload(caseId, documentData, userId);
-        console.log(`🔗 Document enregistré sur blockchain: ${documentData.name}`);
+        logger.debug(`🔗 Document enregistré sur blockchain: ${documentData.name}`);
       } catch (blockchainError) {
-        console.warn('⚠️ Erreur blockchain (document uploadé):', blockchainError);
+        logger.warn('⚠️ Erreur blockchain (document uploadé):', blockchainError);
       }
 
       return { success: true, document: uploadedDoc };
     } catch (error) {
-      console.error('Erreur upload document:', error);
+      logger.error('Erreur upload document:', error);
       return { success: false, error: error.message };
     }
   }
@@ -686,7 +687,7 @@ export class PurchaseWorkflowService {
         }
       };
     } catch (error) {
-      console.error('Erreur vérification blockchain:', error);
+      logger.error('Erreur vérification blockchain:', error);
       return { success: false, error: error.message };
     }
   }

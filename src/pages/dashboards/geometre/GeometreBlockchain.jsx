@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const GeometreBlockchain = () => {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ const GeometreBlockchain = () => {
         const { data: props, error: propsError } = await supabase
           .from('properties')
           .select('id, title, name, location, surface')
-          .eq('owner_id', user.id);
+          .eq('owner_id', user.id).limit(500);
         if (propsError) throw propsError;
 
         const propMap = new Map((props || []).map((p) => [p.id, p]));
@@ -54,7 +55,7 @@ const GeometreBlockchain = () => {
             .from('blockchain_certificates')
             .select('*')
             .in('property_id', propertyIds)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
           if (certError) throw certError;
           certs = certData || [];
         }
@@ -79,7 +80,7 @@ const GeometreBlockchain = () => {
           .from('blockchain_transactions')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (txError) throw txError;
 
         setTransactions(
@@ -93,7 +94,7 @@ const GeometreBlockchain = () => {
           }))
         );
       } catch (err) {
-        console.error('Erreur chargement blockchain:', err);
+        logger.error('Erreur chargement blockchain:', err);
         setCertificates([]);
         setTransactions([]);
       } finally {

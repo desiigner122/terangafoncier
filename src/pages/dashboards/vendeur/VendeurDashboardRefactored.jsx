@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
       const { data: propertiesData, error: propsError } = await supabase
         .from('properties')
         .select('id, title, status, price, created_at, updated_at')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       if (propsError) throw propsError;
       const properties = propertiesData || [];
@@ -89,15 +90,15 @@ const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
         const { data: requestsByProperty, error: reqError1 } = await supabase
           .from('purchase_requests')
           .select('id, property_id, status, created_at, buyer_id')
-          .in('property_id', propertyIds);
-        if (reqError1) console.error('Erreur demandes (property):', reqError1);
+          .in('property_id', propertyIds).limit(500);
+        if (reqError1) logger.error('Erreur demandes (property):', reqError1);
         requests = requestsByProperty || [];
         // Fallback: vérifier la table property_inquiries si elle existe (utilisée par le sidebar)
         try {
           const { data: inquiriesData, error: inquiriesError } = await supabase
             .from('property_inquiries')
             .select('id, property_id, status, created_at')
-            .in('property_id', propertyIds);
+            .in('property_id', propertyIds).limit(500);
           if (!inquiriesError && Array.isArray(inquiriesData)) {
             const merged = [...requests, ...inquiriesData.map(i => ({
               id: i.id,
@@ -125,18 +126,18 @@ const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
       const { data: contactsData, error: contactError } = await supabase
         .from('crm_contacts')
         .select('id, first_name, last_name, status')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
 
-      if (contactError) console.error('Erreur contacts:', contactError);
+      if (contactError) logger.error('Erreur contacts:', contactError);
       const contacts = contactsData || [];
 
       // 4. Récupérer les deals CRM
       const { data: dealsData, error: dealsError } = await supabase
         .from('crm_deals')
         .select('id, title, value, stage, created_at')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
 
-      if (dealsError) console.error('Erreur deals:', dealsError);
+      if (dealsError) logger.error('Erreur deals:', dealsError);
       const deals = dealsData || [];
 
       // ===== CALCULS RÉELS =====
@@ -225,7 +226,7 @@ const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
 
       setRecentActivities(activitiesData || []);
     } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
+      logger.error('Erreur chargement dashboard:', error);
     } finally {
       setLoading(false);
     }

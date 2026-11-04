@@ -34,6 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { aiService } from '@/services/AIService';
+import { logger } from '@/lib/logger';
 
 const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -105,7 +106,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
       
       setInsights(contextualInsights);
     } catch (error) {
-      console.error('Erreur lors du chargement des insights:', error);
+      logger.error('Erreur lors du chargement des insights:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -116,7 +117,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
       const userNotifications = await aiService.generateSmartNotifications(userProfile?.id);
       setNotifications(userNotifications);
     } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error);
+      logger.error('Erreur lors du chargement des notifications:', error);
     }
   };
 
@@ -176,9 +177,9 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
     try {
       const report = await aiService.generateMarketReport();
       // Logique pour afficher ou télécharger le rapport
-      console.log('Rapport généré:', report);
+      logger.debug('Rapport généré:', report);
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      logger.error('Erreur génération rapport:', error);
     } finally {
       setIsAnalyzing(false);
     }

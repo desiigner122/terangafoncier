@@ -16,6 +16,7 @@ import {
 // import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
 import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 import { Helmet } from 'react-helmet-async';
+import { logger } from '@/lib/logger';
 
 const regionDataSim = {
   "saint-louis": {
@@ -77,7 +78,7 @@ const RegionInvestmentPage = () => {
         setFetchError(err.message);
         setRegion(null);
         setParcels([]);
-        console.error('Erreur lors du chargement de la région ou des parcelles:', err);
+        logger.error('Erreur lors du chargement de la région ou des parcelles:', err);
       } finally {
         setLoading(false);
       }

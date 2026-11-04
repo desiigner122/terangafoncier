@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * NotaireArchivesModernized.jsx
@@ -96,7 +97,7 @@ export default function NotaireArchivesModernized() {
         .from('notarial_acts')
         .select('id, notaire_id, act_type, reference, client_name, status, notary_fees, amount, signed_at, created_at, updated_at, properties(title, location, city, region)')
         .eq('notaire_id', user.id)
-        .in('status', ['signed', 'completed']);
+        .in('status', ['signed', 'completed']).limit(500);
 
       const term = searchTerm.trim();
       if (term) {
@@ -115,7 +116,7 @@ export default function NotaireArchivesModernized() {
       setArchives(mapped);
       setFilteredArchives(mapped);
     } catch (error) {
-      console.error('Erreur chargement archives:', error);
+      logger.error('Erreur chargement archives:', error);
       window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: error.message || "Impossible de charger les archives",

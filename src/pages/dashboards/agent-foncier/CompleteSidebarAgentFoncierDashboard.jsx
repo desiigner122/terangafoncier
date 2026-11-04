@@ -37,6 +37,7 @@ import {
   Zap,
   TrendingUp
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // Lazy loading des composants
 const AgentFoncierOverview = React.lazy(() => import('./AgentFoncierOverview'));
@@ -549,7 +550,7 @@ const CompleteSidebarAgentFoncierDashboard = () => {
                       <motion.button
                         whileHover={{ x: 4 }}
                         onClick={() => {
-                          console.log('Déconnexion...');
+                          logger.debug('Déconnexion...');
                           setProfileDropdownOpen(false);
                         }}
                         className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"

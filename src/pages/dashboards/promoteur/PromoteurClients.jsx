@@ -28,6 +28,7 @@ import {
   TrendingUp,
   Loader2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurClients = () => {
   const { user } = useAuth();
@@ -77,7 +78,7 @@ const PromoteurClients = () => {
           .from('crm_contacts')
           .select('*')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         const list = contacts || [];
         setClients(list);
@@ -104,7 +105,7 @@ const PromoteurClients = () => {
           averageScore
         });
       } catch (err) {
-        console.error('Erreur chargement clients CRM:', err);
+        logger.error('Erreur chargement clients CRM:', err);
       } finally {
         setLoading(false);
       }

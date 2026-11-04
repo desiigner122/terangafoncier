@@ -42,6 +42,7 @@ import { notify } from '@/components/ui/NotificationToast';
 
 // 🆕 SEMAINE 3 - Import modals workflows
 import PhotoUploadModal from '@/components/dialogs/PhotoUploadModal';
+import { logger } from '@/lib/logger';
 
 const VendeurPropertiesRealData = () => {
   const navigate = useNavigate();
@@ -111,7 +112,7 @@ const VendeurPropertiesRealData = () => {
         const { data: conversationsData, error: conversationsError } = await supabase
           .from('conversations')
           .select('id, property_id')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
         if (!conversationsError) {
           conversationsByProperty = (conversationsData || []).reduce((acc, c) => {
             if (c.property_id) acc[c.property_id] = (acc[c.property_id] || 0) + 1;
@@ -152,7 +153,7 @@ const VendeurPropertiesRealData = () => {
       setProperties(formattedProperties);
       setFilteredProperties(formattedProperties);
     } catch (error) {
-      console.error('Erreur chargement propriétés:', error);
+      logger.error('Erreur chargement propriétés:', error);
       notify.error('Erreur lors du chargement de vos propriétés');
     } finally {
       setLoading(false);
@@ -781,18 +782,18 @@ const VendeurPropertiesRealData = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {
                           // 🔍 DEBUG COMPLET: Vérifier property.id avant navigation
-                          console.group('🔍 DEBUG EDIT PROPERTY - DÉTAILLÉ');
-                          console.log('Property ID:', property.id);
-                          console.log('Property ID Type:', typeof property.id);
-                          console.log('Property Title:', property.title);
-                          console.log('Property Object:', JSON.stringify(property, null, 2));
-                          console.log('Target URL:', `/vendeur/edit-property/${property.id}`);
-                          console.log('Current Location:', window.location.href);
-                          console.log('User ID:', user?.id);
-                          console.groupEnd();
+                          logger.group('🔍 DEBUG EDIT PROPERTY - DÉTAILLÉ');
+                          logger.debug('Property ID:', property.id);
+                          logger.debug('Property ID Type:', typeof property.id);
+                          logger.debug('Property Title:', property.title);
+                          logger.debug('Property Object:', JSON.stringify(property, null, 2));
+                          logger.debug('Target URL:', `/vendeur/edit-property/${property.id}`);
+                          logger.debug('Current Location:', window.location.href);
+                          logger.debug('User ID:', user?.id);
+                          logger.groupEnd();
                           
                           if (!property.id) {
-                            console.error('❌ ERROR: property.id est undefined ou null!');
+                            logger.error('❌ ERROR: property.id est undefined ou null!');
                             alert('❌ Erreur: ID de la propriété manquant.\n\nOuvrez la console (F12) pour plus de détails.');
                             return;
                           }
@@ -800,12 +801,12 @@ const VendeurPropertiesRealData = () => {
                           // Vérifier que property.id est un UUID valide
                           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                           if (!uuidRegex.test(property.id)) {
-                            console.error('❌ ERROR: property.id n\'est pas un UUID valide:', property.id);
+                            logger.error('❌ ERROR: property.id n\'est pas un UUID valide:', property.id);
                             alert(`❌ Erreur: ID invalide (${property.id}).\n\nFormat attendu: UUID.\nVoir console (F12) pour détails.`);
                             return;
                           }
                           
-                          console.log('✅ ID valide, navigation en cours vers:', `/vendeur/edit-property/${property.id}`);
+                          logger.debug('✅ ID valide, navigation en cours vers:', `/vendeur/edit-property/${property.id}`);
                           
                           // Navigation vers page d'édition
                           navigate(`/vendeur/edit-property/${property.id}`);

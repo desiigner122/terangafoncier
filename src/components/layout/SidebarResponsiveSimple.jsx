@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const logoUrl = "/images/logo.png";
 
@@ -140,7 +141,7 @@ const SidebarContent = ({ onNavigate }) => {
 
         setBadges({ notifications: notifCount || 0, requests: reqCount || 0 });
       } catch (e) {
-        console.warn('SidebarSimple: count load failed', e);
+        logger.warn('SidebarSimple: count load failed', e);
       }
     };
     loadCounts();

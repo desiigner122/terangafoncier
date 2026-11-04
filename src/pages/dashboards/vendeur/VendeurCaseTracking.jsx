@@ -43,6 +43,7 @@ import {
   Send,
   Clock,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const VendeurCaseTracking = () => {
   const { caseNumber } = useParams();
@@ -71,7 +72,7 @@ const VendeurCaseTracking = () => {
   const loadCaseData = async () => {
     try {
       setLoading(true);
-      console.log('📁 [CASE TRACKING] Chargement dossier:', caseNumber);
+      logger.debug('📁 [CASE TRACKING] Chargement dossier:', caseNumber);
 
       // 1. Charger le dossier
       const { data: caseData, error: caseError } = await supabase
@@ -82,7 +83,7 @@ const VendeurCaseTracking = () => {
 
       if (caseError) throw caseError;
       setPurchaseCase(caseData);
-      console.log('✅ [CASE] Dossier chargé:', caseData);
+      logger.debug('✅ [CASE] Dossier chargé:', caseData);
 
       // 2. Charger la transaction
       const { data: txData } = await supabase
@@ -122,7 +123,7 @@ const VendeurCaseTracking = () => {
         .from('purchase_case_history')
         .select('*')
         .eq('case_id', caseData.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       setHistory(historyData || []);
 
@@ -131,7 +132,7 @@ const VendeurCaseTracking = () => {
         .from('purchase_case_messages')
         .select('*')
         .eq('case_id', caseData.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       setMessages(messagesData || []);
 
@@ -140,11 +141,11 @@ const VendeurCaseTracking = () => {
         .from('purchase_case_documents')
         .select('*')
         .eq('case_id', caseData.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       setDocuments(docsData || []);
     } catch (error) {
-      console.error('❌ Erreur chargement dossier:', error);
+      logger.error('❌ Erreur chargement dossier:', error);
       toast.error('Erreur lors du chargement du dossier');
     } finally {
       setLoading(false);
@@ -171,7 +172,7 @@ const VendeurCaseTracking = () => {
       await loadCaseData();
       toast.success('Message envoyé');
     } catch (error) {
-      console.error('❌ Erreur envoi message:', error);
+      logger.error('❌ Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } finally {
       setSendingMessage(false);

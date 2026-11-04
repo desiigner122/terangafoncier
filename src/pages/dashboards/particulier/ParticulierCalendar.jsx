@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { logger } from '@/lib/logger';
 
 const ParticulierCalendar = () => {
   const { user } = useOutletContext();
@@ -113,7 +114,7 @@ const ParticulierCalendar = () => {
 
         setEvents([...visitEvents, ...caseEvents]);
       } catch (error) {
-        console.error('Erreur chargement calendrier:', error);
+        logger.error('Erreur chargement calendrier:', error);
         setEvents([]);
       } finally {
         setLoading(false);

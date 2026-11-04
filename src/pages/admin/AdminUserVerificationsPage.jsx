@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { logger } from '@/lib/logger';
 
 const UserVerificationDetailsDialog = ({ user, FileTexts }) => (
     <DialogContent>
@@ -70,10 +71,10 @@ const AdminUserVerificationsPage = () => {
                 const { data: usersData, error: usersError } = await supabase
                     .from('users')
                     .select('*')
-                    .in('verification_status', ['unverified', 'pending']);
+                    .in('verification_status', ['unverified', 'pending']).limit(500);
 
                 if (usersError) {
-                    console.error("Error fetching users:", usersError);
+                    logger.error("Error fetching users:", usersError);
                     window.safeGlobalToast({ 
                         title: 'Erreur', 
                         description: 'Impossible de charger les utilisateurs.', 
@@ -96,10 +97,10 @@ const AdminUserVerificationsPage = () => {
                     const { data: docsData, error: docsError } = await supabase
                         .from('FileTexts')
                         .select('*')
-                        .in('user_id', userIds);
+                        .in('user_id', userIds).limit(500);
                     
                     if (docsError) {
-                        console.error("Error fetching FileTexts:", docsError);
+                        logger.error("Error fetching FileTexts:", docsError);
                     } else {
                         const docsByUserId = docsData.reduce((acc, doc) => {
                             if (!acc[doc.user_id]) acc[doc.user_id] = [];
@@ -110,7 +111,7 @@ const AdminUserVerificationsPage = () => {
                     }
                 }
             } catch (error) {
-                console.error("Error in fetchUnverifiedUsers:", error);
+                logger.error("Error in fetchUnverifiedUsers:", error);
                 window.safeGlobalToast({ 
                     title: 'Erreur', 
                     description: 'Une erreur est survenue lors du chargement.', 

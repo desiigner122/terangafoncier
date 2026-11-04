@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurBlockchainRealData = () => {
   const { user } = useAuth();
@@ -64,12 +65,12 @@ const VendeurBlockchainRealData = () => {
         .from('properties')
         .select('id, title, location, price, surface, type')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setProperties(data || []);
     } catch (error) {
-      console.error('Erreur chargement propriétés:', error);
+      logger.error('Erreur chargement propriétés:', error);
     }
   };
 
@@ -104,7 +105,7 @@ const VendeurBlockchainRealData = () => {
         totalValue
       });
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
       toast.error('Erreur lors du chargement des données blockchain');
     } finally {
       setLoading(false);
@@ -117,13 +118,13 @@ const VendeurBlockchainRealData = () => {
         .from('wallet_connections')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setWalletConnections(walletsData || []);
     } catch (error) {
       // Table optionnelle selon l'environnement : on affiche simplement l'état vide plutôt que de fabriquer des wallets
-      console.error('Erreur chargement wallets:', error);
+      logger.error('Erreur chargement wallets:', error);
       setWalletConnections([]);
     }
   };
@@ -157,7 +158,7 @@ const VendeurBlockchainRealData = () => {
       toast.success('Certificat marqué comme vérifié');
       loadBlockchainData();
     } catch (error) {
-      console.error('Erreur vérification:', error);
+      logger.error('Erreur vérification:', error);
       toast.error('Erreur lors de la vérification');
     }
   };

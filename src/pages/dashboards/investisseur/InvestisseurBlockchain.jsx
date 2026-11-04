@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 // Libellés lisibles pour les statuts réels des certificats / transactions blockchain
@@ -60,7 +61,7 @@ const InvestisseurBlockchain = () => {
         const { data: investments, error: invError } = await supabase
           .from('investments')
           .select('property_id, title, amount, current_value')
-          .eq('investor_id', user.id);
+          .eq('investor_id', user.id).limit(500);
 
         if (invError) throw invError;
 
@@ -74,7 +75,7 @@ const InvestisseurBlockchain = () => {
           const { data: props, error: propsError } = await supabase
             .from('properties')
             .select('id, title, name, location, region, city, price, estimated_value, market_value')
-            .in('id', propertyIds);
+            .in('id', propertyIds).limit(500);
 
           if (propsError) throw propsError;
           (props || []).forEach((p) => {
@@ -96,7 +97,7 @@ const InvestisseurBlockchain = () => {
             .from('blockchain_certificates')
             .select('*')
             .in('property_id', propertyIds)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
 
           if (certError) throw certError;
           certs = certData || [];
@@ -108,12 +109,12 @@ const InvestisseurBlockchain = () => {
           .from('blockchain_transactions')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (txError) throw txError;
         setTransactions(txData || []);
       } catch (error) {
-        console.error('Erreur chargement données blockchain:', error);
+        logger.error('Erreur chargement données blockchain:', error);
         setCertificates([]);
         setTransactions([]);
       } finally {

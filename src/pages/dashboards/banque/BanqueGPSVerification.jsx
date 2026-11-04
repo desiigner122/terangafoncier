@@ -46,6 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const BanqueGPSVerification = ({ dashboardStats }) => {
   const { user } = useAuth();
@@ -86,7 +87,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         .from('guarantees')
         .select('id, bank_id, loan_id, property_id, client_name, type, value, status, expiry_date, created_at')
         .eq('bank_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (gErr) throw gErr;
 
@@ -100,7 +101,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         const { data: props } = await supabase
           .from('properties')
           .select('id, title, type, location, region, city, surface, latitude, longitude, estimated_value, market_value, price')
-          .in('id', propertyIds);
+          .in('id', propertyIds).limit(500);
         (props || []).forEach((p) => { propsById[p.id] = p; });
       }
 
@@ -110,7 +111,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         const { data: loans } = await supabase
           .from('loans')
           .select('id, reference, amount, type')
-          .in('id', loanIds);
+          .in('id', loanIds).limit(500);
         (loans || []).forEach((l) => { loansById[l.id] = l; });
       }
 
@@ -120,7 +121,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         const { data: photos } = await supabase
           .from('property_photos')
           .select('id, property_id, gps_latitude, gps_longitude, quality_score, is_primary, created_at')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
         (photos || []).forEach((ph) => {
           if (!photosByProperty[ph.property_id]) photosByProperty[ph.property_id] = [];
           photosByProperty[ph.property_id].push(ph);
@@ -133,7 +134,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         const { data: disputes } = await supabase
           .from('disputes')
           .select('id, title, property_id, status')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
         (disputes || []).forEach((d) => {
           if (!disputesByProperty[d.property_id]) disputesByProperty[d.property_id] = [];
           disputesByProperty[d.property_id].push(d);
@@ -228,7 +229,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         accuracyRate: avgQuality != null ? Number(avgQuality.toFixed(1)) : null
       });
     } catch (error) {
-      console.error('Erreur chargement vérifications GPS:', error);
+      logger.error('Erreur chargement vérifications GPS:', error);
       setProperties([]);
     } finally {
       setLoading(false);
@@ -248,7 +249,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         const { data: photos } = await supabase
           .from('property_photos')
           .select('gps_latitude, gps_longitude, quality_score, is_primary, created_at')
-          .eq('property_id', property.propertyId);
+          .eq('property_id', property.propertyId).limit(500);
 
         const gpsPhoto =
           (photos || []).find((ph) => ph.is_primary && ph.gps_latitude != null && ph.gps_longitude != null) ||
@@ -275,7 +276,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
         )
       );
     } catch (error) {
-      console.error('Erreur vérification GPS:', error);
+      logger.error('Erreur vérification GPS:', error);
     } finally {
       setVerificationInProgress(false);
     }

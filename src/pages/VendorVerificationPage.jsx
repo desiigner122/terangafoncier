@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { logger } from '@/lib/logger';
 
 const VendorVerificationPage = () => {
   const { profile } = useAuth();
@@ -82,7 +83,7 @@ const VendorVerificationPage = () => {
         }
       ]);
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      logger.error('Erreur lors du chargement des données:', error);
     } finally {
       setLoading(false);
     }

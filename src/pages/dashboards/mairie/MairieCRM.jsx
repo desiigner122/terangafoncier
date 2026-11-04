@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const MairieCRM = ({ dashboardStats }) => {
   const { user } = useAuth();
@@ -44,18 +45,18 @@ const MairieCRM = ({ dashboardStats }) => {
           .from('crm_contacts')
           .select('id, name, email, phone, company, status, created_at')
           .eq('owner_id', ownerId)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (!active) return;
         if (error) {
-          console.error('Erreur chargement crm_contacts:', error);
+          logger.error('Erreur chargement crm_contacts:', error);
           setContacts([]);
         } else {
           setContacts(data || []);
         }
       } catch (err) {
         if (active) {
-          console.error('Erreur chargement crm_contacts:', err);
+          logger.error('Erreur chargement crm_contacts:', err);
           setContacts([]);
         }
       } finally {

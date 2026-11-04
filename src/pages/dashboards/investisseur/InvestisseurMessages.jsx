@@ -20,6 +20,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const InvestisseurMessages = () => {
   const { user } = useAuth();
@@ -92,16 +93,16 @@ const InvestisseurMessages = () => {
         otherParticipantIds.length > 0
           ? supabase.from('profiles')
               .select('id, first_name, last_name, full_name, email, avatar_url')
-              .in('id', otherParticipantIds)
+              .in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -148,7 +149,7 @@ const InvestisseurMessages = () => {
       setConversations(formatted);
       setLoading(false);
     } catch (err) {
-      console.error('Erreur chargement conversations:', err);
+      logger.error('Erreur chargement conversations:', err);
       toast.error('Erreur lors du chargement des messages');
       setConversations([]);
       setLoading(false);
@@ -176,7 +177,7 @@ const InvestisseurMessages = () => {
       // Marquer comme lus les messages reçus
       await markConversationRead(conversationId);
     } catch (err) {
-      console.error('Erreur chargement messages:', err);
+      logger.error('Erreur chargement messages:', err);
       toast.error('Erreur lors du chargement de la conversation');
       setMessages([]);
       setMessagesLoading(false);
@@ -197,7 +198,7 @@ const InvestisseurMessages = () => {
         c.id === conversationId ? { ...c, read: true, unreadCount: 0 } : c
       ));
     } catch (err) {
-      console.error('Erreur marquage lu:', err);
+      logger.error('Erreur marquage lu:', err);
     }
   };
 
@@ -236,7 +237,7 @@ const InvestisseurMessages = () => {
 
       setSending(false);
     } catch (err) {
-      console.error('Erreur envoi message:', err);
+      logger.error('Erreur envoi message:', err);
       toast.error('Erreur lors de l\'envoi du message');
       setSending(false);
     }

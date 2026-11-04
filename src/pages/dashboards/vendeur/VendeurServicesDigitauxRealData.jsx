@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import { logger } from '@/lib/logger';
 
 // Catalogue des outils numériques réellement intégrés à la plateforme.
 // Il n'existe pas de table "digital_services" / "service_subscriptions" en base :
@@ -209,7 +210,7 @@ const VendeurServicesDigitauxRealData = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement services:', error);
+      logger.error('Erreur chargement services:', error);
       toast.error('Erreur lors du chargement des services');
       setLoading(false);
     }

@@ -22,6 +22,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierOverview = () => {
   // Gestion sécurisée du contexte Outlet
@@ -30,7 +31,7 @@ const ParticulierOverview = () => {
     const context = useOutletContext();
     user = context?.user || null;
   } catch (error) {
-    console.warn('useOutletContext not available, using fallback:', error);
+    logger.warn('useOutletContext not available, using fallback:', error);
   }
 
   const [loading, setLoading] = useState(true);
@@ -138,7 +139,7 @@ const ParticulierOverview = () => {
       activity.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
       setRecentActivity(activity.slice(0, 5));
     } catch (err) {
-      console.error('Erreur chargement dashboard:', err);
+      logger.error('Erreur chargement dashboard:', err);
       setError(err.message);
       setStats({ messages: 0, notifications: 0, demandes: 0, documents: 0 });
       setRecentActivity([]);

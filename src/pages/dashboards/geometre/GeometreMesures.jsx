@@ -35,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Normalise une ligne field_measurements (data jsonb) en objet d'affichage.
 // Aucune valeur inventée : tout provient du jsonb `data` ou reste "—".
@@ -87,12 +88,12 @@ const GeometreMesures = () => {
           .from('field_measurements')
           .select('*')
           .eq('geometre_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setMesures((data || []).map(mapMeasurement));
       } catch (err) {
-        console.error('Erreur chargement mesures:', err);
+        logger.error('Erreur chargement mesures:', err);
         setMesures([]);
       } finally {
         setLoading(false);

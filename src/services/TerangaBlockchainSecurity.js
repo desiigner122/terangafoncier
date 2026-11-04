@@ -24,6 +24,7 @@ const randomBytes = (size) => {
 };
 
 import { supabase } from '../lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class TerangaBlockchainSecurity {
   constructor() {
@@ -91,7 +92,7 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async initialize() {
-    console.log('ðŸ” Initialisation Teranga Blockchain Security...');
+    logger.debug('ðŸ” Initialisation Teranga Blockchain Security...');
     
     try {
       // Charger patterns de fraude depuis Supabase
@@ -108,7 +109,7 @@ class TerangaBlockchainSecurity {
       
       this.initialized = true;
       
-      console.log('✅ Blockchain Security initialisé avec succès');
+      logger.debug('✅ Blockchain Security initialisé avec succès');
       
       return {
         success: true,
@@ -123,19 +124,19 @@ class TerangaBlockchainSecurity {
       };
 
     } catch (error) {
-      console.error('âŒ Erreur initialisation Blockchain Security:', error);
+      logger.error('âŒ Erreur initialisation Blockchain Security:', error);
       return { success: false, error: error.message };
     }
   }
 
   async loadFraudPatterns() {
-    console.log('ðŸ“Š Chargement patterns de fraude...');
+    logger.debug('ðŸ“Š Chargement patterns de fraude...');
     
     try {
       const { data: fraudData } = await supabase
         .from('fraud_patterns')
         .select('*')
-        .eq('country', 'senegal');
+        .eq('country', 'senegal').limit(500);
 
       if (fraudData) {
         fraudData.forEach(pattern => {
@@ -153,21 +154,21 @@ class TerangaBlockchainSecurity {
         });
       }
 
-      console.log('✅ Patterns de fraude chargés');
+      logger.debug('✅ Patterns de fraude chargés');
     } catch (error) {
-      console.warn('âš ï¸ Impossible de charger patterns fraude:', error.message);
+      logger.warn('âš ï¸ Impossible de charger patterns fraude:', error.message);
     }
   }
 
   async initializeAuditTrail() {
-    console.log('ðŸ“‹ Initialisation trail audit...');
+    logger.debug('ðŸ“‹ Initialisation trail audit...');
     
     // Créer table audit si n'existe pas
     try {
       await supabase.rpc('create_audit_trail_if_not_exists');
-      console.log('✅ Trail audit initialisé');
+      logger.debug('✅ Trail audit initialisé');
     } catch (error) {
-      console.warn('âš ï¸ Trail audit utilisant fallback local');
+      logger.warn('âš ï¸ Trail audit utilisant fallback local');
     }
   }
 
@@ -176,7 +177,7 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async hashLandTitle(landTitleData) {
-    console.log('ðŸ” Hachage spécialisé titre foncier...');
+    logger.debug('ðŸ” Hachage spécialisé titre foncier...');
     
     try {
       // 1. Valider structure données obligatoires
@@ -247,7 +248,7 @@ class TerangaBlockchainSecurity {
       return result;
 
     } catch (error) {
-      console.error('âŒ Erreur hachage titre foncier:', error);
+      logger.error('âŒ Erreur hachage titre foncier:', error);
       throw new Error(`Hachage impossible: ${error.message}`);
     }
   }
@@ -267,7 +268,7 @@ class TerangaBlockchainSecurity {
   }
 
   normalizeLandTitleData(data) {
-    console.log('ðŸ“ Normalisation données titre foncier...');
+    logger.debug('ðŸ“ Normalisation données titre foncier...');
     
     return {
       // Champs obligatoires normalisés
@@ -379,7 +380,7 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async verifyDocumentAuthenticity(documentData, expectedHash = null) {
-    console.log('ðŸ“„ Vérification automatique document...');
+    logger.debug('ðŸ“„ Vérification automatique document...');
     
     try {
       const verification = {
@@ -433,7 +434,7 @@ class TerangaBlockchainSecurity {
       return verification;
 
     } catch (error) {
-      console.error('âŒ Erreur vérification document:', error);
+      logger.error('âŒ Erreur vérification document:', error);
       return {
         status: 'ERROR',
         error: error.message,
@@ -443,7 +444,7 @@ class TerangaBlockchainSecurity {
   }
 
   async verifyDocumentStructure(documentData) {
-    console.log('ðŸ” Vérification structure document...');
+    logger.debug('ðŸ” Vérification structure document...');
     
     const checks = {
       hasRequiredFields: false,
@@ -484,14 +485,14 @@ class TerangaBlockchainSecurity {
       checks.passed = checks.score >= 75; // Seuil 75%
 
     } catch (error) {
-      console.error('âŒ Erreur vérification structure:', error);
+      logger.error('âŒ Erreur vérification structure:', error);
     }
 
     return checks;
   }
 
   async verifyAuthoritySignature(documentData) {
-    console.log('ðŸ›¡ï¸ Vérification signature autorité...');
+    logger.debug('ðŸ›¡ï¸ Vérification signature autorité...');
     
     const signatureCheck = {
       hasSignature: false,
@@ -535,14 +536,14 @@ class TerangaBlockchainSecurity {
       signatureCheck.passed = signatureCheck.score >= 70;
 
     } catch (error) {
-      console.error('âŒ Erreur vérification signature:', error);
+      logger.error('âŒ Erreur vérification signature:', error);
     }
 
     return signatureCheck;
   }
 
   async checkAgainstFraudPatterns(documentData) {
-    console.log('ðŸš¨ Vérification patterns de fraude...');
+    logger.debug('ðŸš¨ Vérification patterns de fraude...');
     
     const fraudCheck = {
       duplicateTitle: false,
@@ -590,7 +591,7 @@ class TerangaBlockchainSecurity {
       fraudCheck.suspiciousActivity = fraudCheck.riskScore > 30;
 
     } catch (error) {
-      console.error('âŒ Erreur vérification fraude:', error);
+      logger.error('âŒ Erreur vérification fraude:', error);
       fraudCheck.riskScore += 20; // Pénalité erreur
     }
 
@@ -658,7 +659,7 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async recordAuditEntry(action, data = {}) {
-    console.log(`ðŸ“‹ Enregistrement audit: ${action}`);
+    logger.debug(`ðŸ“‹ Enregistrement audit: ${action}`);
     
     try {
       const auditEntry = {
@@ -693,7 +694,7 @@ class TerangaBlockchainSecurity {
           version: auditEntry.version
         }]);
       } catch (dbError) {
-        console.warn('âš ï¸ Impossible de sauvegarder audit en DB:', dbError.message);
+        logger.warn('âš ï¸ Impossible de sauvegarder audit en DB:', dbError.message);
       }
 
       // Mise Ï  jour métriques
@@ -702,7 +703,7 @@ class TerangaBlockchainSecurity {
       return auditEntry;
 
     } catch (error) {
-      console.error('âŒ Erreur enregistrement audit:', error);
+      logger.error('âŒ Erreur enregistrement audit:', error);
       return null;
     }
   }
@@ -734,7 +735,7 @@ class TerangaBlockchainSecurity {
   }
 
   async verifyAuditTrailIntegrity() {
-    console.log('ðŸ” Vérification intégrité trail audit...');
+    logger.debug('ðŸ” Vérification intégrité trail audit...');
     
     const verification = {
       totalEntries: this.auditTrail.length,
@@ -782,7 +783,7 @@ class TerangaBlockchainSecurity {
       return verification;
 
     } catch (error) {
-      console.error('âŒ Erreur vérification audit trail:', error);
+      logger.error('âŒ Erreur vérification audit trail:', error);
       return {
         ...verification,
         error: error.message,
@@ -796,7 +797,7 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async generateDigitalCertificate(landTitleData, mainHash, verificationHashes) {
-    console.log('ðŸ“œ Génération certificat numérique...');
+    logger.debug('ðŸ“œ Génération certificat numérique...');
     
     try {
       const certificate = {
@@ -855,7 +856,7 @@ class TerangaBlockchainSecurity {
       return certificate;
 
     } catch (error) {
-      console.error('âŒ Erreur génération certificat:', error);
+      logger.error('âŒ Erreur génération certificat:', error);
       throw new Error(`Certificat impossible: ${error.message}`);
     }
   }
@@ -923,7 +924,7 @@ class TerangaBlockchainSecurity {
         status: 'ACTIVE'
       }]);
     } catch (error) {
-      console.warn('âš ï¸ Impossible de sauvegarder certificat en DB:', error.message);
+      logger.warn('âš ï¸ Impossible de sauvegarder certificat en DB:', error.message);
     }
   }
 
@@ -964,7 +965,7 @@ class TerangaBlockchainSecurity {
   }
 
   async loadAuthorityCertificates() {
-    console.log('ðŸ“œ Chargement certificats autorités...');
+    logger.debug('ðŸ“œ Chargement certificats autorités...');
     // En production, charger vrais certificats des autorités sénégalaises
   }
 
@@ -1012,7 +1013,7 @@ class TerangaBlockchainSecurity {
   }
 
   async handleSuspiciousDocument(documentData, verification) {
-    console.log('ðŸš¨ Gestion document suspect...');
+    logger.debug('ðŸš¨ Gestion document suspect...');
     
     // Enregistrer incident
     await this.recordAuditEntry('SUSPICIOUS_DOCUMENT_DETECTED', {

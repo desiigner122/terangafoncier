@@ -51,6 +51,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Formatte une valeur FCFA (nombre) en libellé lisible
 const formatFCFA = (value) => {
@@ -363,7 +364,7 @@ const MairieCadastre = ({ dashboardStats }) => {
         let propsQuery = supabase
           .from('properties')
           .select('id, owner_id, title, name, type, price, surface, location, region, city, latitude, longitude, status, verification_status, estimated_value, created_at')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (commune) {
           propsQuery = propsQuery.or(`city.eq.${commune},region.eq.${commune}`);
         }
@@ -380,10 +381,10 @@ const MairieCadastre = ({ dashboardStats }) => {
             ? supabase
                 .from('property_photos')
                 .select('property_id, gps_latitude, gps_longitude, is_primary')
-                .in('property_id', propIds)
+                .in('property_id', propIds).limit(500)
             : Promise.resolve({ data: [] }),
           ownerIds.length
-            ? supabase.from('profiles').select('id, full_name, first_name, last_name').in('id', ownerIds)
+            ? supabase.from('profiles').select('id, full_name, first_name, last_name').in('id', ownerIds).limit(500)
             : Promise.resolve({ data: [] }),
           supabase.from('blockchain_certificates').select('id', { count: 'exact', head: true })
         ]);
@@ -476,7 +477,7 @@ const MairieCadastre = ({ dashboardStats }) => {
         }));
         setCadastralZones(zones);
       } catch (err) {
-        console.error('Erreur chargement cadastre:', err);
+        logger.error('Erreur chargement cadastre:', err);
         setCadastralParcels([]);
         setCadastralZones([]);
         setStats({ total: 0, titled: 0, geolocated: 0, totalSurface: 0, certificates: 0 });

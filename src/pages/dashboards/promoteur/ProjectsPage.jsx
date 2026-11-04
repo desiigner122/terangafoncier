@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatMoney = (value) => {
   if (value === null || value === undefined || value === '') return '—';
@@ -57,11 +58,11 @@ const ProjectsPage = () => {
             .from('developer_projects')
             .select('id, title, client, location, status, progress, budget, spent, start_date, estimated_completion, current_phase, created_at')
             .eq('developer_id', user.id)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('project_sales')
             .select('id, project_id, status')
-            .eq('promoteur_id', user.id)
+            .eq('promoteur_id', user.id).limit(500)
         ]);
 
         setProjects(projectRows || []);
@@ -77,7 +78,7 @@ const ProjectsPage = () => {
         });
         setSalesByProject(grouped);
       } catch (error) {
-        console.error('Erreur chargement projets promoteur:', error);
+        logger.error('Erreur chargement projets promoteur:', error);
         setProjects([]);
         setSalesByProject({});
       } finally {

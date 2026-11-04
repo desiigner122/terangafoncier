@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const timeAgo = (dateStr) => {
   if (!dateStr) return '';
@@ -105,7 +106,7 @@ const AgentFoncierServicesDigitaux = () => {
         activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setRecentActivities(activities.slice(0, 6));
       } catch (e) {
-        console.error('Erreur chargement services digitaux:', e);
+        logger.error('Erreur chargement services digitaux:', e);
       } finally {
         setLoading(false);
       }

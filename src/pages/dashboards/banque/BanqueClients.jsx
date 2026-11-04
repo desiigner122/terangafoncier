@@ -39,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const emptyForm = {
   name: '',
@@ -77,12 +78,12 @@ const BanqueClients = () => {
         .from('bank_clients')
         .select('*')
         .eq('bank_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setClients(data || []);
     } catch (err) {
-      console.error('Erreur chargement clients:', err);
+      logger.error('Erreur chargement clients:', err);
       setClients([]);
     } finally {
       setLoading(false);
@@ -197,11 +198,11 @@ const BanqueClients = () => {
         .select('*')
         .eq('bank_id', user.id)
         .eq('client_id', client.client_id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       setClientLoans(data || []);
     } catch (err) {
-      console.error('Erreur chargement crédits client:', err);
+      logger.error('Erreur chargement crédits client:', err);
       setClientLoans([]);
     } finally {
       setLoansLoading(false);
@@ -275,7 +276,7 @@ const BanqueClients = () => {
       setShowFormModal(false);
       await fetchClients();
     } catch (err) {
-      console.error('Erreur enregistrement client:', err);
+      logger.error('Erreur enregistrement client:', err);
       window.safeGlobalToast?.({
         title: 'Erreur',
         description: "Impossible d'enregistrer le client.",
@@ -302,7 +303,7 @@ const BanqueClients = () => {
       });
       await fetchClients();
     } catch (err) {
-      console.error('Erreur suppression client:', err);
+      logger.error('Erreur suppression client:', err);
       window.safeGlobalToast?.({
         title: 'Erreur',
         description: 'Impossible de supprimer le client.',

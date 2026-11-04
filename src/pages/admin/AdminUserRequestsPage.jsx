@@ -16,6 +16,7 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const AdminUserRequestsPage = () => {
     const [requests, setRequests] = useState([]);
@@ -28,10 +29,10 @@ const AdminUserRequestsPage = () => {
             const { data, error } = await supabase
                 .from('requests')
                 .select('*')
-                .eq('request_type', 'account_upgrade');
+                .eq('request_type', 'account_upgrade').limit(500);
             
             if (error) {
-                console.error("Error fetching requests:", error);
+                logger.error("Error fetching requests:", error);
                 window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les requêtes.', variant: 'destructive' });
             } else {
                 setRequests(data.map(r => {
@@ -39,7 +40,7 @@ const AdminUserRequestsPage = () => {
                     try {
                         requestedRole = JSON.parse(r.message || '{}')?.requestedRole || 'N/A';
                     } catch (error) {
-                        console.warn('Failed to parse request message:', error);
+                        logger.warn('Failed to parse request message:', error);
                     }
                     
                     return {

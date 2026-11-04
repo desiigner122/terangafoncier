@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurAIRealData = () => {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ const VendeurAIRealData = () => {
         .from('properties')
         .select('*')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (propertiesError) throw propertiesError;
       setProperties(propertiesData || []);
@@ -70,7 +71,7 @@ const VendeurAIRealData = () => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (analysesError) throw analysesError;
       setAnalyses(analysesData || []);
@@ -110,7 +111,7 @@ const VendeurAIRealData = () => {
       });
 
     } catch (error) {
-      console.error('Erreur chargement données:', error);
+      logger.error('Erreur chargement données:', error);
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -125,7 +126,7 @@ const VendeurAIRealData = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       if (error) throw error;
 
@@ -136,7 +137,7 @@ const VendeurAIRealData = () => {
 
       setChatMessages(formattedMessages);
     } catch (error) {
-      console.error('Erreur chargement chat:', error);
+      logger.error('Erreur chargement chat:', error);
     }
   };
 
@@ -194,7 +195,7 @@ const VendeurAIRealData = () => {
       await loadData();
 
     } catch (error) {
-      console.error('Erreur analyse:', error);
+      logger.error('Erreur analyse:', error);
       toast.error('Erreur lors de l\'analyse');
     } finally {
       setAnalyzing(false);
@@ -245,7 +246,7 @@ const VendeurAIRealData = () => {
       await loadData();
 
     } catch (error) {
-      console.error('Erreur génération:', error);
+      logger.error('Erreur génération:', error);
       toast.error('Erreur lors de la génération');
     } finally {
       setAnalyzing(false);
@@ -309,7 +310,7 @@ const VendeurAIRealData = () => {
       await loadData();
 
     } catch (error) {
-      console.error('Erreur mots-clés:', error);
+      logger.error('Erreur mots-clés:', error);
       toast.error('Erreur lors de la génération');
     } finally {
       setAnalyzing(false);
@@ -365,7 +366,7 @@ const VendeurAIRealData = () => {
       }, 600);
 
     } catch (error) {
-      console.error('Erreur chat:', error);
+      logger.error('Erreur chat:', error);
       toast.error('Erreur lors de l\'envoi');
       setSendingMessage(false);
     }

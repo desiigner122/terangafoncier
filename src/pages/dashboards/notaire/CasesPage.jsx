@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Folder, Loader2, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Dossiers Notariaux (page routée) — reconnectée à la table réelle `notarial_acts`,
@@ -73,12 +74,12 @@ const CasesPage = () => {
           .from('notarial_acts')
           .select('id, act_type, reference, client_name, status, notary_fees, amount, signed_at, created_at')
           .eq('notaire_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         if (active) setCases(data || []);
       } catch (err) {
-        console.error('Erreur chargement dossiers notariaux:', err);
+        logger.error('Erreur chargement dossiers notariaux:', err);
         if (active) setCases([]);
       } finally {
         if (active) setIsLoading(false);

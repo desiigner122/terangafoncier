@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { logger } from '@/lib/logger';
 
 const RefactoredVendeurCaseTracking = () => {
   const { caseNumber } = useParams();
@@ -68,7 +69,7 @@ const RefactoredVendeurCaseTracking = () => {
       setSummary(sum);
 
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       toast.error('Impossible de charger le dossier');
       navigate(-1);
     } finally {
@@ -84,7 +85,7 @@ const RefactoredVendeurCaseTracking = () => {
       loadCaseData();
       setShowAcceptDialog(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       toast.error('Erreur lors de l\'acceptation');
     }
   };
@@ -102,7 +103,7 @@ const RefactoredVendeurCaseTracking = () => {
       loadCaseData();
       setShowDeclineDialog(false);
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
       toast.error('Erreur lors du refus');
     }
   };

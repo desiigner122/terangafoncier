@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Normalise le champ jsonb `parties` de la table disputes vers un tableau
 // { name, role, contact }. Gère tableau d'objets, tableau de chaînes ou chaîne JSON.
@@ -84,7 +85,7 @@ const MairieAntiFraude = ({ dashboardStats }) => {
 
       let propertiesQuery = supabase
         .from('properties')
-        .select('id, verification_status, city');
+        .select('id, verification_status, city').limit(500);
       if (communeCity) {
         propertiesQuery = propertiesQuery.eq('city', communeCity);
       }
@@ -94,7 +95,7 @@ const MairieAntiFraude = ({ dashboardStats }) => {
         supabase
           .from('disputes')
           .select('id, title, property_id, status, parties, created_at')
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('blockchain_transactions')
           .select('id', { count: 'exact', head: true }),
@@ -144,7 +145,7 @@ const MairieAntiFraude = ({ dashboardStats }) => {
         certificates: certRes?.count ?? 0
       });
     } catch (err) {
-      console.error('Erreur chargement anti-fraude:', err);
+      logger.error('Erreur chargement anti-fraude:', err);
       setErrorData(err.message || 'Erreur de chargement des données');
     } finally {
       setLoading(false);

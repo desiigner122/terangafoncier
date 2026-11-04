@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Map, Search, MapPin, FileText, Download, User, Calendar, Info, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const SEARCH_TYPES = [
   { key: 'parcelle', label: 'Parcelle' },
@@ -43,7 +44,7 @@ const NotaireAPICadastrePage = () => {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, full_name')
-          .in('id', ownerIds);
+          .in('id', ownerIds).limit(500);
         ownersMap = Object.fromEntries((profiles || []).map((p) => [p.id, p.full_name]));
       }
 
@@ -65,7 +66,7 @@ const NotaireAPICadastrePage = () => {
 
       setParcels(mapped);
     } catch (err) {
-      console.error('Erreur chargement propriétés:', err);
+      logger.error('Erreur chargement propriétés:', err);
       setParcels([]);
     } finally {
       setIsLoading(false);

@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatPrice = (price) => {
   if (price === null || price === undefined) return 'N/A';
@@ -151,11 +152,11 @@ const MyFavoritesPage = () => {
     const { data: parcels, error: parcelsError } = await supabase
       .from('parcels')
       .select('*')
-      .in('id', profile.favorites);
+      .in('id', profile.favorites).limit(500);
       
     if(parcelsError) {
         setError("Impossible de charger les parcelles favorites.");
-        console.error("Error fetching favorite parcels:", parcelsError);
+        logger.error("Error fetching favorite parcels:", parcelsError);
     } else {
         setFavoriteParcels(parcels);
     }

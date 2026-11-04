@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const STATUS_LABELS = {
   pending: "En cours d'examen",
@@ -78,12 +79,12 @@ const MunicipalRequestsPage = () => {
         .from('communal_requests')
         .select('*')
         .eq('applicant_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (cancelled) return;
 
       if (error) {
-        console.error('Erreur chargement demandes communales:', error);
+        logger.error('Erreur chargement demandes communales:', error);
         setRequests([]);
         setFilteredRequests([]);
         setLoading(false);

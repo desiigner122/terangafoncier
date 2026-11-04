@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const NotaireAuthenticationModernized = () => {
   const { user } = useAuth();
@@ -61,12 +62,12 @@ const NotaireAuthenticationModernized = () => {
           .from('document_authentication')
           .select('id, document_name, document_type, verification_status, authenticity_hash, verified_at, created_at, property_id')
           .eq('notaire_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('documents')
           .select('id, name, type, status, url, property_id, created_at')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }).limit(500)
       ]);
 
       if (authResult.error) throw authResult.error;
@@ -75,7 +76,7 @@ const NotaireAuthenticationModernized = () => {
       setAuthentications(authResult.data || []);
       setDocuments(docsResult.data || []);
     } catch (error) {
-      console.error('Erreur chargement authentification:', error);
+      logger.error('Erreur chargement authentification:', error);
       window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: "Impossible de charger les données d'authentification",
@@ -112,7 +113,7 @@ const NotaireAuthenticationModernized = () => {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur authentification:', error);
+      logger.error('Erreur authentification:', error);
       window.safeGlobalToast?.({
         title: "Erreur d'authentification",
         description: "Impossible de soumettre le document",
@@ -140,7 +141,7 @@ const NotaireAuthenticationModernized = () => {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur copie:', error);
+      logger.error('Erreur copie:', error);
     }
   };
 

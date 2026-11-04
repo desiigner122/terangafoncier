@@ -44,6 +44,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import StatsService from '@/services/StatsService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const AgentFoncierAI = () => {
   const { user } = useAuth();
@@ -107,7 +108,7 @@ const AgentFoncierAI = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       setChatHistory(
         (chatData || []).map((m) => ({
@@ -125,7 +126,7 @@ const AgentFoncierAI = () => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       setAnalyses(analysesData || []);
 
@@ -133,7 +134,7 @@ const AgentFoncierAI = () => {
       const { data: propertiesData } = await supabase
         .from('properties')
         .select('id, ai_score')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       const scored = (propertiesData || []).filter(
         (p) => typeof p.ai_score === 'number' && p.ai_score !== null
@@ -157,7 +158,7 @@ const AgentFoncierAI = () => {
           .sort((a, b) => b.avgPricePerM2 - a.avgPricePerM2)
       );
     } catch (error) {
-      console.error('Erreur chargement IA agent foncier:', error);
+      logger.error('Erreur chargement IA agent foncier:', error);
     } finally {
       setLoading(false);
     }
@@ -206,7 +207,7 @@ const AgentFoncierAI = () => {
 
       setAiMetrics((prev) => ({ ...prev, totalMessages: prev.totalMessages + 2 }));
     } catch (error) {
-      console.error('Erreur envoi message IA:', error);
+      logger.error('Erreur envoi message IA:', error);
       toast.error("Erreur lors de l'envoi du message");
     } finally {
       setIsProcessing(false);

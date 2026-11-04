@@ -43,6 +43,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const BanqueCRM = ({ dashboardStats }) => {
   const { user } = useAuth();
@@ -73,14 +74,14 @@ const BanqueCRM = ({ dashboardStats }) => {
           .from('bank_clients')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (clientsError) throw clientsError;
 
         // Crédits réels pour dériver les statistiques
         const { data: loansData, error: loansError } = await supabase
           .from('loans')
           .select('id, amount, status, created_at')
-          .eq('bank_id', user.id);
+          .eq('bank_id', user.id).limit(500);
         if (loansError) throw loansError;
 
         if (cancelled) return;
@@ -111,7 +112,7 @@ const BanqueCRM = ({ dashboardStats }) => {
           conversionRate
         });
       } catch (err) {
-        console.error('Erreur chargement CRM banque:', err);
+        logger.error('Erreur chargement CRM banque:', err);
         if (!cancelled) {
           setClients([]);
           setCrmStats({ totalClients: 0, activeCredits: 0, monthlyVolume: 0, conversionRate: null });

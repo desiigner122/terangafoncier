@@ -12,6 +12,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import NotificationService from './NotificationService';
 import AdvancedCaseTrackingService from './AdvancedCaseTrackingService';
+import { logger } from '@/lib/logger';
 
 export class SellerAcceptanceService {
   /**
@@ -20,7 +21,7 @@ export class SellerAcceptanceService {
    */
   static async handleSellerAcceptance(caseId, sellerId) {
     try {
-      console.log(`✅ Seller ${sellerId} accepting case ${caseId}`);
+      logger.debug(`✅ Seller ${sellerId} accepting case ${caseId}`);
 
       // STEP 1: Get the case (simple query, no relationships)
       let { data: caseData, error: getCaseError } = await supabase
@@ -61,7 +62,7 @@ export class SellerAcceptanceService {
 
       if (updateError) throw updateError;
 
-      console.log('✅ Case status updated to seller_accepted');
+      logger.debug('✅ Case status updated to seller_accepted');
 
       // STEP 3: Create system message showing acceptance
       const { error: msgError } = await supabase
@@ -77,7 +78,7 @@ export class SellerAcceptanceService {
           },
         });
 
-      if (msgError) console.warn('Message creation warning:', msgError);
+      if (msgError) logger.warn('Message creation warning:', msgError);
 
       // STEP 4: Log to timeline
       await AdvancedCaseTrackingService.logTimelineEvent(
@@ -104,7 +105,7 @@ export class SellerAcceptanceService {
         },
       });
 
-      console.log('✅ Buyer notification sent');
+      logger.debug('✅ Buyer notification sent');
 
       // STEP 6: Create initial tasks for next phase
       await AdvancedCaseTrackingService.createTask(caseId, {
@@ -141,11 +142,11 @@ export class SellerAcceptanceService {
         );
       }
 
-      console.log('✅ Seller acceptance completed successfully');
+      logger.debug('✅ Seller acceptance completed successfully');
       return updatedCase;
 
     } catch (error) {
-      console.error('❌ Error handling seller acceptance:', error);
+      logger.error('❌ Error handling seller acceptance:', error);
       throw error;
     }
   }
@@ -186,7 +187,7 @@ export class SellerAcceptanceService {
       };
 
     } catch (error) {
-      console.error('❌ Error fetching buyer case status:', error);
+      logger.error('❌ Error fetching buyer case status:', error);
       return null;
     }
   }
@@ -226,7 +227,7 @@ export class SellerAcceptanceService {
       };
 
     } catch (error) {
-      console.error('❌ Error fetching seller case status:', error);
+      logger.error('❌ Error fetching seller case status:', error);
       return null;
     }
   }
@@ -249,7 +250,7 @@ export class SellerAcceptanceService {
         sync_status: buyerView?.status === 'seller_accepted' ? 'SYNCED' : 'MISMATCH',
       };
     } catch (error) {
-      console.error('❌ Error verifying case visibility:', error);
+      logger.error('❌ Error verifying case visibility:', error);
       return null;
     }
   }

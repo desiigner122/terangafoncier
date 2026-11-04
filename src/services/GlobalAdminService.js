@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class GlobalAdminService {
   constructor() {
@@ -79,7 +80,7 @@ class GlobalAdminService {
       this.setCache('all_users', processedUsers);
       return { success: true, data: processedUsers };
     } catch (error) {
-      console.error('Erreur récupération utilisateurs:', error);
+      logger.error('Erreur récupération utilisateurs:', error);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -130,7 +131,7 @@ class GlobalAdminService {
         const { data } = await supabase
           .from('profiles')
           .select('id, role, created_at')
-          .gte('created_at', weekAgo.toISOString());
+          .gte('created_at', weekAgo.toISOString()).limit(500);
         recentSignups = (data || []).length;
         usersByRole = (data || []).reduce((acc, p) => {
           acc[p.role || 'particulier'] = (acc[p.role || 'particulier'] || 0) + 1;
@@ -154,7 +155,7 @@ class GlobalAdminService {
       this.setCache('user_stats', processedStats);
       return { success: true, data: processedStats };
     } catch (error) {
-      console.error('Erreur stats utilisateurs:', error);
+      logger.error('Erreur stats utilisateurs:', error);
       return { success: false, error: error.message, data: {} };
     }
   }
@@ -179,8 +180,8 @@ class GlobalAdminService {
 
       // Fetch profiles and properties separately for lookups
       const [{ data: profiles }, { data: properties }] = await Promise.all([
-        supabase.from('profiles').select('id, email, full_name, nom'),
-        supabase.from('properties').select('id, title, location, price, type')
+        supabase.from('profiles').select('id, email, full_name, nom').limit(500),
+        supabase.from('properties').select('id, title, location, price, type').limit(500)
       ]);
 
       // Create lookup maps
@@ -219,7 +220,7 @@ class GlobalAdminService {
       this.setCache('all_transactions', processedTransactions);
       return { success: true, data: processedTransactions };
     } catch (error) {
-      console.error('Erreur récupération transactions:', error);
+      logger.error('Erreur récupération transactions:', error);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -231,7 +232,7 @@ class GlobalAdminService {
 
       const { data, error } = await supabase
         .from('transactions')
-        .select('amount, status, created_at, type');
+        .select('amount, status, created_at, type').limit(500);
 
       if (error && error.code !== 'PGRST116') throw error;
 
@@ -271,7 +272,7 @@ class GlobalAdminService {
       this.setCache('transaction_stats', stats);
       return { success: true, data: stats };
     } catch (error) {
-      console.error('Erreur stats transactions:', error);
+      logger.error('Erreur stats transactions:', error);
       return { success: false, error: error.message, data: {} };
     }
   }
@@ -297,7 +298,7 @@ class GlobalAdminService {
       // Fetch all profiles separately to match with owner_id
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nom');
+        .select('id, email, full_name, nom').limit(500);
 
       // Create lookup map for faster access
       const profilesMap = (profiles || []).reduce((map, p) => {
@@ -335,7 +336,7 @@ class GlobalAdminService {
       this.setCache('all_properties', processedProperties);
       return { success: true, data: processedProperties };
     } catch (error) {
-      console.error('Erreur récupération propriétés:', error);
+      logger.error('Erreur récupération propriétés:', error);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -376,7 +377,7 @@ class GlobalAdminService {
       return { success: true, data: processedStats };
 
     } catch (error) {
-      console.error('Erreur stats propriétés:', error);
+      logger.error('Erreur stats propriétés:', error);
       // Fallback avec données basiques si pas de fonction SQL
       return { 
         success: true, 
@@ -453,7 +454,7 @@ class GlobalAdminService {
       this.setCache('analytics', analytics);
       return { success: true, data: analytics };
     } catch (error) {
-      console.error('Erreur analytics:', error);
+      logger.error('Erreur analytics:', error);
       return { success: false, error: error.message, data: {} };
     }
   }
@@ -532,7 +533,7 @@ class GlobalAdminService {
           .from('profiles')
           .select('id')
           .gte('created_at', start.toISOString())
-          .lt('created_at', end.toISOString());
+          .lt('created_at', end.toISOString()).limit(500);
         growth.push((data || []).length);
       } catch (_) {
         growth.push(0);
@@ -555,7 +556,7 @@ class GlobalAdminService {
         .select('amount')
         .eq('status', 'completed')
         .gte('created_at', date.toISOString())
-        .lt('created_at', nextDate.toISOString());
+        .lt('created_at', nextDate.toISOString()).limit(500);
       
       const monthlyRevenue = (data || []).reduce((sum, t) => sum + (t.amount || 0), 0);
       growth.push(monthlyRevenue / 1000000); // En millions
@@ -568,7 +569,7 @@ class GlobalAdminService {
     // Calcul des top régions basé sur les vraies données
     const { data, error } = await supabase
       .from('properties')
-      .select('location, price');
+      .select('location, price').limit(500);
     
     if (error || !data) return {};
     
@@ -745,7 +746,7 @@ class GlobalAdminService {
       return { success: true, data: stats };
 
     } catch (error) {
-      console.error('Erreur stats dashboard:', error);
+      logger.error('Erreur stats dashboard:', error);
       return { 
         success: false, 
         error: error.message,

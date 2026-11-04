@@ -66,6 +66,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { logger } from '@/lib/logger';
 
 const CompleteSidebarNotaireDashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -126,7 +127,7 @@ const CompleteSidebarNotaireDashboard = () => {
           const result = await NotaireSupabaseService.getDashboardStats(user.id);
           if (result.success && result.data) serviceStats = result.data;
         } catch (serviceError) {
-          console.error('Erreur service stats notaire:', serviceError);
+          logger.error('Erreur service stats notaire:', serviceError);
         }
 
         // Compteurs réels des badges : comptage direct sur les vraies tables/colonnes
@@ -150,7 +151,7 @@ const CompleteSidebarNotaireDashboard = () => {
         const { data: parts } = await supabase
           .from('conversation_participants')
           .select('conversation_id')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id).limit(500);
         const convIds = (parts || []).map((p) => p.conversation_id);
         if (convIds.length > 0) {
           const { count: msgCount } = await supabase
@@ -172,7 +173,7 @@ const CompleteSidebarNotaireDashboard = () => {
           pendingTickets: ticketsRes.count || 0
         }));
       } catch (error) {
-        console.error('Erreur chargement stats sidebar:', error);
+        logger.error('Erreur chargement stats sidebar:', error);
       } finally {
         setIsLoadingStats(false);
       }

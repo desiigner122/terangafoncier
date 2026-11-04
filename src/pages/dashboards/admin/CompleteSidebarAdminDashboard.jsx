@@ -115,6 +115,7 @@ import AdminPropertyValidationSection from './sections/AdminPropertyValidationSe
 import AdminNotificationsSection from './sections/AdminNotificationsSection';
 import AdminCommissionsSection from './sections/AdminCommissionsSection';
 import { formatCurrency as formatCurrencyUtil, logAdminAction as logAdminActionUtil, exportToCSV as exportToCSVUtil } from './sections/adminUtils';
+import { logger } from '@/lib/logger';
 
 const CompleteSidebarAdminDashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -192,9 +193,9 @@ const CompleteSidebarAdminDashboard = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      console.log('Déconnexion réussie');
+      logger.debug('Déconnexion réussie');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
     }
   };
   const [showNotifications, setShowNotifications] = useState(false);
@@ -463,25 +464,25 @@ const CompleteSidebarAdminDashboard = () => {
 
   // Handlers pour les actions du dashboard
   const handleExport = (type) => {
-    console.log(`📊 Export ${type} déclenché`);
+    logger.debug(`📊 Export ${type} déclenché`);
     // TODO: Implémenter l'export réel
     alert(`Export ${type} en cours de développement`);
   };
 
   const handleFilter = (section) => {
-    console.log(`🔍 Filtre ${section} déclenché`);
+    logger.debug(`🔍 Filtre ${section} déclenché`);
     // TODO: Implémenter le filtrage réel
     alert(`Filtrage ${section} en cours de développement`);
   };
 
   const handleAction = (action, item = null) => {
-    console.log(`⚡ Action ${action} déclenchée`, item);
+    logger.debug(`⚡ Action ${action} déclenchée`, item);
     // TODO: Implémenter les actions réelles
     alert(`Action ${action} en cours de développement`);
   };
 
   const handleRefresh = () => {
-    console.log('🔄 Actualisation des données...');
+    logger.debug('🔄 Actualisation des données...');
     loadRealData();
   };
 
@@ -529,7 +530,7 @@ const CompleteSidebarAdminDashboard = () => {
       toast.success('Utilisateur suspendu');
       loadRealData();
     } catch (error) {
-      console.error('Erreur suspension:', error);
+      logger.error('Erreur suspension:', error);
       toast.error('Erreur lors de la suspension');
     }
   };
@@ -549,7 +550,7 @@ const CompleteSidebarAdminDashboard = () => {
       toast.success('Utilisateur réactivé');
       loadRealData();
     } catch (error) {
-      console.error('Erreur réactivation:', error);
+      logger.error('Erreur réactivation:', error);
       toast.error('Erreur lors de la réactivation');
     }
   };
@@ -571,7 +572,7 @@ const CompleteSidebarAdminDashboard = () => {
       toast.success('Utilisateur supprimé');
       loadRealData();
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -587,7 +588,7 @@ const CompleteSidebarAdminDashboard = () => {
       toast.success(`Rôle changé: ${newRole}`);
       loadRealData();
     } catch (error) {
-      console.error('Erreur changement rôle:', error);
+      logger.error('Erreur changement rôle:', error);
       toast.error('Erreur lors du changement de rôle');
     }
   };
@@ -596,7 +597,7 @@ const CompleteSidebarAdminDashboard = () => {
   const loadRealData = async () => {
     setLoadingData(true);
     try {
-      console.log('🚀 Chargement données admin RÉELLES depuis Supabase...');
+      logger.debug('🚀 Chargement données admin RÉELLES depuis Supabase...');
       
       // 8 requêtes parallèles pour charger TOUTES les données réelles
       const [
@@ -624,7 +625,7 @@ const CompleteSidebarAdminDashboard = () => {
         supabase
           .from('blockchain_transactions')
           .select('*')
-          .eq('status', 'completed')
+          .eq('status', 'completed').limit(500)
           .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
   supabase.from('properties').select('id', { count: 'exact' }).eq('status', 'reported').limit(0),
   supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'active').limit(0),
@@ -702,8 +703,8 @@ const CompleteSidebarAdminDashboard = () => {
         }
       });
       
-      console.log('✅ Données RÉELLES chargées depuis Supabase');
-      console.log('📊 Stats:', { totalUsers, totalProperties, totalTransactions, monthlyRevenue });
+      logger.debug('✅ Données RÉELLES chargées depuis Supabase');
+      logger.debug('📊 Stats:', { totalUsers, totalProperties, totalTransactions, monthlyRevenue });
       
       // Stats additionnelles
       setAdditionalStats({
@@ -715,7 +716,7 @@ const CompleteSidebarAdminDashboard = () => {
       });
 
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des données:', error);
+      logger.error('❌ Erreur lors du chargement des données:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoadingData(false);

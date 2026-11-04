@@ -29,6 +29,7 @@ import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 /**
  * Page historique complet des transactions blockchain
@@ -130,7 +131,7 @@ const TransactionsPage = () => {
 
       setTransactions(normalizedTransactions);
     } catch (error) {
-      console.error('Erreur chargement transactions blockchain:', error);
+      logger.error('Erreur chargement transactions blockchain:', error);
       setTransactions([]);
       toast.error("Impossible de charger les transactions blockchain.");
     } finally {

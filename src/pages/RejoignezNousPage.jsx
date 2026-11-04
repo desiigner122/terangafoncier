@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SEO from '@/components/SEO';
+import { logger } from '@/lib/logger';
 
 const RejoignezNousPage = () => {
   const [activeRole, setActiveRole] = useState(0);
@@ -226,7 +227,7 @@ const RejoignezNousPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission
-    console.log('Form submitted:', formData);
+    logger.debug('Form submitted:', formData);
   };
 
   return (

@@ -28,6 +28,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 const AdminAnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ const AdminAnalyticsPage = () => {
       complete: 'Rapport_Complet_' + format(new Date(), 'yyyy-MM-dd') + '.xlsx'
     };
     
-    console.log(`Downloading: ${exports[type]}`);
+    logger.debug(`Downloading: ${exports[type]}`);
   };
 
   const shareReport = () => {

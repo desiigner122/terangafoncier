@@ -66,6 +66,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Catalogue STATIQUE des outils digitaux réellement proposés par la plateforme.
 // Aucun chiffre d'usage/note n'est codé en dur : le compteur `usageKey` pointe vers
@@ -242,7 +243,7 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
 
       setRecentTransactions(txList);
     } catch (error) {
-      console.error('Erreur chargement services digitaux:', error);
+      logger.error('Erreur chargement services digitaux:', error);
       setCounts({
         clients: 0, loans: 0, guarantees: 0, transactions: 0,
         tickets: 0, certificates: 0, riskAssessments: 0, documents: 0

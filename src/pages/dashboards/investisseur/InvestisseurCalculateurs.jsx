@@ -56,7 +56,7 @@ const InvestisseurCalculateurs = () => {
       const { data, error } = await supabase
         .from('investments')
         .select('roi, status')
-        .eq('investor_id', user.id);
+        .eq('investor_id', user.id).limit(500);
       if (error || !active) return;
       const rows = data || [];
       const activeRows = rows.filter((r) => r.status === 'active');

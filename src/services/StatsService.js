@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class StatsService {
   /**
@@ -29,7 +30,7 @@ class StatsService {
         supabase.from('properties').select('id', { count: 'exact', head: true }),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
         supabase.from('reviews').select('rating', { count: 'exact' }).eq('is_approved', true),
-        supabase.from('properties').select('region').not('region', 'is', null)
+        supabase.from('properties').select('region').not('region', 'is', null).limit(500)
       ]);
 
       stats.verifiedProperties = verified.count || 0;
@@ -49,7 +50,7 @@ class StatsService {
 
       return { success: true, stats };
     } catch (error) {
-      console.error('Erreur StatsService.getPlatformStats:', error);
+      logger.error('Erreur StatsService.getPlatformStats:', error);
       return { success: false, stats };
     }
   }
@@ -64,7 +65,7 @@ class StatsService {
         .from('properties')
         .select('region, price, surface, verification_status, smart_contract_address')
         .eq('status', 'active')
-        .not('region', 'is', null);
+        .not('region', 'is', null).limit(500);
       if (error) throw error;
 
       const byRegion = {};
@@ -91,7 +92,7 @@ class StatsService {
         verificationRate: g.count ? Math.round((g.verified / g.count) * 100) : 0
       }));
     } catch (error) {
-      console.error('Erreur StatsService.getRegionMarket:', error);
+      logger.error('Erreur StatsService.getRegionMarket:', error);
       return [];
     }
   }
@@ -139,7 +140,7 @@ class StatsService {
 
       return { success: true, stats };
     } catch (error) {
-      console.error('Erreur StatsService.getBlockchainStats:', error);
+      logger.error('Erreur StatsService.getBlockchainStats:', error);
       return { success: false, stats };
     }
   }

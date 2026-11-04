@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { logger } from '@/lib/logger';
 
 const CreateClientDialog = ({ open, onOpenChange, onClientCreated, notaireId }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -142,7 +143,7 @@ const CreateClientDialog = ({ open, onOpenChange, onClientCreated, notaireId }) 
         setError(result.error || 'Erreur lors de la création du client');
       }
     } catch (error) {
-      console.error('Erreur création client:', error);
+      logger.error('Erreur création client:', error);
       setError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);

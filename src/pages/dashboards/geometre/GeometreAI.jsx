@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const GeometreAI = () => {
   const { user } = useAuth();
@@ -94,7 +95,7 @@ const GeometreAI = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       setChatHistory(
         (chatData || []).map((m) => ({
@@ -112,7 +113,7 @@ const GeometreAI = () => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       setAnalyses(analysesData || []);
 
@@ -120,7 +121,7 @@ const GeometreAI = () => {
       const { data: propertiesData } = await supabase
         .from('properties')
         .select('id, ai_score')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       const scored = (propertiesData || []).filter(
         (p) => typeof p.ai_score === 'number' && p.ai_score !== null
@@ -140,7 +141,7 @@ const GeometreAI = () => {
         propertiesAnalyzed
       });
     } catch (error) {
-      console.error('Erreur chargement IA géomètre:', error);
+      logger.error('Erreur chargement IA géomètre:', error);
     } finally {
       setLoading(false);
     }
@@ -189,7 +190,7 @@ const GeometreAI = () => {
 
       setStats((prev) => ({ ...prev, totalMessages: prev.totalMessages + 2 }));
     } catch (error) {
-      console.error('Erreur envoi message IA:', error);
+      logger.error('Erreur envoi message IA:', error);
       toast.error("Erreur lors de l'envoi du message");
     } finally {
       setSending(false);

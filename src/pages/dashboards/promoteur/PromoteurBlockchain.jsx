@@ -21,6 +21,7 @@ import {
   Fingerprint,
   Loader2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurBlockchain = () => {
   const { user } = useAuth();
@@ -49,7 +50,7 @@ const PromoteurBlockchain = () => {
       const { data: props } = await supabase
         .from('properties')
         .select('id, title, name, price')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
       const properties = props || [];
       const propsById = {};
       properties.forEach((p) => { propsById[p.id] = p; });
@@ -62,7 +63,7 @@ const PromoteurBlockchain = () => {
           .from('blockchain_certificates')
           .select('*')
           .in('property_id', propertyIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         certRows = certData || [];
       }
 
@@ -96,7 +97,7 @@ const PromoteurBlockchain = () => {
         pendingTransactions: pending
       });
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
       setCertificates([]);
       setTransactions([]);
     } finally {

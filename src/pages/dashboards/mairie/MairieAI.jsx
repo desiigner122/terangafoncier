@@ -37,6 +37,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Message honnête : l'assistant conversationnel n'est relié à aucun moteur de génération.
 const NO_AI_MESSAGE = "L'assistant conversationnel IA n'est pas encore connecté à un moteur de génération. "
@@ -67,7 +68,7 @@ const MairieAI = ({ dashboardStats }) => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       const analyses = (analysesData || []).map((a) => {
         const r = a.result || {};
@@ -89,7 +90,7 @@ const MairieAI = ({ dashboardStats }) => {
       let reqQuery = supabase
         .from('communal_requests')
         .select('id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at')
-        .order('ai_score', { ascending: false, nullsFirst: false });
+        .order('ai_score', { ascending: false, nullsFirst: false }).limit(500);
       if (communeFilter) {
         reqQuery = reqQuery.eq('commune', communeFilter);
       }
@@ -101,7 +102,7 @@ const MairieAI = ({ dashboardStats }) => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       const mappedChat = (chatData || []).map((m) => ({
         type: m.role === 'assistant' ? 'ai' : 'user',
@@ -112,7 +113,7 @@ const MairieAI = ({ dashboardStats }) => {
       }));
       setChatHistory(mappedChat);
     } catch (err) {
-      console.error('Erreur chargement MairieAI:', err);
+      logger.error('Erreur chargement MairieAI:', err);
       setAiAnalyses([]);
       setRequests([]);
       setChatHistory([]);
@@ -204,7 +205,7 @@ const MairieAI = ({ dashboardStats }) => {
           content: text
         });
       } catch (err) {
-        console.error('Erreur enregistrement question IA:', err);
+        logger.error('Erreur enregistrement question IA:', err);
       }
     }
   };

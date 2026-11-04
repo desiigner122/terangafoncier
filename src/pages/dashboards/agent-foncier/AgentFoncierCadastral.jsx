@@ -37,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Superficie (m²) -> hectares avec 1 décimale
 const toHectares = (m2) => {
@@ -87,7 +88,7 @@ const AgentFoncierCadastral = () => {
           .from('properties')
           .select('id, title, name, type, surface, location, region, city, latitude, longitude, status, verification_status, created_at')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         const list = props || [];
@@ -101,7 +102,7 @@ const AgentFoncierCadastral = () => {
             .from('property_photos')
             .select('id, property_id, gps_latitude, gps_longitude, quality_score, created_at')
             .in('property_id', ids)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
 
           (photos || []).forEach((ph) => {
             photosByProperty[ph.property_id] = (photosByProperty[ph.property_id] || 0) + 1;
@@ -152,7 +153,7 @@ const AgentFoncierCadastral = () => {
           avgQuality
         });
       } catch (e) {
-        console.error('Erreur chargement cadastre agent:', e);
+        logger.error('Erreur chargement cadastre agent:', e);
         setCadastralPlans([]);
         setGpsPoints([]);
         setStats({ totalPlans: 0, surfaceHa: 0, gpsPointsCount: 0, avgQuality: null });

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Play, Clock, Star, ChevronRight, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const NotaireELearningPage = () => {
   const { user } = useAuth();
@@ -20,12 +21,12 @@ const NotaireELearningPage = () => {
       const { data, error } = await supabase
         .from('elearning_courses')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setCourses(data || []);
     } catch (error) {
-      console.error('Erreur chargement E-Learning:', error);
+      logger.error('Erreur chargement E-Learning:', error);
       setCourses([]);
     } finally {
       setIsLoading(false);

@@ -30,6 +30,7 @@ import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Palette de couleurs réutilisée pour les graphiques dynamiques
 const TYPE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6', '#EC4899'];
@@ -62,14 +63,14 @@ const MairieOverview = ({ dashboardStats }) => {
         let requestsQuery = supabase
           .from('communal_requests')
           .select('id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (commune) {
           requestsQuery = requestsQuery.eq('commune', commune);
         }
 
         const [requestsRes, disputesRes] = await Promise.all([
           requestsQuery,
-          supabase.from('disputes').select('id, status')
+          supabase.from('disputes').select('id, status').limit(500)
         ]);
 
         const requests = requestsRes.data || [];
@@ -142,7 +143,7 @@ const MairieOverview = ({ dashboardStats }) => {
         // --- Demandes récentes ---
         setRecentRequests(requests.slice(0, 4));
       } catch (error) {
-        console.error('Erreur chargement données mairie:', error);
+        logger.error('Erreur chargement données mairie:', error);
       } finally {
         setDataLoading(false);
       }

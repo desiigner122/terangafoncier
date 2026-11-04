@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SEO from '@/components/SEO';
+import { logger } from '@/lib/logger';
 
 const SuccessStoriesPage = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -33,9 +34,9 @@ const SuccessStoriesPage = () => {
       const { data, error } = await supabase
         .from('success_stories')
         .select('id, name, role, category, story, investment, location, timeline, image, rating, highlights')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (!active || error) {
-        if (error) console.error('Erreur chargement success stories:', error);
+        if (error) logger.error('Erreur chargement success stories:', error);
         return;
       }
       const mapped = (data || []).map(s => ({

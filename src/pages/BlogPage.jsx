@@ -17,6 +17,7 @@ import {
   Filter,
   ChevronRight
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // Placeholder neutre quand un article n'a pas d'image de couverture
 const FALLBACK_COVER = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=500&fit=crop';
@@ -54,7 +55,7 @@ const BlogPage = () => {
         setPosts(result.posts || []);
       } catch (err) {
         setError(err.message);
-        console.error('Error loading blog posts:', err);
+        logger.error('Error loading blog posts:', err);
       } finally {
         setLoading(false);
       }

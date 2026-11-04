@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabaseClient';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 // Calcule le temps de réponse moyen réel du vendeur : délai entre le dernier
 // message reçu d'un acheteur et la réponse suivante envoyée par le vendeur,
@@ -118,16 +119,16 @@ const VendeurMessagesRealData = () => {
 
       const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
         otherParticipantIds.length > 0
-          ? supabase.from('profiles').select('id, first_name, last_name, email, avatar_url').in('id', otherParticipantIds)
+          ? supabase.from('profiles').select('id, first_name, last_name, email, avatar_url').in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -195,7 +196,7 @@ const VendeurMessagesRealData = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
+      logger.error('Erreur chargement conversations:', error);
       toast.error('Erreur lors du chargement des conversations');
       setLoading(false);
     }
@@ -226,7 +227,7 @@ const VendeurMessagesRealData = () => {
       // Marquer comme lu
       markAsRead(conversationId);
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
       toast.error('Erreur lors du chargement des messages');
     }
   };
@@ -254,7 +255,7 @@ const VendeurMessagesRealData = () => {
         unreadCount: Math.max(0, prev.unreadCount - (selectedConversation?.unread_count || 0))
       }));
     } catch (error) {
-      console.error('Erreur marquage lu:', error);
+      logger.error('Erreur marquage lu:', error);
     }
   };
 
@@ -303,7 +304,7 @@ const VendeurMessagesRealData = () => {
 
       toast.success('Message envoyé');
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi');
     }
   };

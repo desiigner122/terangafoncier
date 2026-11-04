@@ -46,6 +46,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const MairieBlockchain = ({ dashboardStats }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -63,7 +64,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
         supabase
           .from('blockchain_certificates')
           .select('*, properties(title, name, city, region, surface, estimated_value, price)')
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('blockchain_transactions')
           .select('*, properties(title, name)')
@@ -77,7 +78,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
       setCertificates(certRes.data || []);
       setTransactions(txRes.data || []);
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
       setCertificates([]);
       setTransactions([]);
     } finally {

@@ -53,6 +53,7 @@ import {
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // --- Helpers d'affichage (statuts réels des tables loans / guarantees / disputes) ---
 const LOAN_STATUS_LABELS = {
@@ -124,9 +125,9 @@ const BanqueCompliance = ({ dashboardStats }) => {
     setLoading(true);
     try {
       const [loansRes, guaranteesRes, clientsRes] = await Promise.all([
-        supabase.from('loans').select('*').eq('bank_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('guarantees').select('*').eq('bank_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('bank_clients').select('client_id, name, credit_score, status, client_type').eq('bank_id', user.id)
+        supabase.from('loans').select('*').eq('bank_id', user.id).order('created_at', { ascending: false }).limit(500),
+        supabase.from('guarantees').select('*').eq('bank_id', user.id).order('created_at', { ascending: false }).limit(500),
+        supabase.from('bank_clients').select('client_id, name, credit_score, status, client_type').eq('bank_id', user.id).limit(500)
       ]);
 
       const loanList = loansRes.data || [];
@@ -149,10 +150,10 @@ const BanqueCompliance = ({ dashboardStats }) => {
       const { data: disputesData } = await supabase
         .from('disputes')
         .select('id, title, property_id, status, parties')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       setDisputes(disputesData || []);
     } catch (err) {
-      console.error('Erreur chargement conformité:', err);
+      logger.error('Erreur chargement conformité:', err);
       setLoans([]);
       setGuarantees([]);
       setClients([]);

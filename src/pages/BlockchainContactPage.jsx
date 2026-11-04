@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import SEO from '@/components/SEO';
+import { logger } from '@/lib/logger';
 
 const BlockchainContactPage = () => {
   const [formData, setFormData] = useState({
@@ -149,7 +150,7 @@ const BlockchainContactPage = () => {
     setIsLoading(true);
 
     try {
-      console.log('📝 [BlockchainContactPage] Début soumission formulaire:', formData);
+      logger.debug('📝 [BlockchainContactPage] Début soumission formulaire:', formData);
 
       // Créer un lead dans marketing_leads
       const leadResult = await MarketingService.createLead({
@@ -163,13 +164,13 @@ const BlockchainContactPage = () => {
         urgency: formData.urgency
       });
 
-      console.log('📊 [BlockchainContactPage] Résultat createLead:', leadResult);
+      logger.debug('📊 [BlockchainContactPage] Résultat createLead:', leadResult);
 
       if (!leadResult.success) {
         throw new Error(leadResult.error || 'Erreur lors de la création du lead');
       }
 
-      console.log('✅ [BlockchainContactPage] Lead créé avec succès');
+      logger.debug('✅ [BlockchainContactPage] Lead créé avec succès');
       
       setIsLoading(false);
       setShowSuccess(true);
@@ -183,7 +184,7 @@ const BlockchainContactPage = () => {
         urgency: 'normal'
       });
     } catch (error) {
-      console.error('❌ [BlockchainContactPage] Erreur:', error);
+      logger.error('❌ [BlockchainContactPage] Erreur:', error);
       setIsLoading(false);
       alert('Erreur lors de l\'envoi du formulaire: ' + error.message);
     }

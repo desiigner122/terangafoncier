@@ -80,8 +80,8 @@ const BanqueAnalytics = () => {
     setIsLoading(true);
     try {
       const [{ data: loansData }, { data: clientsData }] = await Promise.all([
-        supabase.from('loans').select('*').eq('bank_id', user.id),
-        supabase.from('bank_clients').select('id').eq('bank_id', user.id)
+        supabase.from('loans').select('*').eq('bank_id', user.id).limit(500),
+        supabase.from('bank_clients').select('id').eq('bank_id', user.id).limit(500)
       ]);
 
       const safeLoans = loansData || [];
@@ -94,7 +94,7 @@ const BanqueAnalytics = () => {
         const { data: props } = await supabase
           .from('properties')
           .select('id, region')
-          .in('id', propertyIds);
+          .in('id', propertyIds).limit(500);
         const map = {};
         (props || []).forEach((p) => { map[p.id] = p.region; });
         setRegionMap(map);

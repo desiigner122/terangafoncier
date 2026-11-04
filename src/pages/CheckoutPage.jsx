@@ -23,6 +23,7 @@ import {
   Shield,
   AlertCircle
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const CheckoutPage = () => {
   const { id } = useParams();
@@ -82,7 +83,7 @@ const CheckoutPage = () => {
           }
         }
       } catch (error) {
-        console.error('Erreur chargement terrain:', error);
+        logger.error('Erreur chargement terrain:', error);
         window.safeGlobalToast({
           title: 'Erreur',
           description: 'Impossible de charger le terrain.',
@@ -167,7 +168,7 @@ const CheckoutPage = () => {
       navigate(`/dashboard/acheteur/transaction-history`);
 
     } catch (error) {
-      console.error('Erreur création transaction:', error);
+      logger.error('Erreur création transaction:', error);
       window.safeGlobalToast({
         title: 'Erreur',
         description: 'Impossible de finaliser votre demande. Réessayez.',

@@ -56,6 +56,7 @@ import {
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const BanqueBlockchain = () => {
   const { user } = useAuth();
@@ -79,7 +80,7 @@ const BanqueBlockchain = () => {
         .from('blockchain_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       const txList = txs || [];
       setTransactions(txList);
@@ -91,13 +92,13 @@ const BanqueBlockchain = () => {
           .from('blockchain_certificates')
           .select('*')
           .in('property_id', propertyIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         setCertificates(certs || []);
       } else {
         setCertificates([]);
       }
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
       setTransactions([]);
       setCertificates([]);
     } finally {

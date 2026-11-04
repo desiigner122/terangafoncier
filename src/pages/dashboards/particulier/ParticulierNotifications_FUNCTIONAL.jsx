@@ -36,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParticulierNotifications_FUNCTIONAL = () => {
   const { user } = useAuth();
@@ -66,14 +67,14 @@ const ParticulierNotifications_FUNCTIONAL = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       setNotifications(data || []);
-      console.log(`✅ ${(data || []).length} notifications chargées depuis Supabase`);
+      logger.debug(`✅ ${(data || []).length} notifications chargées depuis Supabase`);
     } catch (error) {
-      console.error('❌ Erreur chargement notifications:', error);
+      logger.error('❌ Erreur chargement notifications:', error);
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -127,7 +128,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
       toast.success('Notification marquée comme lue');
     } catch (error) {
-      console.error('Erreur marquage comme lu:', error);
+      logger.error('Erreur marquage comme lu:', error);
       toast.error('Erreur lors du marquage');
     }
   };
@@ -150,7 +151,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
       toast.success('Notification marquée comme non lue');
     } catch (error) {
-      console.error('Erreur marquage comme non lu:', error);
+      logger.error('Erreur marquage comme non lu:', error);
       toast.error('Erreur lors du marquage');
     }
   };
@@ -182,7 +183,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
 
       toast.success(`${unreadIds.length} notifications marquées comme lues`);
     } catch (error) {
-      console.error('Erreur marquage tout comme lu:', error);
+      logger.error('Erreur marquage tout comme lu:', error);
       toast.error('Erreur lors du marquage');
     }
   };
@@ -200,7 +201,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
       setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
       toast.success('Notification supprimée');
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -224,7 +225,7 @@ const ParticulierNotifications_FUNCTIONAL = () => {
       setSelectedNotifications([]);
       toast.success(`${selectedNotifications.length} notifications supprimées`);
     } catch (error) {
-      console.error('Erreur suppression multiple:', error);
+      logger.error('Erreur suppression multiple:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const logoUrl = "/images/logo.png";
 
@@ -89,7 +90,7 @@ const ModernRegisterPage = () => {
             navigate('/login');
             
         } catch (err) {
-            console.error("Registration error:", err);
+            logger.error("Registration error:", err);
             const errorMessage = err.message.includes('User already registered') 
                 ? "Un compte existe déjÏ  avec cet email."
                 : "Une erreur est survenue lors de la création du compte.";

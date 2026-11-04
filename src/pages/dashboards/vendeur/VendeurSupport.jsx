@@ -54,6 +54,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import { logger } from '@/lib/logger';
 
 // La table réelle `support_tickets` n'a pas de colonne `type` : le type
 // (bug/fonctionnalité/question/aide) est encodé au début du `title` sous la
@@ -202,12 +203,12 @@ const VendeurSupport = () => {
         .from('support_ticket_messages')
         .select('id, ticket_id, sender_id, content, created_at')
         .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       if (error) throw error;
       setTicketMessages(data || []);
     } catch (error) {
-      console.error('Erreur chargement messages ticket:', error);
+      logger.error('Erreur chargement messages ticket:', error);
       setTicketMessages([]);
     } finally {
       setLoadingMessages(false);
@@ -231,7 +232,7 @@ const VendeurSupport = () => {
           .from('support_ticket_messages')
           .select('ticket_id, sender_id, created_at')
           .in('ticket_id', ticketIds)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: true }).limit(500);
 
         if (!messagesError && messages) {
           const messagesByTicket = {};
@@ -255,7 +256,7 @@ const VendeurSupport = () => {
       setTickets(parsedTickets);
       calculateStats(parsedTickets);
     } catch (error) {
-      console.error('Erreur chargement tickets:', error);
+      logger.error('Erreur chargement tickets:', error);
       toast.error('Erreur lors du chargement des tickets');
     } finally {
       setLoading(false);
@@ -345,7 +346,7 @@ const VendeurSupport = () => {
       // TODO: Envoyer email confirmation
       
     } catch (error) {
-      console.error('Erreur création ticket:', error);
+      logger.error('Erreur création ticket:', error);
       toast.error('Erreur lors de la création du ticket');
     }
   };

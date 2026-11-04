@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Utilitaire pour accéder aux variables d'environnement de manière sécurisée
  * Évite l'erreur "process is not defined" dans le navigateur
@@ -36,10 +37,10 @@ export const isDevelopment = ENV_VARS.NODE_ENV === 'development';
 
 // Fonction pour logger les variables d'environnement (sans exposer les clés sensibles)
 export const logEnvStatus = () => {
-  console.group('🔧 Configuration Environnement');
-  console.log('Mode:', ENV_VARS.NODE_ENV);
-  console.log('OpenAI API:', ENV_VARS.OPENAI_API_KEY ? '✅ Configurée' : '❌ Non configurée (mode simulation)');
-  console.log('Supabase URL:', ENV_VARS.SUPABASE_URL ? '✅ Configurée' : '❌ Non configurée');
-  console.log('Supabase Key:', ENV_VARS.SUPABASE_ANON_KEY ? '✅ Configurée' : '❌ Non configurée');
-  console.groupEnd();
+  logger.group('🔧 Configuration Environnement');
+  logger.debug('Mode:', ENV_VARS.NODE_ENV);
+  logger.debug('OpenAI API:', ENV_VARS.OPENAI_API_KEY ? '✅ Configurée' : '❌ Non configurée (mode simulation)');
+  logger.debug('Supabase URL:', ENV_VARS.SUPABASE_URL ? '✅ Configurée' : '❌ Non configurée');
+  logger.debug('Supabase Key:', ENV_VARS.SUPABASE_ANON_KEY ? '✅ Configurée' : '❌ Non configurée');
+  logger.groupEnd();
 };

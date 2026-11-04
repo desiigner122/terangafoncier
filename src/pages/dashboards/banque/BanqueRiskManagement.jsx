@@ -35,6 +35,7 @@ import {
 } from 'recharts';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Interprétation retenue : risk_score (0-100) = score de solidité/qualité du dossier
 // (plus haut = meilleur / moins risqué). Le niveau de risque en est dérivé de façon cohérente.
@@ -62,12 +63,12 @@ const BanqueRiskManagement = () => {
           .from('risk_assessments')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('loans')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }).limit(500)
       ]);
 
       if (assessRes.error) throw assessRes.error;
@@ -76,7 +77,7 @@ const BanqueRiskManagement = () => {
       setAssessments(assessRes.data || []);
       setLoans(loansRes.data || []);
     } catch (err) {
-      console.error('Erreur chargement risques:', err);
+      logger.error('Erreur chargement risques:', err);
       setAssessments([]);
       setLoans([]);
     } finally {

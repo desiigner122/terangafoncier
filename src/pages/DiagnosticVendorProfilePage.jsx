@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchDirect } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/lib/logger';
 
 const DiagnosticVendorProfilePage = () => {
   const [data, setData] = useState(null);
@@ -15,28 +16,28 @@ const DiagnosticVendorProfilePage = () => {
 
     try {
       // 1. Récupérer les premières propriétés
-      console.log('📥 Step 1: Fetching properties...');
+      logger.debug('📥 Step 1: Fetching properties...');
       const propertiesData = await fetchDirect(
         'properties?select=id,title,owner_id,status,verification_status&limit=5'
       );
       results.properties = propertiesData;
-      console.log('✅ Properties:', propertiesData);
+      logger.debug('✅ Properties:', propertiesData);
 
       // 2. Extraire les owner_ids
       const ownerIds = propertiesData
         .map(p => p.owner_id)
         .filter((id, idx, arr) => arr.indexOf(id) === idx);
       results.ownerIds = ownerIds;
-      console.log('✅ Unique owner IDs:', ownerIds);
+      logger.debug('✅ Unique owner IDs:', ownerIds);
 
       // 3. Récupérer les profils
       if (ownerIds.length > 0) {
-        console.log(`📥 Step 2: Fetching ${ownerIds.length} profiles...`);
+        logger.debug(`📥 Step 2: Fetching ${ownerIds.length} profiles...`);
         const profilesData = await fetchDirect(
           `profiles?select=*&id=in.(${ownerIds.join(',')})`
         );
         results.profiles = profilesData;
-        console.log('✅ Profiles:', profilesData);
+        logger.debug('✅ Profiles:', profilesData);
 
         // 4. Vérifier les champs de chaque profil
         results.profileFields = profilesData.map(p => ({
@@ -51,12 +52,12 @@ const DiagnosticVendorProfilePage = () => {
           verification_status: p.verification_status || '❌',
           created_at: p.created_at ? '✅' : '❌'
         }));
-        console.log('✅ Profile fields:', results.profileFields);
+        logger.debug('✅ Profile fields:', results.profileFields);
       }
 
       setData(results);
     } catch (err) {
-      console.error('❌ Error:', err);
+      logger.error('❌ Error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

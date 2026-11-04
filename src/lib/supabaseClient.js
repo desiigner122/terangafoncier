@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // Variables d'environnement
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -18,9 +19,9 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validation stricte
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Configuration Supabase manquante!');
-  console.error('VITE_SUPABASE_URL:', supabaseUrl ? '✅ Défini' : '❌ Manquant');
-  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Défini' : '❌ Manquant');
+  logger.error('❌ Configuration Supabase manquante!');
+  logger.error('VITE_SUPABASE_URL:', supabaseUrl ? '✅ Défini' : '❌ Manquant');
+  logger.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Défini' : '❌ Manquant');
   throw new Error('Variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY requises dans .env');
 }
 
@@ -73,4 +74,4 @@ export const fetchDirect = async (endpoint, options = {}) => {
   return response.json();
 };
 
-console.log('✅ Client Supabase centralisé initialisé:', supabaseUrl);
+logger.debug('✅ Client Supabase centralisé initialisé:', supabaseUrl);

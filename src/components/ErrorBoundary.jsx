@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -13,7 +14,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log the error but don't break the app
-    console.warn('ErrorBoundary caught an error:', {
+    logger.warn('ErrorBoundary caught an error:', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack
@@ -26,7 +27,7 @@ class ErrorBoundary extends React.Component {
 
     // Check if it's a JSON parsing error
     if (error.message.includes('JSON.parse') || error.message.includes('unexpected character')) {
-      console.log('🔧 JSON parsing error detected - this is likely a production minification issue');
+      logger.debug('🔧 JSON parsing error detected - this is likely a production minification issue');
     }
   }
 

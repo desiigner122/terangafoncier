@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 class TerangaBlockchainService {
   constructor() {
@@ -136,7 +137,7 @@ class TerangaBlockchainService {
   async initialize() {
     try {
       if (typeof window.ethereum === 'undefined') {
-        console.warn('MetaMask not detected');
+        logger.warn('MetaMask not detected');
         return false;
       }
 
@@ -158,11 +159,11 @@ class TerangaBlockchainService {
       this.setupEventListeners();
 
       this.isInitialized = true;
-      console.log('✅ Blockchain service initialized');
+      logger.debug('✅ Blockchain service initialized');
       
       return true;
     } catch (error) {
-      console.error('❌ Blockchain initialization failed:', error);
+      logger.error('❌ Blockchain initialization failed:', error);
       toast.error('Erreur d\'initialisation blockchain');
       return false;
     }
@@ -192,9 +193,9 @@ class TerangaBlockchainService {
         }
       }
 
-      console.log(`✅ Switched to ${targetNetwork.name}`);
+      logger.debug(`✅ Switched to ${targetNetwork.name}`);
     } catch (error) {
-      console.error('❌ Network switch failed:', error);
+      logger.error('❌ Network switch failed:', error);
       toast.error('Erreur de changement de réseau');
     }
   }
@@ -237,9 +238,9 @@ class TerangaBlockchainService {
         )
       };
 
-      console.log('✅ Contracts initialized');
+      logger.debug('✅ Contracts initialized');
     } catch (error) {
-      console.error('❌ Contract initialization failed:', error);
+      logger.error('❌ Contract initialization failed:', error);
       throw error;
     }
   }
@@ -270,39 +271,39 @@ class TerangaBlockchainService {
 
     // Property events
     this.contracts.property.on('PropertyCreated', (tokenId, owner, title, price) => {
-      console.log('🏠 New property created:', { tokenId: tokenId.toString(), owner, title, price: ethers.formatEther(price) });
+      logger.debug('🏠 New property created:', { tokenId: tokenId.toString(), owner, title, price: ethers.formatEther(price) });
       toast.success(`Propriété "${title}" créée avec succès!`);
     });
 
     this.contracts.property.on('PropertyVerified', (tokenId, verifier) => {
-      console.log('✅ Property verified:', { tokenId: tokenId.toString(), verifier });
+      logger.debug('✅ Property verified:', { tokenId: tokenId.toString(), verifier });
       toast.success('Propriété vérifiée avec succès!');
     });
 
     // Token events
     this.contracts.token.on('Transfer', (from, to, amount) => {
-      console.log('💰 Token transfer:', { from, to, amount: ethers.formatEther(amount) });
+      logger.debug('💰 Token transfer:', { from, to, amount: ethers.formatEther(amount) });
     });
 
     // Marketplace events
     this.contracts.marketplace.on('PropertyListed', (listingId, tokenId, seller, price) => {
-      console.log('🏪 Property listed:', { listingId: listingId.toString(), tokenId: tokenId.toString(), seller, price: ethers.formatEther(price) });
+      logger.debug('🏪 Property listed:', { listingId: listingId.toString(), tokenId: tokenId.toString(), seller, price: ethers.formatEther(price) });
       toast.success('Propriété mise en vente!');
     });
 
     this.contracts.marketplace.on('PropertySold', (listingId, tokenId, buyer, price) => {
-      console.log('🎉 Property sold:', { listingId: listingId.toString(), tokenId: tokenId.toString(), buyer, price: ethers.formatEther(price) });
+      logger.debug('🎉 Property sold:', { listingId: listingId.toString(), tokenId: tokenId.toString(), buyer, price: ethers.formatEther(price) });
       toast.success('Propriété vendue avec succès!');
     });
 
     // Escrow deposit event if available
     try {
       this.contracts.marketplace.on('EscrowDeposited', (payer, amount, reference) => {
-        console.log('💼 Escrow deposit:', { payer, amount: ethers.formatEther(amount), reference });
+        logger.debug('💼 Escrow deposit:', { payer, amount: ethers.formatEther(amount), reference });
         toast.success('Dépôt d\'escrow confirmé');
       });
     } catch (e) {
-      console.warn('Escrow event not available on marketplace contract');
+      logger.warn('Escrow event not available on marketplace contract');
     }
   }
 
@@ -339,7 +340,7 @@ class TerangaBlockchainService {
         blockNumber: receipt.blockNumber
       };
     } catch (error) {
-      console.error('❌ Create property failed:', error);
+      logger.error('❌ Create property failed:', error);
       toast.error('Erreur lors de la création', { id: 'create-property' });
       throw error;
     }
@@ -359,7 +360,7 @@ class TerangaBlockchainService {
         createdAt: new Date(property.createdAt.toNumber() * 1000)
       };
     } catch (error) {
-      console.error('❌ Get property failed:', error);
+      logger.error('❌ Get property failed:', error);
       throw error;
     }
   }
@@ -374,7 +375,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: tx.hash };
     } catch (error) {
-      console.error('❌ Verify property failed:', error);
+      logger.error('❌ Verify property failed:', error);
       toast.error('Erreur de vérification', { id: 'verify-property' });
       throw error;
     }
@@ -391,7 +392,7 @@ class TerangaBlockchainService {
       );
       return properties;
     } catch (error) {
-      console.error('❌ Get properties by owner failed:', error);
+      logger.error('❌ Get properties by owner failed:', error);
       throw error;
     }
   }
@@ -402,7 +403,7 @@ class TerangaBlockchainService {
       const balance = await this.contracts.token.balanceOf(address);
       return ethers.formatEther(balance);
     } catch (error) {
-      console.error('❌ Get token balance failed:', error);
+      logger.error('❌ Get token balance failed:', error);
       throw error;
     }
   }
@@ -418,7 +419,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: tx.hash };
     } catch (error) {
-      console.error('❌ Transfer tokens failed:', error);
+      logger.error('❌ Transfer tokens failed:', error);
       toast.error('Erreur de transfert', { id: 'transfer-tokens' });
       throw error;
     }
@@ -444,7 +445,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: stakeTx.hash };
     } catch (error) {
-      console.error('❌ Stake tokens failed:', error);
+      logger.error('❌ Stake tokens failed:', error);
       toast.error('Erreur de staking', { id: 'stake-tokens' });
       throw error;
     }
@@ -466,7 +467,7 @@ class TerangaBlockchainService {
         apy: apy.toNumber() / 100 // Convert from basis points
       };
     } catch (error) {
-      console.error('❌ Get staking info failed:', error);
+      logger.error('❌ Get staking info failed:', error);
       throw error;
     }
   }
@@ -491,7 +492,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: receipt.transactionHash };
     } catch (error) {
-      console.error('❌ List property failed:', error);
+      logger.error('❌ List property failed:', error);
       toast.error('Erreur de mise en vente', { id: 'list-property' });
       throw error;
     }
@@ -510,7 +511,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: tx.hash };
     } catch (error) {
-      console.error('❌ Buy property failed:', error);
+      logger.error('❌ Buy property failed:', error);
       toast.error('Erreur d\'achat', { id: 'buy-property' });
       throw error;
     }
@@ -537,7 +538,7 @@ class TerangaBlockchainService {
       );
       return listings.filter(listing => listing.isActive);
     } catch (error) {
-      console.error('❌ Get active listings failed:', error);
+      logger.error('❌ Get active listings failed:', error);
       throw error;
     }
   }
@@ -554,7 +555,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: receipt.transactionHash };
     } catch (error) {
-      console.error('❌ Create proposal failed:', error);
+      logger.error('❌ Create proposal failed:', error);
       toast.error('Erreur de création', { id: 'create-proposal' });
       throw error;
     }
@@ -570,7 +571,7 @@ class TerangaBlockchainService {
       
       return { success: true, transactionHash: tx.hash };
     } catch (error) {
-      console.error('❌ Vote failed:', error);
+      logger.error('❌ Vote failed:', error);
       toast.error('Erreur de vote', { id: 'vote' });
       throw error;
     }
@@ -596,7 +597,7 @@ class TerangaBlockchainService {
       toast.success('Paiement on-chain confirmé', { id: 'escrow-pay' });
       return { success: true, transactionHash: receipt.transactionHash };
     } catch (error) {
-      console.error('❌ Escrow payment failed:', error);
+      logger.error('❌ Escrow payment failed:', error);
       toast.error('Échec du paiement on-chain', { id: 'escrow-pay' });
       throw error;
     }
@@ -616,7 +617,7 @@ class TerangaBlockchainService {
       toast.success('NFT de preuve émis', { id: 'mint-proof' });
       return { success: true, tokenId, transactionHash: receipt.transactionHash };
     } catch (error) {
-      console.error('❌ Mint proof NFT failed:', error);
+      logger.error('❌ Mint proof NFT failed:', error);
       toast.error('Échec du mint', { id: 'mint-proof' });
       throw error;
     }
@@ -642,7 +643,7 @@ class TerangaBlockchainService {
       );
       return proposals;
     } catch (error) {
-      console.error('❌ Get active proposals failed:', error);
+      logger.error('❌ Get active proposals failed:', error);
       throw error;
     }
   }
@@ -651,12 +652,12 @@ class TerangaBlockchainService {
   async getWalletAddress() {
     try {
       if (!this.signer) {
-        console.log('Wallet non connecté');
+        logger.debug('Wallet non connecté');
         return null;
       }
       return await this.signer.getAddress();
     } catch (error) {
-      console.error('❌ Get wallet address failed:', error);
+      logger.error('❌ Get wallet address failed:', error);
       return null;
     }
   }
@@ -670,7 +671,7 @@ class TerangaBlockchainService {
         current: this.networks[this.currentNetwork]
       };
     } catch (error) {
-      console.error('❌ Get network info failed:', error);
+      logger.error('❌ Get network info failed:', error);
       return null;
     }
   }
@@ -680,7 +681,7 @@ class TerangaBlockchainService {
       const { gasPrice } = await this.provider.getFeeData();
       return gasPrice == null ? null : ethers.formatUnits(gasPrice, 'gwei');
     } catch (error) {
-      console.error('❌ Get gas price failed:', error);
+      logger.error('❌ Get gas price failed:', error);
       return null;
     }
   }
@@ -700,7 +701,7 @@ class TerangaBlockchainService {
     this.signer = null;
     this.contracts = {};
     this.isInitialized = false;
-    console.log('🔌 Blockchain service disconnected');
+    logger.debug('🔌 Blockchain service disconnected');
   }
 }
 

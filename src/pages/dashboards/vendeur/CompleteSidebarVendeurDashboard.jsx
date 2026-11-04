@@ -70,10 +70,11 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import { logger } from '@/lib/logger';
 
 // Import des pages spécialisées - VERSION REAL DATA
 // 🆕 PAGES MODERNISÉES - LAZY LOADING
-console.log('🔧 [DEBUG] Chargement CompleteSidebarVendeurDashboard.jsx - V4');
+logger.debug('🔧 [DEBUG] Chargement CompleteSidebarVendeurDashboard.jsx - V4');
 const VendeurDashboardRefactored = React.lazy(() => import('./VendeurDashboardRefactored'));
 const VendeurOverview = React.lazy(() => import('./VendeurOverviewRealDataModern'));
 const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
@@ -101,8 +102,8 @@ const CompleteSidebarVendeurDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  console.log('🏢 [SIDEBAR VENDEUR] User depuis useAuth:', user);
-  console.log('🏢 [SIDEBAR VENDEUR] Profile:', profile);
+  logger.debug('🏢 [SIDEBAR VENDEUR] User depuis useAuth:', user);
+  logger.debug('🏢 [SIDEBAR VENDEUR] Profile:', profile);
   
   // Extraire l'onglet actif depuis l'URL
   const getActiveTabFromPath = () => {
@@ -126,9 +127,9 @@ const CompleteSidebarVendeurDashboard = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      console.log('Déconnexion réussie');
+      logger.debug('Déconnexion réussie');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
     }
   };
 
@@ -309,7 +310,7 @@ const CompleteSidebarVendeurDashboard = () => {
         setUnreadNotificationsCount(data.length);
       }
     } catch (error) {
-      console.error('Erreur chargement notifications:', error);
+      logger.error('Erreur chargement notifications:', error);
     }
   };
 
@@ -324,7 +325,7 @@ const CompleteSidebarVendeurDashboard = () => {
         .limit(20);
 
       if (partError || !participations || participations.length === 0) {
-        console.log('Aucune conversation trouvée');
+        logger.debug('Aucune conversation trouvée');
         setMessages([]);
         setUnreadMessagesCount(0);
         return;
@@ -346,7 +347,7 @@ const CompleteSidebarVendeurDashboard = () => {
         setUnreadMessagesCount(data.filter(m => !m.read && m.sender_id !== user.id).length);
       }
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
     }
   };
 
@@ -434,7 +435,7 @@ const CompleteSidebarVendeurDashboard = () => {
         blockchainVerified: blockchainVerifiedCount,
       }));
     } catch (error) {
-      console.error('Erreur chargement stats:', error);
+      logger.error('Erreur chargement stats:', error);
     }
   };
 
@@ -448,12 +449,12 @@ const CompleteSidebarVendeurDashboard = () => {
 
   // Rendu du composant de page active
   const renderActiveComponent = () => {
-    console.log('📍 [RENDER] Début renderActiveComponent, activeTab:', activeTab);
-    console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
+    logger.debug('📍 [RENDER] Début renderActiveComponent, activeTab:', activeTab);
+    logger.debug('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
     // Vérifier si c'est une route dynamique avec paramètres
     if (activeTab.includes('edit-property')) {
-      console.log('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
+      logger.debug('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
       return <Outlet />;
     }
     
@@ -478,7 +479,7 @@ const CompleteSidebarVendeurDashboard = () => {
     };
 
     const ActiveComponent = components[activeTab];
-    console.log('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
+    logger.debug('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
     
     if (!ActiveComponent) {
       return (
@@ -494,7 +495,7 @@ const CompleteSidebarVendeurDashboard = () => {
       );
     }
 
-    console.log('🚀 [RENDER] Passage de user à ActiveComponent:', user);
+    logger.debug('🚀 [RENDER] Passage de user à ActiveComponent:', user);
 
     return (
       <Suspense fallback={

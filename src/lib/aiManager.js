@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { logger } from '@/lib/logger';
 
 class AIManager {
   constructor() {
@@ -17,9 +18,9 @@ class AIManager {
     
     // Log du statut d'activation
     if (this.isEnabled) {
-      console.log('🤖 IA Teranga Foncier activée avec OpenAI GPT-4o-mini');
+      logger.debug('🤖 IA Teranga Foncier activée avec OpenAI GPT-4o-mini');
     } else {
-      console.log('⚠️ IA en mode simulation - Clé OpenAI manquante');
+      logger.debug('⚠️ IA en mode simulation - Clé OpenAI manquante');
     }
   }
 
@@ -61,7 +62,7 @@ class AIManager {
       const data = await response.json();
       return JSON.parse(data.choices[0].message.content);
     } catch (error) {
-      console.error('Erreur IA prédiction:', error);
+      logger.error('Erreur IA prédiction:', error);
       return this.getMockPredictions();
     }
   }
@@ -89,7 +90,7 @@ class AIManager {
       const response = await this.callOpenAI(prompt, 'Tu es un expert en détection d\'anomalies pour plateformes immobilières.');
       return response;
     } catch (error) {
-      console.error('Erreur détection anomalies:', error);
+      logger.error('Erreur détection anomalies:', error);
       return this.getMockAnomalies();
     }
   }
@@ -118,7 +119,7 @@ class AIManager {
       const response = await this.callOpenAI(prompt, 'Tu es un consultant en business intelligence immobilier.');
       return response;
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      logger.error('Erreur génération rapport:', error);
       return this.getMockReport();
     }
   }
@@ -152,7 +153,7 @@ class AIManager {
       const response = await this.callOpenAI(prompt, 'Tu es un expert en évaluation immobilière au Sénégal.');
       return response;
     } catch (error) {
-      console.error('Erreur optimisation prix:', error);
+      logger.error('Erreur optimisation prix:', error);
       return this.getMockPricingOptimization();
     }
   }
@@ -181,7 +182,7 @@ class AIManager {
       const response = await this.callOpenAI(prompt, 'Tu es un expert en analyse de sentiment.');
       return response;
     } catch (error) {
-      console.error('Erreur analyse sentiment:', error);
+      logger.error('Erreur analyse sentiment:', error);
       return this.getMockSentimentAnalysis();
     }
   }
@@ -232,7 +233,7 @@ class AIManager {
       const data = await response.json();
       
       if (data.error) {
-        console.error('Erreur OpenAI:', data.error);
+        logger.error('Erreur OpenAI:', data.error);
         return this.getMockContextualResponse(userQuery, pageContext);
       }
 
@@ -243,7 +244,7 @@ class AIManager {
       
       return aiResponse;
     } catch (error) {
-      console.error('Erreur IA contextuelle:', error);
+      logger.error('Erreur IA contextuelle:', error);
       return this.getMockContextualResponse(userQuery, pageContext);
     }
   }
@@ -286,7 +287,7 @@ class AIManager {
       const response = await this.callOpenAI(prompt, 'Tu es un conseiller immobilier IA spécialisé au Sénégal.');
       return response;
     } catch (error) {
-      console.error('Erreur recommandations:', error);
+      logger.error('Erreur recommandations:', error);
       return this.getMockRecommendations();
     }
   }
@@ -327,7 +328,7 @@ class AIManager {
         created_at: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Erreur log IA:', error);
+      logger.error('Erreur log IA:', error);
     }
   }
 

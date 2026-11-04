@@ -47,6 +47,7 @@ import {
   Send,
   Clock,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const ParticulierCaseTracking = () => {
   const { caseNumber } = useParams();
@@ -82,12 +83,12 @@ const ParticulierCaseTracking = () => {
   const subscribeToUpdates = () => {
     if (!user) return;
 
-    console.log(`🟢 [BUYER TRACKING] Subscribe to case: ${caseNumber}`);
+    logger.debug(`🟢 [BUYER TRACKING] Subscribe to case: ${caseNumber}`);
     
     const unsub = RealtimeSyncService.subscribeToCaseUpdates(
       caseNumber,
       (payload) => {
-        console.log('🔄 [BUYER TRACKING] Case update received:', payload);
+        logger.debug('🔄 [BUYER TRACKING] Case update received:', payload);
         loadCaseData();
       }
     );
@@ -98,7 +99,7 @@ const ParticulierCaseTracking = () => {
   const loadCaseData = async () => {
     try {
       setLoading(true);
-      console.log('📁 [BUYER CASE TRACKING] Chargement dossier:', caseNumber);
+      logger.debug('📁 [BUYER CASE TRACKING] Chargement dossier:', caseNumber);
 
       // 1. Charger le dossier + la propriété jointe (properties)
       const caseResult = await ParticulierSupabaseService.getPurchaseCaseByNumber(caseNumber, user.id);
@@ -108,7 +109,7 @@ const ParticulierCaseTracking = () => {
       const caseData = caseResult.data;
       setPurchaseCase(caseData);
       setParcel(caseData.property || null);
-      console.log('✅ [BUYER CASE] Dossier chargé:', caseData);
+      logger.debug('✅ [BUYER CASE] Dossier chargé:', caseData);
 
       // 2. Charger les données du vendeur (profiles)
       if (caseData.seller_id) {
@@ -127,19 +128,19 @@ const ParticulierCaseTracking = () => {
       const summary = await AdvancedCaseTrackingService.getCompleteCaseSummary(caseData.id);
       setHistory(summary?.timeline || []);
       setDocuments(summary?.documents || []);
-      console.log('✅ [BUYER CASE] Timeline/documents chargés:', summary?.timeline?.length, summary?.documents?.length);
+      logger.debug('✅ [BUYER CASE] Timeline/documents chargés:', summary?.timeline?.length, summary?.documents?.length);
 
       // 4. Charger les messages du dossier (purchase_case_messages)
       const { data: messagesData } = await supabase
         .from('purchase_case_messages')
         .select('*')
         .eq('case_id', caseData.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       setMessages(messagesData || []);
-      console.log('✅ [BUYER CASE] Messages chargés:', messagesData?.length);
+      logger.debug('✅ [BUYER CASE] Messages chargés:', messagesData?.length);
     } catch (error) {
-      console.error('❌ Erreur chargement dossier:', error);
+      logger.error('❌ Erreur chargement dossier:', error);
       toast.error('Erreur lors du chargement du dossier');
     } finally {
       setLoading(false);
@@ -166,7 +167,7 @@ const ParticulierCaseTracking = () => {
       await loadCaseData();
       toast.success('Message envoyé');
     } catch (error) {
-      console.error('❌ Erreur envoi message:', error);
+      logger.error('❌ Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } finally {
       setSendingMessage(false);

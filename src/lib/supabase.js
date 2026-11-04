@@ -1,14 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Variables Supabase manquantes dans .env');
+  logger.error('❌ Variables Supabase manquantes dans .env');
   throw new Error('Supabase URL et ANON_KEY requis');
 }
 
-console.log('✅ Supabase client initialisé:', supabaseUrl);
+logger.debug('✅ Supabase client initialisé:', supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

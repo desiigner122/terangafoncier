@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 // Système de gestion en temps réel des changements d'utilisateur - Version Mock
 // Mode test uniquement - Supabase désactivé
 
@@ -15,12 +16,12 @@ class UserStatusManager {
     // Mock subscription - pas de vraie connexion Supabase
     this.subscription = {
       unsubscribe: () => {
-        console.log('UserStatusManager: Mock unsubscribe');
+        logger.debug('UserStatusManager: Mock unsubscribe');
       }
     };
     
     this.isListening = true;
-    console.log('UserStatusManager: Mock listening started');
+    logger.debug('UserStatusManager: Mock listening started');
   }
 
   // Arrêter l'écoute (Mock)
@@ -28,7 +29,7 @@ class UserStatusManager {
     if (this.subscription) {
       this.subscription.unsubscribe();
       this.isListening = false;
-      console.log('UserStatusManager: Mock listening stopped');
+      logger.debug('UserStatusManager: Mock listening stopped');
     }
   }
 
@@ -41,34 +42,34 @@ class UserStatusManager {
       this.startListening();
     }
 
-    console.log('UserStatusManager: Mock subscription added');
+    logger.debug('UserStatusManager: Mock subscription added');
     return () => {
       this.subscribers.delete(callback);
-      console.log('UserStatusManager: Mock subscription removed');
+      logger.debug('UserStatusManager: Mock subscription removed');
     };
   }
 
   // Se désabonner (Mock)
   unsubscribe(callback) {
     this.subscribers.delete(callback);
-    console.log('UserStatusManager: Mock subscription removed');
+    logger.debug('UserStatusManager: Mock subscription removed');
   }
 
   // Notifier tous les abonnés (Mock)
   notifySubscribers(event) {
-    console.log('UserStatusManager: Mock notification:', event);
+    logger.debug('UserStatusManager: Mock notification:', event);
     this.subscribers.forEach(callback => {
       try {
         callback(event);
       } catch (error) {
-        console.error('UserStatusManager: Error in subscriber callback:', error);
+        logger.error('UserStatusManager: Error in subscriber callback:', error);
       }
     });
   }
 
   // Vérifier la session utilisateur (Mock)
   async checkUserSession(userId) {
-    console.log('UserStatusManager: Mock checkUserSession for:', userId);
+    logger.debug('UserStatusManager: Mock checkUserSession for:', userId);
     return {
       id: userId,
       verification_status: 'verified',
@@ -80,7 +81,7 @@ class UserStatusManager {
 
   // Mock invalidation de session
   async invalidateBannedUserSession(userId) {
-    console.log('UserStatusManager: Mock invalidateBannedUserSession for:', userId);
+    logger.debug('UserStatusManager: Mock invalidateBannedUserSession for:', userId);
     
     this.notifySubscribers({
       type: 'USER_SESSION_INVALIDATED',
@@ -92,7 +93,7 @@ class UserStatusManager {
 
   // Mock bannissement
   async banUser(userId, reason = 'Violation des conditions d\'utilisation') {
-    console.log('UserStatusManager: Mock banUser for:', userId, 'reason:', reason);
+    logger.debug('UserStatusManager: Mock banUser for:', userId, 'reason:', reason);
     
     this.notifySubscribers({
       type: 'USER_STATUS_CHANGED',
@@ -103,7 +104,7 @@ class UserStatusManager {
 
   // Mock débannissement
   async unbanUser(userId) {
-    console.log('UserStatusManager: Mock unbanUser for:', userId);
+    logger.debug('UserStatusManager: Mock unbanUser for:', userId);
     
     this.notifySubscribers({
       type: 'USER_STATUS_CHANGED',
@@ -114,7 +115,7 @@ class UserStatusManager {
 
   // Mock vérification d'utilisateur
   async verifyUser(userId) {
-    console.log('UserStatusManager: Mock verifyUser for:', userId);
+    logger.debug('UserStatusManager: Mock verifyUser for:', userId);
     
     this.notifySubscribers({
       type: 'USER_STATUS_CHANGED',
@@ -125,7 +126,7 @@ class UserStatusManager {
 
   // Mock rejet d'utilisateur
   async rejectUser(userId, reason = 'Documents insuffisants') {
-    console.log('UserStatusManager: Mock rejectUser for:', userId, 'reason:', reason);
+    logger.debug('UserStatusManager: Mock rejectUser for:', userId, 'reason:', reason);
     
     this.notifySubscribers({
       type: 'USER_STATUS_CHANGED',
@@ -136,7 +137,7 @@ class UserStatusManager {
 
   // Mock changement de rôle
   async changeUserRole(userId, newRole) {
-    console.log('UserStatusManager: Mock changeUserRole for:', userId, 'newRole:', newRole);
+    logger.debug('UserStatusManager: Mock changeUserRole for:', userId, 'newRole:', newRole);
     
     this.notifySubscribers({
       type: 'USER_ROLE_CHANGED',
@@ -147,13 +148,13 @@ class UserStatusManager {
 
   // Mock surveillance de bannissement
   async monitorBannedUsers() {
-    console.log('UserStatusManager: Mock monitorBannedUsers');
+    logger.debug('UserStatusManager: Mock monitorBannedUsers');
     return [];
   }
 
   // Mock initialisation du manager
   async initializeManager() {
-    console.log('UserStatusManager: Mock initialization completed');
+    logger.debug('UserStatusManager: Mock initialization completed');
     return true;
   }
 
@@ -161,7 +162,7 @@ class UserStatusManager {
   cleanup() {
     this.stopListening();
     this.subscribers.clear();
-    console.log('UserStatusManager: Mock cleanup completed');
+    logger.debug('UserStatusManager: Mock cleanup completed');
   }
 }
 
@@ -170,9 +171,9 @@ const userStatusManager = new UserStatusManager();
 
 // Auto-initialisation mock
 userStatusManager.initializeManager().then(() => {
-  console.log('✅ UserStatusManager mock initialized');
+  logger.debug('✅ UserStatusManager mock initialized');
 }).catch(error => {
-  console.error('âŒ UserStatusManager mock initialization failed:', error);
+  logger.error('âŒ UserStatusManager mock initialization failed:', error);
 });
 
 export default userStatusManager;

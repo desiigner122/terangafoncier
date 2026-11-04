@@ -11,6 +11,7 @@ import {
   upsertSubscription,
   getSubscription
 } from '@/api/stripe';
+import { logger } from '@/lib/logger';
 
 const SUBSCRIPTION_PLANS = {
   free: {
@@ -126,7 +127,7 @@ export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }
         setSelectedPlan(sub.plan_name.toLowerCase());
       }
     } catch (error) {
-      console.error('Erreur chargement abonnement:', error);
+      logger.error('Erreur chargement abonnement:', error);
     }
   };
 
@@ -181,7 +182,7 @@ export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }
         await loadSubscription();
       }
     } catch (error) {
-      console.error('❌ Erreur activation abonnement:', error);
+      logger.error('❌ Erreur activation abonnement:', error);
       toast.error('Erreur lors de l\'activation de l\'abonnement');
       setLoading(false);
     }

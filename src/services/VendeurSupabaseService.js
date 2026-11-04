@@ -17,6 +17,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class VendeurSupabaseService {
   /**
@@ -36,7 +37,7 @@ class VendeurSupabaseService {
           photos:property_photos ( id, url, is_primary, gps_latitude, gps_longitude, quality_score )
         `)
         .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (status) query = query.eq('status', status);
       query = query.range(offset, offset + limit - 1);
@@ -46,7 +47,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: data || [], message: `${data?.length || 0} annonces chargées` };
     } catch (error) {
-      console.error('Erreur getVendeurListings:', error);
+      logger.error('Erreur getVendeurListings:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -57,7 +58,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data, message: 'Annonce créée avec succès' };
     } catch (error) {
-      console.error('Erreur createListing:', error);
+      logger.error('Erreur createListing:', error);
       return { success: false, error: error.message };
     }
   }
@@ -68,7 +69,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data, message: 'Annonce mise à jour' };
     } catch (error) {
-      console.error('Erreur updateListing:', error);
+      logger.error('Erreur updateListing:', error);
       return { success: false, error: error.message };
     }
   }
@@ -79,7 +80,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, message: 'Annonce supprimée' };
     } catch (error) {
-      console.error('Erreur deleteListing:', error);
+      logger.error('Erreur deleteListing:', error);
       return { success: false, error: error.message };
     }
   }
@@ -95,7 +96,7 @@ class VendeurSupabaseService {
       const { data: properties, error: propsError } = await supabase
         .from('properties')
         .select('id, title, name, location, surface')
-        .eq('owner_id', userId);
+        .eq('owner_id', userId).limit(500);
       if (propsError) throw propsError;
 
       const propertyIds = properties?.map(p => p.id) || [];
@@ -107,7 +108,7 @@ class VendeurSupabaseService {
         .from('property_photos')
         .select('*')
         .in('property_id', propertyIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (photosError) throw photosError;
 
       const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
@@ -115,7 +116,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: enriched, message: `${enriched.length} photos chargées` };
     } catch (error) {
-      console.error('Erreur getUserPhotos:', error);
+      logger.error('Erreur getUserPhotos:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -144,7 +145,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: photoRecord, message: 'Photo uploadée avec succès' };
     } catch (error) {
-      console.error('Erreur uploadPropertyPhoto:', error);
+      logger.error('Erreur uploadPropertyPhoto:', error);
       return { success: false, error: error.message };
     }
   }
@@ -168,7 +169,7 @@ class VendeurSupabaseService {
             await supabase.storage.from('property-photos').remove([filePath]);
           }
         } catch (storageErr) {
-          console.warn('Erreur suppression Storage:', storageErr);
+          logger.warn('Erreur suppression Storage:', storageErr);
         }
       }
 
@@ -177,7 +178,7 @@ class VendeurSupabaseService {
 
       return { success: true, message: 'Photo supprimée' };
     } catch (error) {
-      console.error('Erreur deletePhoto:', error);
+      logger.error('Erreur deletePhoto:', error);
       return { success: false, error: error.message };
     }
   }
@@ -195,7 +196,7 @@ class VendeurSupabaseService {
       const { data: properties, error: propsError } = await supabase
         .from('properties')
         .select('id, title, name, price, location')
-        .eq('owner_id', userId);
+        .eq('owner_id', userId).limit(500);
       if (propsError) throw propsError;
 
       const propertyIds = properties?.map(p => p.id) || [];
@@ -207,7 +208,7 @@ class VendeurSupabaseService {
         .from('financial_transactions')
         .select('*')
         .in('property_id', propertyIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (offersError) throw offersError;
 
       const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
@@ -215,7 +216,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: enriched, message: `${enriched.length} offres chargées` };
     } catch (error) {
-      console.error('Erreur getVendeurOffers:', error);
+      logger.error('Erreur getVendeurOffers:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -231,7 +232,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data, message: 'Offre acceptée' };
     } catch (error) {
-      console.error('Erreur acceptOffer:', error);
+      logger.error('Erreur acceptOffer:', error);
       return { success: false, error: error.message };
     }
   }
@@ -247,7 +248,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data, message: 'Offre refusée' };
     } catch (error) {
-      console.error('Erreur rejectOffer:', error);
+      logger.error('Erreur rejectOffer:', error);
       return { success: false, error: error.message };
     }
   }
@@ -263,7 +264,7 @@ class VendeurSupabaseService {
       const { data: properties, error: propsError } = await supabase
         .from('properties')
         .select('id, status, price, surface, views_count')
-        .eq('owner_id', userId);
+        .eq('owner_id', userId).limit(500);
       if (propsError) throw propsError;
 
       const propertyIds = properties?.map(p => p.id) || [];
@@ -272,7 +273,7 @@ class VendeurSupabaseService {
         const { data: offersData, error: offersError } = await supabase
           .from('financial_transactions')
           .select('id, status, amount')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
         if (offersError) throw offersError;
         offers = offersData || [];
       }
@@ -293,7 +294,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: stats, message: 'Analytics chargées' };
     } catch (error) {
-      console.error('Erreur getVendeurAnalytics:', error);
+      logger.error('Erreur getVendeurAnalytics:', error);
       return { success: false, data: null, error: error.message };
     }
   }
@@ -310,11 +311,11 @@ class VendeurSupabaseService {
         .from('crm_contacts')
         .select('*')
         .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCrmContacts:', error);
+      logger.error('Erreur getCrmContacts:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -325,7 +326,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createCrmContact:', error);
+      logger.error('Erreur createCrmContact:', error);
       return { success: false, error: error.message };
     }
   }
@@ -336,11 +337,11 @@ class VendeurSupabaseService {
         .from('crm_deals')
         .select('*, contact:crm_contacts(id, name, email)')
         .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCrmDeals:', error);
+      logger.error('Erreur getCrmDeals:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -356,7 +357,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCrmActivities:', error);
+      logger.error('Erreur getCrmActivities:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -367,11 +368,11 @@ class VendeurSupabaseService {
         .from('crm_tasks')
         .select('*')
         .eq('owner_id', userId)
-        .order('due_date', { ascending: true });
+        .order('due_date', { ascending: true }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCrmTasks:', error);
+      logger.error('Erreur getCrmTasks:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -388,11 +389,11 @@ class VendeurSupabaseService {
         .from('documents')
         .select('*')
         .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getDocuments:', error);
+      logger.error('Erreur getDocuments:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -408,7 +409,7 @@ class VendeurSupabaseService {
       const { data: properties, error: propsError } = await supabase
         .from('properties')
         .select('id, title, name')
-        .eq('owner_id', userId);
+        .eq('owner_id', userId).limit(500);
       if (propsError) throw propsError;
 
       const propertyIds = properties?.map(p => p.id) || [];
@@ -420,7 +421,7 @@ class VendeurSupabaseService {
         .from('disputes')
         .select('*')
         .in('property_id', propertyIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
 
       const propertyMap = Object.fromEntries((properties || []).map(p => [p.id, p]));
@@ -428,7 +429,7 @@ class VendeurSupabaseService {
 
       return { success: true, data: enriched };
     } catch (error) {
-      console.error('Erreur getDisputes:', error);
+      logger.error('Erreur getDisputes:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -451,7 +452,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data: data || [], message: `${data?.length || 0} transactions chargées` };
     } catch (error) {
-      console.error('Erreur getBlockchainTransactions:', error);
+      logger.error('Erreur getBlockchainTransactions:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -461,7 +462,7 @@ class VendeurSupabaseService {
       const { data: properties, error: propsError } = await supabase
         .from('properties')
         .select('id')
-        .eq('owner_id', userId);
+        .eq('owner_id', userId).limit(500);
       if (propsError) throw propsError;
 
       const propertyIds = properties?.map(p => p.id) || [];
@@ -473,11 +474,11 @@ class VendeurSupabaseService {
         .from('blockchain_certificates')
         .select('*')
         .in('property_id', propertyIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getBlockchainCertificates:', error);
+      logger.error('Erreur getBlockchainCertificates:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -493,7 +494,7 @@ class VendeurSupabaseService {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', userId);
+        .eq('user_id', userId).limit(500);
       if (partError) throw partError;
 
       const conversationIds = participations?.map(p => p.conversation_id) || [];
@@ -505,11 +506,11 @@ class VendeurSupabaseService {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getConversations:', error);
+      logger.error('Erreur getConversations:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -520,11 +521,11 @@ class VendeurSupabaseService {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMessages:', error);
+      logger.error('Erreur getMessages:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -539,7 +540,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur sendMessage:', error);
+      logger.error('Erreur sendMessage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -556,11 +557,11 @@ class VendeurSupabaseService {
         .from('support_tickets')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getSupportTickets:', error);
+      logger.error('Erreur getSupportTickets:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -571,7 +572,7 @@ class VendeurSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createSupportTicket:', error);
+      logger.error('Erreur createSupportTicket:', error);
       return { success: false, error: error.message };
     }
   }

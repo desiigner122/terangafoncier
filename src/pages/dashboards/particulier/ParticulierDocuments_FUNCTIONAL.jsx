@@ -40,6 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 // Libellés lisibles pour les types de documents réels (colonne documents.type)
 const TYPE_LABELS = {
@@ -88,7 +89,7 @@ const ParticulierDocuments = () => {
 
       setDocuments(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement documents:', error);
+      logger.error('Erreur chargement documents:', error);
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -145,7 +146,7 @@ const ParticulierDocuments = () => {
         file: null
       });
     } catch (error) {
-      console.error('Erreur upload document:', error);
+      logger.error('Erreur upload document:', error);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -170,7 +171,7 @@ const ParticulierDocuments = () => {
 
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
     }
   };
 

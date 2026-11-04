@@ -16,6 +16,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const CommunalZonesPage = () => {
   const [zones, setZones] = useState([]);
@@ -49,7 +50,7 @@ const CommunalZonesPage = () => {
         const { data, error } = await supabase
           .from('communal_zones')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
 
@@ -74,7 +75,7 @@ const CommunalZonesPage = () => {
         setZones(mapped);
         setFilteredZones(mapped);
       } catch (err) {
-        console.error('Erreur lors du chargement des zones communales:', err);
+        logger.error('Erreur lors du chargement des zones communales:', err);
         setZones([]);
         setFilteredZones([]);
       } finally {

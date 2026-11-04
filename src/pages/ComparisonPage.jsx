@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/supabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { logger } from '@/lib/logger';
 
 const formatPrice = (price) => {
    if (price === null || price === undefined) return 'N/A';
@@ -51,10 +52,10 @@ const ComparisonPage = () => {
       const { data, error } = await supabase
         .from('parcels')
         .select('*')
-        .in('id', comparisonList);
+        .in('id', comparisonList).limit(500);
       
       if (error) {
-        console.error("Error fetching parcels for comparison:", error);
+        logger.error("Error fetching parcels for comparison:", error);
         window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger les parcelles à comparer.", variant: "destructive" });
       } else {
         setParcelsToCompare(data);

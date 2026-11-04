@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // --- Statuts réels de la table demandes_financement ---
 const STATUS_META = {
@@ -66,17 +67,17 @@ const FundingRequestsPage = () => {
       const { data: rows, error: fetchError } = await supabase
         .from('demandes_financement')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (fetchError) {
-        console.error('Erreur chargement demandes_financement:', fetchError);
+        logger.error('Erreur chargement demandes_financement:', fetchError);
         setError("Impossible de charger les demandes de financement.");
         setData([]);
       } else {
         setData(rows || []);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       setError("Une erreur est survenue lors du chargement.");
       setData([]);
     } finally {
@@ -98,7 +99,7 @@ const FundingRequestsPage = () => {
         .update(patch)
         .eq('id', id);
       if (updError) {
-        console.error('Erreur mise à jour statut:', updError);
+        logger.error('Erreur mise à jour statut:', updError);
         return;
       }
       setData((prev) =>

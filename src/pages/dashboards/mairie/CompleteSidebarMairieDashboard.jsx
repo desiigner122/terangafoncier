@@ -71,6 +71,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 // Toast import supprimé - utilisation window.safeGlobalToast
 
 // Lazy loading des composants de pages
@@ -123,7 +124,7 @@ const CompleteSidebarMairieDashboard = () => {
         if (error) throw error;
         setProfile(data);
       } catch (error) {
-        console.error('Erreur lors du chargement du profil:', error);
+        logger.error('Erreur lors du chargement du profil:', error);
       }
     };
 

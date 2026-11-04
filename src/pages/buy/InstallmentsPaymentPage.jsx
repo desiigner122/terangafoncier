@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabaseClient";
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const InstallmentsPaymentPage = () => {
   const { state } = useLocation();
@@ -65,11 +66,11 @@ const InstallmentsPaymentPage = () => {
 
           if (error) throw error;
 
-          console.log('✅ Offre chargée:', data);
+          logger.debug('✅ Offre chargée:', data);
           setOffer(data);
           setTotalAmount(data.offer_price?.toString() || '');
         } catch (error) {
-          console.error('❌ Erreur chargement offre:', error);
+          logger.error('❌ Erreur chargement offre:', error);
         }
       }
     };
@@ -438,7 +439,7 @@ const InstallmentsPaymentPage = () => {
 
                   setSubmitting(true);
                   try {
-                    console.log('🔍 Context reçu:', { 
+                    logger.debug('🔍 Context reçu:', { 
                       parcelleId: context.parcelleId, 
                       parcelle: context.parcelle,
                       hasContext 
@@ -453,7 +454,7 @@ const InstallmentsPaymentPage = () => {
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
-                      console.log('🏠 Vérification parcelle:', { 
+                      logger.debug('🏠 Vérification parcelle:', { 
                         searched: context.parcelleId, 
                         found: parcelExists,
                         error: parcelError 
@@ -462,11 +463,11 @@ const InstallmentsPaymentPage = () => {
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
+                        logger.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
                         // ATTENTION: Ceci crée des demandes orphelines !
                       }
                     } else {
-                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
+                      logger.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
@@ -499,7 +500,7 @@ const InstallmentsPaymentPage = () => {
                       }
                     };
                     
-                    console.log('📤 Envoi payload:', payload);
+                    logger.debug('📤 Envoi payload:', payload);
                     
                     const { data: reqRows, error: reqError } = await supabase
                       .from('requests')
@@ -507,13 +508,13 @@ const InstallmentsPaymentPage = () => {
                       .select()
                       .limit(1);
                       
-                    console.log('📥 Réponse Supabase:', { reqRows, reqError });
+                    logger.debug('📥 Réponse Supabase:', { reqRows, reqError });
                       
                     if (reqError) throw reqError;
 
                     const request = Array.isArray(reqRows) ? reqRows[0] : reqRows;
                     
-                    console.log('✅ Request créée:', request);
+                    logger.debug('✅ Request créée:', request);
                     
                     // NFT proof (si activé)
                     if (FEATURES.ENABLE_REQUEST_NFT) {
@@ -538,7 +539,7 @@ const InstallmentsPaymentPage = () => {
                           }
                         }
                       } catch (e) {
-                        console.warn('Mint NFT request failed (ignored):', e.message);
+                        logger.warn('Mint NFT request failed (ignored):', e.message);
                       }
                     }
                     
@@ -579,16 +580,16 @@ const InstallmentsPaymentPage = () => {
                     
                     if (txError) throw txError;
                     
-                    console.log('✅ Request créée avec succès:', request?.id);
-                    console.log('✅ Transaction créée avec succès');
+                    logger.debug('✅ Request créée avec succès:', request?.id);
+                    logger.debug('✅ Transaction créée avec succès');
                     
                     // Afficher le dialog de succès
                     setCreatedRequestId(request?.id);
                     setShowSuccessDialog(true);
                     
-                    console.log('✅ Dialog state set to true');
+                    logger.debug('✅ Dialog state set to true');
                   } catch (err) {
-                    console.error('❌ Erreur création demande:', err);
+                    logger.error('❌ Erreur création demande:', err);
                     window.safeGlobalToast?.({ 
                       variant: 'destructive', 
                       title: 'Erreur', 

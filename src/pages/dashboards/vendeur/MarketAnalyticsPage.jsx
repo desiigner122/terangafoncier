@@ -34,6 +34,7 @@ import pdfGenerator from '@/services/pdfGenerator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 
 /**
@@ -138,10 +139,10 @@ const MarketAnalyticsPage = () => {
           verification_status,
           owner_id
         `)
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       if (propertiesError) {
-        console.warn('[MarketAnalytics] Fallback vers terrains:', propertiesError.message);
+        logger.warn('[MarketAnalytics] Fallback vers terrains:', propertiesError.message);
         const { data: terrainsData, error: terrainsError } = await supabase
           .from('terrains')
           .select(`
@@ -163,7 +164,7 @@ const MarketAnalyticsPage = () => {
             verification_status,
             vendeur_id
           `)
-          .eq('vendeur_id', user.id);
+          .eq('vendeur_id', user.id).limit(500);
 
         if (terrainsError) {
           throw terrainsError;
@@ -181,10 +182,10 @@ const MarketAnalyticsPage = () => {
         const { data: transactionData, error: txError } = await supabase
           .from('transactions')
           .select('id, property_id, status, amount, created_at, updated_at')
-          .in('property_id', propertyIds);
+          .in('property_id', propertyIds).limit(500);
 
         if (txError) {
-          console.warn('[MarketAnalytics] Échec chargement transactions:', txError.message);
+          logger.warn('[MarketAnalytics] Échec chargement transactions:', txError.message);
         } else {
           transactions = transactionData || [];
         }
@@ -215,7 +216,7 @@ const MarketAnalyticsPage = () => {
         setPropertyType('all');
       }
     } catch (error) {
-      console.error('Erreur chargement analytics vendeur:', error);
+      logger.error('Erreur chargement analytics vendeur:', error);
       toast.error('Impossible de charger les analytics marché.');
     } finally {
       setLoading(false);
@@ -481,7 +482,7 @@ const MarketAnalyticsPage = () => {
       }
       toast.success('Rapport exporté avec succès');
     } catch (error) {
-      console.error('Erreur export PDF:', error);
+      logger.error('Erreur export PDF:', error);
       toast.error('Erreur lors de l\'export du rapport');
     }
   };

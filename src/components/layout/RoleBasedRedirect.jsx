@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { logger } from '@/lib/logger';
 
 /**
  * Composant de redirection automatique basée sur le rôle
@@ -13,8 +14,8 @@ const RoleBasedRedirect = () => {
 
   useEffect(() => {
     if (profile) {
-      console.log('🔄 RoleBasedRedirect - Rôle utilisateur:', profile.role);
-      console.log('🔄 RoleBasedRedirect - Localisation actuelle:', location.pathname);
+      logger.debug('🔄 RoleBasedRedirect - Rôle utilisateur:', profile.role);
+      logger.debug('🔄 RoleBasedRedirect - Localisation actuelle:', location.pathname);
     }
   }, [profile, location]);
 
@@ -63,12 +64,12 @@ const RoleBasedRedirect = () => {
   const redirectPath = roleRedirectMap[userRole];
   
   if (redirectPath) {
-    console.log('✅ Redirection automatique:', userRole, '->', redirectPath);
+    logger.debug('✅ Redirection automatique:', userRole, '->', redirectPath);
     return <Navigate to={redirectPath} replace />;
   }
 
   // Si aucun rôle spécifique n'est trouvé, rediriger vers le dashboard général
-  console.log('⚠️ Rôle non reconnu:', userRole, '-> redirection vers dashboard général');
+  logger.debug('⚠️ Rôle non reconnu:', userRole, '-> redirection vers dashboard général');
   return <Navigate to="/dashboard" replace />;
 };
 

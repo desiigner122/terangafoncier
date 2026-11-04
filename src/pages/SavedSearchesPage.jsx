@@ -33,6 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatSearchParams = (params) => {
   if (!params) return 'Critères non définis.';
@@ -172,10 +173,10 @@ const SavedSearchesPage = () => {
             .from('saved_searches')
             .select('*')
             .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
 
         if (error) {
-            console.error("Error fetching saved searches:", error);
+            logger.error("Error fetching saved searches:", error);
             setError("Impossible de charger vos recherches sauvegardées.");
         } else {
             setSavedSearches(data);

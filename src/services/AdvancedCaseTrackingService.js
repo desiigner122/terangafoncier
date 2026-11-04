@@ -8,6 +8,7 @@
 
 import { supabase } from '@/lib/supabaseClient';
 import NotificationService from './NotificationService';
+import { logger } from '@/lib/logger';
 
 export class AdvancedCaseTrackingService {
   // ==========================================
@@ -50,7 +51,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error adding participant:', error);
+      logger.error('❌ Error adding participant:', error);
       throw error;
     }
   }
@@ -80,7 +81,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error accepting participation:', error);
+      logger.error('❌ Error accepting participation:', error);
       throw error;
     }
   }
@@ -96,12 +97,12 @@ export class AdvancedCaseTrackingService {
         .from('purchase_case_participants')
         .select('*')
         .eq('case_id', caseId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching participants:', error);
+      logger.error('❌ Error fetching participants:', error);
       return [];
     }
   }
@@ -140,7 +141,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error creating fee:', error);
+      logger.error('❌ Error creating fee:', error);
       throw error;
     }
   }
@@ -154,12 +155,12 @@ export class AdvancedCaseTrackingService {
         .from('purchase_case_fees')
         .select('*')
         .eq('case_id', caseId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching fees:', error);
+      logger.error('❌ Error fetching fees:', error);
       return [];
     }
   }
@@ -172,7 +173,7 @@ export class AdvancedCaseTrackingService {
       const fees = await this.getCaseFees(caseId);
       return fees.reduce((sum, fee) => sum + parseFloat(fee.amount || 0), 0);
     } catch (error) {
-      console.error('❌ Error calculating total fees:', error);
+      logger.error('❌ Error calculating total fees:', error);
       return 0;
     }
   }
@@ -205,7 +206,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error marking fee as paid:', error);
+      logger.error('❌ Error marking fee as paid:', error);
       throw error;
     }
   }
@@ -245,7 +246,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error creating task:', error);
+      logger.error('❌ Error creating task:', error);
       throw error;
     }
   }
@@ -259,12 +260,12 @@ export class AdvancedCaseTrackingService {
         .from('purchase_case_tasks')
         .select('*')
         .eq('case_id', caseId)
-        .order('due_date', { ascending: true });
+        .order('due_date', { ascending: true }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching tasks:', error);
+      logger.error('❌ Error fetching tasks:', error);
       return [];
     }
   }
@@ -305,7 +306,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error updating task:', error);
+      logger.error('❌ Error updating task:', error);
       throw error;
     }
   }
@@ -346,7 +347,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error adding document:', error);
+      logger.error('❌ Error adding document:', error);
       throw error;
     }
   }
@@ -360,12 +361,12 @@ export class AdvancedCaseTrackingService {
         .from('purchase_case_documents')
         .select('*')
         .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching documents:', error);
+      logger.error('❌ Error fetching documents:', error);
       return [];
     }
   }
@@ -397,7 +398,7 @@ export class AdvancedCaseTrackingService {
 
       return data;
     } catch (error) {
-      console.error('❌ Error verifying document:', error);
+      logger.error('❌ Error verifying document:', error);
       throw error;
     }
   }
@@ -427,7 +428,7 @@ export class AdvancedCaseTrackingService {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('❌ Error logging timeline event:', error);
+      logger.error('❌ Error logging timeline event:', error);
       return null;
     }
   }
@@ -441,12 +442,12 @@ export class AdvancedCaseTrackingService {
         .from('purchase_case_timeline')
         .select('*')
         .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching timeline:', error);
+      logger.error('❌ Error fetching timeline:', error);
       return [];
     }
   }
@@ -490,7 +491,7 @@ export class AdvancedCaseTrackingService {
         },
       };
     } catch (error) {
-      console.error('❌ Error getting case summary:', error);
+      logger.error('❌ Error getting case summary:', error);
       throw error;
     }
   }
@@ -509,7 +510,7 @@ export class AdvancedCaseTrackingService {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('❌ Error fetching case:', error);
+      logger.error('❌ Error fetching case:', error);
       return null;
     }
   }
@@ -557,7 +558,7 @@ export class AdvancedCaseTrackingService {
 
       return updatedCase;
     } catch (error) {
-      console.error('❌ Error handling seller acceptance:', error);
+      logger.error('❌ Error handling seller acceptance:', error);
       throw error;
     }
   }
@@ -581,7 +582,7 @@ export class AdvancedCaseTrackingService {
 
       await Promise.all(notifications);
     } catch (error) {
-      console.error('❌ Error notifying participants:', error);
+      logger.error('❌ Error notifying participants:', error);
     }
   }
 }

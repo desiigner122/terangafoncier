@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatXOF = (value) => {
   const n = Number(value) || 0;
@@ -72,12 +73,12 @@ const GuaranteesPage = () => {
         .from('guarantees')
         .select('*')
         .eq('bank_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (qError) throw qError;
       setGuarantees(data || []);
     } catch (err) {
-      console.error('Erreur chargement garanties:', err);
+      logger.error('Erreur chargement garanties:', err);
       setError("Impossible de charger les garanties.");
       setGuarantees([]);
     } finally {

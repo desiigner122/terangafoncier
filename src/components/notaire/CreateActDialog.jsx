@@ -37,6 +37,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { logger } from '@/lib/logger';
 
 const CreateActDialog = ({ open, onOpenChange, onActCreated, notaireId }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -232,7 +233,7 @@ const CreateActDialog = ({ open, onOpenChange, onActCreated, notaireId }) => {
         setError(result.error || 'Erreur lors de la création de l\'acte');
       }
     } catch (error) {
-      console.error('Erreur création acte:', error);
+      logger.error('Erreur création acte:', error);
       setError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);

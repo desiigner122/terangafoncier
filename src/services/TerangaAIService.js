@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabaseClient';
 import { fraudDetectionAI } from './FraudDetectionAI';
 import { recommendationEngine } from './PersonalizedRecommendationEngine';
 import { terangaBlockchainSecurity } from './TerangaBlockchainSecurity';
+import { logger } from '@/lib/logger';
 
 class TerangaAIService {
   constructor() {
@@ -142,14 +143,14 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async initialize() {
-    console.log('🚀 Initialisation Teranga AI Service - Phase 2 Enhanced + Blockchain');
+    logger.debug('🚀 Initialisation Teranga AI Service - Phase 2 Enhanced + Blockchain');
     
     try {
       // Initialisation des modules avancés
       await this.initializeEnhancedModules();
       
       this.initialized = true;
-      console.log('✅ Teranga AI Service v2.1 initialisé avec succès');
+      logger.debug('✅ Teranga AI Service v2.1 initialisé avec succès');
       
       return {
         success: true,
@@ -176,7 +177,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur initialisation Teranga AI:', error);
+      logger.error('❌ Erreur initialisation Teranga AI:', error);
       return { success: false, error: error.message };
     }
   }
@@ -186,27 +187,27 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async initializeEnhancedModules() {
-    console.log('⚡ Initialisation modules avancés + Blockchain...');
+    logger.debug('⚡ Initialisation modules avancés + Blockchain...');
     
     try {
       // Initialisation système anti-fraude
       await this.fraudDetection.initialize();
-      console.log('✅ Module anti-fraude initialisé');
+      logger.debug('✅ Module anti-fraude initialisé');
       
       // Initialisation moteur de recommandations
       await this.recommendations.initialize();
-      console.log('✅ Moteur de recommandations initialisé');
+      logger.debug('✅ Moteur de recommandations initialisé');
       
       // Initialisation sécurité blockchain
       await this.blockchainSecurity.initialize();
-      console.log('✅ Module blockchain sécurisé initialisé');
+      logger.debug('✅ Module blockchain sécurisé initialisé');
       
       // Initialisation cache intelligent
       this.initializeIntelligentCache();
-      console.log('✅ Cache intelligent initialisé');
+      logger.debug('✅ Cache intelligent initialisé');
       
     } catch (error) {
-      console.error('❌ Erreur initialisation modules avancés:', error);
+      logger.error('❌ Erreur initialisation modules avancés:', error);
     }
   }
 
@@ -240,7 +241,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async analyzeTransactionSecurity(transactionData) {
-    console.log('🛡️ Analyse sécurité transaction...');
+    logger.debug('🛡️ Analyse sécurité transaction...');
     
     const startTime = Date.now();
     
@@ -277,7 +278,7 @@ class TerangaAIService {
       return enrichedAnalysis;
 
     } catch (error) {
-      console.error('❌ Erreur analyse sécurité:', error);
+      logger.error('❌ Erreur analyse sécurité:', error);
       return {
         fraudScore: 0.5,
         riskLevel: 'INDETERMINÉ',
@@ -292,7 +293,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async generatePersonalizedRecommendations(userId, context = {}) {
-    console.log('🎯 Génération recommandations personnalisées...');
+    logger.debug('🎯 Génération recommandations personnalisées...');
     
     const startTime = Date.now();
     const cacheKey = `recommendations_${userId}`;
@@ -301,7 +302,7 @@ class TerangaAIService {
       // Vérifier cache d'abord
       const cached = this.getCacheValue(cacheKey);
       if (cached && !context.forceRefresh) {
-        console.log('📋 Recommandations depuis cache');
+        logger.debug('📋 Recommandations depuis cache');
         return cached;
       }
 
@@ -328,7 +329,7 @@ class TerangaAIService {
       return enrichedRecommendations;
 
     } catch (error) {
-      console.error('❌ Erreur génération recommandations:', error);
+      logger.error('❌ Erreur génération recommandations:', error);
       return this.getFallbackRecommendations(userId);
     }
   }
@@ -367,7 +368,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async analyzeBehaviorPatterns(userId, timeframe = '30d') {
-    console.log('📊 Analyse patterns comportementaux...');
+    logger.debug('📊 Analyse patterns comportementaux...');
 
     try {
       // Récupérer historique utilisateur
@@ -401,7 +402,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur analyse comportementale:', error);
+      logger.error('❌ Erreur analyse comportementale:', error);
       return { error: error.message, fallback: true };
     }
   }
@@ -411,7 +412,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async performAdvancedPredictiveAnalysis(propertyData, marketContext = {}) {
-    console.log('🔍 Analyse prédictive avancée...');
+    logger.debug('🔍 Analyse prédictive avancée...');
 
     try {
       // Analyse de base existante
@@ -453,7 +454,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur analyse prédictive avancée:', error);
+      logger.error('❌ Erreur analyse prédictive avancée:', error);
       // Fallback vers analyse de base
       return await this.evaluateProperty(propertyData);
     }
@@ -465,7 +466,7 @@ class TerangaAIService {
 
   async evaluateProperty(propertyData) {
     const startTime = Date.now();
-    console.log('💰 Évaluation propriété avec données Sénégal');
+    logger.debug('💰 Évaluation propriété avec données Sénégal');
 
     try {
       const { type, surface, location } = propertyData;
@@ -507,7 +508,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur évaluation propriété:', error);
+      logger.error('❌ Erreur évaluation propriété:', error);
       return this.getFallbackEvaluation(propertyData);
     }
   }
@@ -517,7 +518,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   getLocalMarketData(location) {
-    console.log(`📊 Récupération données marché local: ${location}`);
+    logger.debug(`📊 Récupération données marché local: ${location}`);
     
     // Recherche par région/zone
     for (const region in this.senegalMarketData.regions) {
@@ -634,7 +635,7 @@ class TerangaAIService {
   // ═══════════════════════════════════════════════════════════
 
   async getQuickEstimate(location, type, surface) {
-    console.log(`⚡ Estimation rapide: ${type} ${surface}m² à ${location}`);
+    logger.debug(`⚡ Estimation rapide: ${type} ${surface}m² à ${location}`);
     
     const localMarket = this.getLocalMarketData(location);
     const estimatedPrice = this.calculateMarketPrice({ type, surface }, localMarket);
@@ -650,7 +651,7 @@ class TerangaAIService {
   }
 
   async getMarketInsights(region = 'Dakar') {
-    console.log(`📈 Insights marché: ${region}`);
+    logger.debug(`📈 Insights marché: ${region}`);
     
     const regionData = this.senegalMarketData.regions[region];
     if (!regionData) return null;
@@ -690,7 +691,7 @@ class TerangaAIService {
    * Hachage sécurisé d'un titre foncier avec toutes les validations
    */
   async hashSecureLandTitle(landTitleData, options = {}) {
-    console.log('🔐 Hachage sécurisé titre foncier avec IA...');
+    logger.debug('🔐 Hachage sécurisé titre foncier avec IA...');
     
     try {
       // 1. Pré-validation avec IA anti-fraude
@@ -731,7 +732,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur hachage sécurisé:', error);
+      logger.error('❌ Erreur hachage sécurisé:', error);
       return {
         success: false,
         error: error.message,
@@ -744,7 +745,7 @@ class TerangaAIService {
    * Vérification complète document avec IA + Blockchain
    */
   async verifySecureDocument(documentData, expectedHash = null) {
-    console.log('📄 Vérification sécurisée document avec IA...');
+    logger.debug('📄 Vérification sécurisée document avec IA...');
     
     try {
       // 1. Vérification blockchain de base
@@ -794,7 +795,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur vérification sécurisée:', error);
+      logger.error('❌ Erreur vérification sécurisée:', error);
       return {
         status: 'ERROR',
         error: error.message,
@@ -807,7 +808,7 @@ class TerangaAIService {
    * Génération certificat numérique enrichi IA
    */
   async generateEnhancedDigitalCertificate(landTitleData) {
-    console.log('📜 Génération certificat numérique enrichi IA...');
+    logger.debug('📜 Génération certificat numérique enrichi IA...');
     
     try {
       // 1. Hachage sécurisé complet
@@ -862,7 +863,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur génération certificat enrichi:', error);
+      logger.error('❌ Erreur génération certificat enrichi:', error);
       return {
         success: false,
         error: error.message
@@ -874,7 +875,7 @@ class TerangaAIService {
    * Analyse Trail Audit avec insights IA
    */
   async analyzeAuditTrailWithAI() {
-    console.log('🔍 Analyse trail audit avec insights IA...');
+    logger.debug('🔍 Analyse trail audit avec insights IA...');
     
     try {
       // 1. Vérification intégrité blockchain
@@ -907,7 +908,7 @@ class TerangaAIService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur analyse audit trail:', error);
+      logger.error('❌ Erreur analyse audit trail:', error);
       return { error: error.message };
     }
   }

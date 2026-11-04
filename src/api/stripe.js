@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Crée une session de paiement Stripe
@@ -41,7 +42,7 @@ export const createCheckoutSession = async (planName, amount, userId, email) => 
     // En production, appeler une véritable API backend
     // Pour le moment, retourner une session de test
     if (process.env.REACT_APP_STRIPE_API_KEY) {
-      console.log('🔑 Clé Stripe trouvée, utilisation API production');
+      logger.debug('🔑 Clé Stripe trouvée, utilisation API production');
       // Appel API backend pour Stripe
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
@@ -63,7 +64,7 @@ export const createCheckoutSession = async (planName, amount, userId, email) => 
 
       return await response.json();
     } else {
-      console.warn('⚠️ Clé Stripe non configurée, mode simulation');
+      logger.warn('⚠️ Clé Stripe non configurée, mode simulation');
       // Retourner session de test
       return {
         ...session,
@@ -72,7 +73,7 @@ export const createCheckoutSession = async (planName, amount, userId, email) => 
       };
     }
   } catch (error) {
-    console.error('❌ Erreur création session Stripe:', error);
+    logger.error('❌ Erreur création session Stripe:', error);
     throw error;
   }
 };
@@ -117,14 +118,14 @@ export const savePaymentTransaction = async (transactionData) => {
       .single();
 
     if (error) {
-      console.error('❌ Erreur insertion transaction:', error);
+      logger.error('❌ Erreur insertion transaction:', error);
       throw error;
     }
 
-    console.log('✅ Transaction sauvegardée:', data.id);
+    logger.debug('✅ Transaction sauvegardée:', data.id);
     return data;
   } catch (error) {
-    console.error('❌ Erreur sauvegarde transaction:', error);
+    logger.error('❌ Erreur sauvegarde transaction:', error);
     throw error;
   }
 };
@@ -150,10 +151,10 @@ export const updatePaymentStatus = async (transactionId, status) => {
 
     if (error) throw error;
 
-    console.log(`✅ Statut transaction ${transactionId} mis à jour: ${status}`);
+    logger.debug(`✅ Statut transaction ${transactionId} mis à jour: ${status}`);
     return data;
   } catch (error) {
-    console.error('❌ Erreur mise à jour statut:', error);
+    logger.error('❌ Erreur mise à jour statut:', error);
     throw error;
   }
 };
@@ -202,10 +203,10 @@ export const upsertSubscription = async (userId, planName, amount) => {
 
     if (error) throw error;
 
-    console.log(`✅ Abonnement ${planName} créé pour utilisateur ${userId}`);
+    logger.debug(`✅ Abonnement ${planName} créé pour utilisateur ${userId}`);
     return data;
   } catch (error) {
-    console.error('❌ Erreur création abonnement:', error);
+    logger.error('❌ Erreur création abonnement:', error);
     throw error;
   }
 };
@@ -232,7 +233,7 @@ export const getSubscription = async (userId) => {
 
     return data || null;
   } catch (error) {
-    console.error('❌ Erreur récupération abonnement:', error);
+    logger.error('❌ Erreur récupération abonnement:', error);
     return null;
   }
 };
@@ -259,10 +260,10 @@ export const cancelSubscription = async (userId) => {
 
     if (error) throw error;
 
-    console.log(`✅ Abonnement annulé pour utilisateur ${userId}`);
+    logger.debug(`✅ Abonnement annulé pour utilisateur ${userId}`);
     return data;
   } catch (error) {
-    console.error('❌ Erreur annulation abonnement:', error);
+    logger.error('❌ Erreur annulation abonnement:', error);
     throw error;
   }
 };

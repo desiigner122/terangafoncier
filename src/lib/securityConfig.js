@@ -1,11 +1,12 @@
+import { logger } from '@/lib/logger';
 // Configuration pour éviter les erreurs de Service Worker et gérer la sécurité
 
 // Désactiver les Service Workers si non supportés ou en contexte non sécurisé
 if ('serviceWorker' in navigator && window.isSecureContext) {
   // Service Worker optionnel uniquement en contexte sécurisé
-  console.log('Service Worker supporté et contexte sécurisé');
+  logger.debug('Service Worker supporté et contexte sécurisé');
 } else {
-  console.warn('Service Worker non disponible ou contexte non sécurisé');
+  logger.warn('Service Worker non disponible ou contexte non sécurisé');
 }
 
 // Configuration pour éviter les erreurs HTTPS/HTTP

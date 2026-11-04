@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
 import { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const formatPrice = (price) => new Intl.NumberFormat('fr-SN', { style: 'currency', currency: 'XOF' }).format(price);
 
@@ -48,7 +49,7 @@ const TransactionsPage = () => {
             .order('created_at', { ascending: false });
         
         if (error) {
-            console.error("Error fetching transactions:", error);
+            logger.error("Error fetching transactions:", error);
             window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger vos transactions.", variant: "destructive" });
         } else {
             setTransactions(data);

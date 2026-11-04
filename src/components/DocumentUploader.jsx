@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Upload, X, FileText, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const DOCUMENT_TYPES = {
   salarySlip: { label: 'Bulletins de salaire (3 derniers mois)', accept: '.pdf,.jpg,.jpeg,.png' },
@@ -68,7 +69,7 @@ export const DocumentUploader = ({ userId, onDocumentsChange }) => {
       onDocumentsChange?.(newDocs);
 
     } catch (error) {
-      console.error('Erreur upload:', error);
+      logger.error('Erreur upload:', error);
       setErrors(prev => ({ ...prev, [docType]: error.message }));
     } finally {
       setUploading(prev => ({ ...prev, [docType]: false }));
@@ -94,7 +95,7 @@ export const DocumentUploader = ({ userId, onDocumentsChange }) => {
       onDocumentsChange?.(newDocs);
 
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
     }
   };
 

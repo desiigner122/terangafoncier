@@ -42,6 +42,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import StatsService from '@/services/StatsService';
+import { logger } from '@/lib/logger';
 
 const AgentFoncierCalculateurs = () => {
   const [loading, setLoading] = useState(true);
@@ -119,7 +120,7 @@ const AgentFoncierCalculateurs = () => {
           setLoyerData(prev => ({ ...prev, zone: realZones[0].value }));
         }
       } catch (e) {
-        console.error('Erreur chargement marché régional:', e);
+        logger.error('Erreur chargement marché régional:', e);
         setZones([]);
       } finally {
         setLoading(false);

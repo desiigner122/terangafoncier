@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Normalise le champ jsonb `parties` de la table disputes vers un tableau de noms.
 const normalizeParties = (parties) => {
@@ -84,7 +85,7 @@ const AgentFoncierAntiFraude = () => {
         .from('properties')
         .select('id, title, name, location, region, city, verification_status, created_at')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (propsErr) throw propsErr;
 
       const properties = props || [];
@@ -104,7 +105,7 @@ const AgentFoncierAntiFraude = () => {
           .from('disputes')
           .select('id, title, property_id, status, parties, created_at')
           .in('property_id', ids)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (dispErr) throw dispErr;
         disputes = disp || [];
       }
@@ -201,7 +202,7 @@ const AgentFoncierAntiFraude = () => {
 
       setAlertes(allAlerts);
     } catch (e) {
-      console.error('Erreur chargement anti-fraude agent:', e);
+      logger.error('Erreur chargement anti-fraude agent:', e);
       setAlertes([]);
       setFraudeStats({ totalAlerts: 0, criticalAlerts: 0, resolvedCases: 0, verifiedRate: null });
       setMonthlyData([]);

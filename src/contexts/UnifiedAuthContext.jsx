@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { unifiedAuth } from '@/services/UnifiedAuthService';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Colonnes de `profiles` qu'un utilisateur ne peut jamais modifier lui-même.
 // (Verrouillées aussi côté base par le trigger protect_profile_privileged_columns.)
@@ -49,7 +50,7 @@ export const AuthProvider = ({ children }) => {
         .eq('id', authUser.id)
         .maybeSingle();
       if (error) {
-        console.error('Erreur chargement profil:', error.message);
+        logger.error('Erreur chargement profil:', error.message);
         setDbProfile(null);
         return null;
       }
@@ -121,7 +122,7 @@ export const AuthProvider = ({ children }) => {
         
         setLoading(false);
       } catch (error) {
-        console.error('Erreur initialisation auth:', error);
+        logger.error('Erreur initialisation auth:', error);
         setLoading(false);
       }
     };
@@ -131,7 +132,7 @@ export const AuthProvider = ({ children }) => {
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = unifiedAuth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
+        logger.debug('Auth state change:', event, session?.user?.email);
         handleSession(session);
       }
     );
@@ -174,7 +175,7 @@ export const AuthProvider = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Erreur inscription:', error);
+      logger.error('Erreur inscription:', error);
       window.safeGlobalToast?.({
         variant: "destructive",
         title: "Inscription échouée",
@@ -189,13 +190,13 @@ export const AuthProvider = ({ children }) => {
   // Connexion
   const signIn = useCallback(async (email, password) => {
     try {
-      console.log('🔐 UnifiedAuthContext.signIn appelé:', { email });
+      logger.debug('🔐 UnifiedAuthContext.signIn appelé:', { email });
       setLoading(true);
       const result = await unifiedAuth.signIn(email, password);
-      console.log('📋 Résultat du service:', result);
+      logger.debug('📋 Résultat du service:', result);
 
       if (result.error) {
-        console.log('❌ Erreur de connexion:', result.error);
+        logger.debug('❌ Erreur de connexion:', result.error);
         window.safeGlobalToast?.({
           variant: "destructive",
           title: "Connexion échouée",
@@ -206,7 +207,7 @@ export const AuthProvider = ({ children }) => {
 
       // Mettre à jour l'état local
       if (result.user) {
-        console.log('✅ Mise à jour de l\'état utilisateur:', result.user);
+        logger.debug('✅ Mise à jour de l\'état utilisateur:', result.user);
         setUser(result.user);
         setSession({ user: result.user, access_token: 'authenticated' });
         
@@ -219,7 +220,7 @@ export const AuthProvider = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Erreur connexion:', error);
+      logger.error('Erreur connexion:', error);
       window.safeGlobalToast?.({
         variant: "destructive",
         title: "Connexion échouée",
@@ -247,7 +248,7 @@ export const AuthProvider = ({ children }) => {
 
       return { error: result.error };
     } catch (error) {
-      console.error('Erreur déconnexion:', error);
+      logger.error('Erreur déconnexion:', error);
       window.safeGlobalToast?.({
         variant: "destructive",
         title: "Erreur déconnexion",
@@ -290,7 +291,7 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error: new Error(result.error) };
       }
     } catch (error) {
-      console.error('Erreur mise à jour profil:', error);
+      logger.error('Erreur mise à jour profil:', error);
       window.safeGlobalToast?.({
         variant: "destructive",
         title: "Erreur profil",
@@ -318,7 +319,7 @@ export const AuthProvider = ({ children }) => {
       
       return result;
     } catch (error) {
-      console.error('Erreur connexion rapide:', error);
+      logger.error('Erreur connexion rapide:', error);
       return { user: null, error };
     }
   }, []);

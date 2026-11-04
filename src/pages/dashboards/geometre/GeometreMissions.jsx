@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const GeometreMissions = () => {
   const { user } = useAuth();
@@ -45,12 +46,12 @@ const GeometreMissions = () => {
           .from('survey_missions')
           .select('*')
           .eq('geometre_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setMissions(data || []);
       } catch (err) {
-        console.error('Erreur chargement missions:', err);
+        logger.error('Erreur chargement missions:', err);
         setMissions([]);
       } finally {
         setLoading(false);

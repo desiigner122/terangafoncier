@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const AdminReportsPage = () => {
   // toast remplacé par window.safeGlobalToast
@@ -78,7 +79,7 @@ const AdminReportsPage = () => {
       });
 
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      logger.error('Erreur lors du chargement des données:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de charger les statistiques réelles.",

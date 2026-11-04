@@ -64,6 +64,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
 import CreateActDialog from '@/components/notaire/CreateActDialog';
+import { logger } from '@/lib/logger';
 
 const NotaireTransactionsModernized = () => {
   const { dashboardStats } = useOutletContext();
@@ -130,14 +131,14 @@ const NotaireTransactionsModernized = () => {
           property:properties(id, title, name, type, surface, location, region, city, price)
         `)
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       setTransactions(data || []);
       setFilteredTransactions(data || []);
     } catch (error) {
-      console.error('Erreur chargement transactions:', error);
+      logger.error('Erreur chargement transactions:', error);
       window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: "Impossible de charger les transactions",

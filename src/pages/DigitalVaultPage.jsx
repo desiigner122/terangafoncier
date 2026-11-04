@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { Helmet } from 'react-helmet-async';
+import { logger } from '@/lib/logger';
 
 const DigitalVaultPage = () => {
   const [FileTexts, setFileTexts] = useState([]);
@@ -29,7 +30,7 @@ const DigitalVaultPage = () => {
       }
       
       // Fallback 1: Console pour développement
-      console.log(`📢 TOAST [${type.toUpperCase()}]: ${message}`);
+      logger.debug(`📢 TOAST [${type.toUpperCase()}]: ${message}`);
       
       // Fallback 2: Alert pour utilisateur en cas d'erreur critique
       if (type === 'destructive' || type === 'error') {
@@ -64,8 +65,8 @@ const DigitalVaultPage = () => {
         }
       }
     } catch (error) {
-      console.error('Erreur dans safeToast:', error);
-      console.log(`📢 MESSAGE: ${message}`);
+      logger.error('Erreur dans safeToast:', error);
+      logger.debug(`📢 MESSAGE: ${message}`);
     }
   };
 
@@ -86,10 +87,10 @@ const DigitalVaultPage = () => {
           .from('FileTexts')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (docError) {
-          console.error('Erreur récupération FileTexts:', docError);
+          logger.error('Erreur récupération FileTexts:', docError);
           // Fallback vers données d'exemple si la table n'existe pas encore
           setFileTexts([
             {
@@ -106,7 +107,7 @@ const DigitalVaultPage = () => {
           setFileTexts(userFileTexts || []);
         }
       } catch (err) {
-        console.error('Erreur lors du chargement des FileTexts:', err);
+        logger.error('Erreur lors du chargement des FileTexts:', err);
         setError('Impossible de charger vos FileTexts');
       } finally {
         setLoading(false);
@@ -143,7 +144,7 @@ const DigitalVaultPage = () => {
       
       safeToast(`Téléchargement de "${docName}" réussi`, "success");
     } catch (err) {
-      console.error('Erreur téléchargement:', err);
+      logger.error('Erreur téléchargement:', err);
       safeToast("Erreur lors du téléchargement", "destructive");
     }
   };

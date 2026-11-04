@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 // Système d'authentification locale avec comptes intégrés
 // Permet l'accès aux dashboards sans connexion Supabase
 
@@ -100,7 +101,7 @@ class LocalAuthService {
         this.currentUser = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Erreur chargement utilisateur local:', error);
+      logger.error('Erreur chargement utilisateur local:', error);
       localStorage.removeItem('local_auth_user');
     }
   }

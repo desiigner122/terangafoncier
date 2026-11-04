@@ -49,6 +49,7 @@ import {
   Cell,
   Pie
 } from 'recharts';
+import { logger } from '@/lib/logger';
 
 const AutonomousAIDashboard = () => {
   const { user } = useAuth();
@@ -78,7 +79,7 @@ const AutonomousAIDashboard = () => {
       setAiInsights(insights);
       setRealTimeMetrics(metrics);
     } catch (error) {
-      console.error('Erreur chargement dashboard IA:', error);
+      logger.error('Erreur chargement dashboard IA:', error);
     } finally {
       setLoading(false);
     }
@@ -655,7 +656,7 @@ const AutonomousAIDashboard = () => {
   }
 
   function handleAIAction(action) {
-    console.log('Action IA exécutée:', action);
+    logger.debug('Action IA exécutée:', action);
     toast({
       title: "🧠 Action IA",
       description: `${action.label} en cours d'exécution...`,

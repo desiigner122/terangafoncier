@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import ProfileLink from '@/components/common/ProfileLink';
+import { logger } from '@/lib/logger';
 
 const ParcellesCommunalesPage = () => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const ParcellesCommunalesPage = () => {
     const handleSubmit = (e) => {
       e.preventDefault();
       // Logique de soumission de demande
-      console.log('Demande soumise:', { zone: zone.id, ...formData });
+      logger.debug('Demande soumise:', { zone: zone.id, ...formData });
     };
 
     return (

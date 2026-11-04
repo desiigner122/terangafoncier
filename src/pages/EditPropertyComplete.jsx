@@ -36,6 +36,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 import LoadingState from '@/components/ui/LoadingState';
+import { logger } from '@/lib/logger';
 
 const EditPropertyComplete = () => {
   const { id } = useParams();
@@ -303,10 +304,10 @@ const EditPropertyComplete = () => {
         .select('*')
         .eq('property_id', id)
         .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       if (photosError) {
-        console.error('Erreur chargement photos:', photosError);
+        logger.error('Erreur chargement photos:', photosError);
       } else {
         setPhotos(photosData || []);
         setPropertyData(prev => ({ ...prev, images: (photosData || []).map(p => p.url) }));
@@ -316,15 +317,15 @@ const EditPropertyComplete = () => {
       const { data: docsData, error: docsError } = await supabase
         .from('documents')
         .select('*')
-        .eq('property_id', id);
+        .eq('property_id', id).limit(500);
 
       if (docsError) {
-        console.error('Erreur chargement documents:', docsError);
+        logger.error('Erreur chargement documents:', docsError);
       } else {
         setRealDocuments(docsData || []);
       }
     } catch (err) {
-      console.error('Erreur chargement propriété:', err);
+      logger.error('Erreur chargement propriété:', err);
       setError(err.message);
       toast.error('Erreur lors du chargement');
     } finally {
@@ -371,7 +372,7 @@ const EditPropertyComplete = () => {
       toast.success('✅ Propriété mise à jour avec succès !');
       setTimeout(() => navigate('/vendeur/properties'), 1500);
     } catch (err) {
-      console.error('Erreur sauvegarde:', err);
+      logger.error('Erreur sauvegarde:', err);
       toast.error('❌ Erreur lors de la sauvegarde: ' + err.message);
     } finally {
       setSaving(false);
@@ -410,7 +411,7 @@ const EditPropertyComplete = () => {
       handleChange('images', updatedPhotos.map(p => p.url));
       toast.success('Photo supprimée');
     } catch (err) {
-      console.error('Erreur suppression photo:', err);
+      logger.error('Erreur suppression photo:', err);
       toast.error('Erreur lors de la suppression de la photo');
     }
   };

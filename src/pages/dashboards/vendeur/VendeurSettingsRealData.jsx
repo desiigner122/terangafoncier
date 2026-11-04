@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 import { SubscriptionPlans } from '@/components/SubscriptionPlans';
 import { useSupabaseError, SupabaseErrorDisplay } from '@/components/SupabaseErrorHandler';
+import { logger } from '@/lib/logger';
 
 const VendeurSettingsRealData = () => {
   const { user } = useAuth();
@@ -127,7 +128,7 @@ const VendeurSettingsRealData = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement paramètres:', error);
+      logger.error('Erreur chargement paramètres:', error);
       toast.error('Erreur lors du chargement des paramètres');
       setLoading(false);
     }
@@ -176,7 +177,7 @@ const VendeurSettingsRealData = () => {
       
       setLoadingSubscription(false);
     } catch (error) {
-      console.error('Erreur chargement abonnement:', error);
+      logger.error('Erreur chargement abonnement:', error);
       setLoadingSubscription(false);
     }
   };
@@ -189,7 +190,7 @@ const VendeurSettingsRealData = () => {
       const hasVerifiedFactor = (data?.totp || []).some(f => f.status === 'verified');
       setSecuritySettings(prev => ({ ...prev, two_factor_enabled: hasVerifiedFactor }));
     } catch (error) {
-      console.error('Erreur chargement statut 2FA:', error);
+      logger.error('Erreur chargement statut 2FA:', error);
     }
   };
 
@@ -214,7 +215,7 @@ const VendeurSettingsRealData = () => {
       toast.success('Profil mis à jour avec succès');
       setSaving(false);
     } catch (error) {
-      console.error('Erreur sauvegarde profil:', error);
+      logger.error('Erreur sauvegarde profil:', error);
       toast.error('Erreur lors de la sauvegarde');
       setSaving(false);
     }
@@ -251,7 +252,7 @@ const VendeurSettingsRealData = () => {
       
       setSaving(false);
     } catch (error) {
-      console.error('Erreur upgrade:', error);
+      logger.error('Erreur upgrade:', error);
       toast.error('Erreur lors du changement de plan');
       setSaving(false);
     }
@@ -282,7 +283,7 @@ const VendeurSettingsRealData = () => {
       
       setSaving(false);
     } catch (error) {
-      console.error('Erreur annulation:', error);
+      logger.error('Erreur annulation:', error);
       toast.error('Erreur lors de l\'annulation');
       setSaving(false);
     }
@@ -316,7 +317,7 @@ const VendeurSettingsRealData = () => {
       });
       setSaving(false);
     } catch (error) {
-      console.error('Erreur changement mot de passe:', error);
+      logger.error('Erreur changement mot de passe:', error);
       toast.error('Erreur lors du changement de mot de passe');
       setSaving(false);
     }
@@ -353,7 +354,7 @@ const VendeurSettingsRealData = () => {
       setProfileData(prev => ({ ...prev, avatar_url: data.publicUrl }));
       toast.success('Photo de profil mise à jour');
     } catch (error) {
-      console.error('Erreur upload avatar:', error);
+      logger.error('Erreur upload avatar:', error);
       toast.error('Erreur lors de l\'upload');
     }
   };
@@ -372,7 +373,7 @@ const VendeurSettingsRealData = () => {
       setProfileData(prev => ({ ...prev, avatar_url: '' }));
       toast.success('Photo de profil supprimée');
     } catch (error) {
-      console.error('Erreur suppression avatar:', error);
+      logger.error('Erreur suppression avatar:', error);
       toast.error('Erreur lors de la suppression de la photo');
     }
   };
@@ -386,7 +387,7 @@ const VendeurSettingsRealData = () => {
       toast.success('Préférences appliquées pour cette session (persistance serveur bientôt disponible)');
       setSaving(false);
     } catch (error) {
-      console.error('Erreur sauvegarde notifications:', error);
+      logger.error('Erreur sauvegarde notifications:', error);
       toast.error('Erreur lors de la sauvegarde');
       setSaving(false);
     }
@@ -420,7 +421,7 @@ const VendeurSettingsRealData = () => {
         toast.info('L\'activation de la 2FA nécessite une configuration supplémentaire, bientôt disponible');
       }
     } catch (error) {
-      console.error('Erreur 2FA:', error);
+      logger.error('Erreur 2FA:', error);
       toast.error('Erreur lors de la mise à jour de la 2FA');
     }
   };
@@ -434,7 +435,7 @@ const VendeurSettingsRealData = () => {
       // Logique de suppression (à implémenter avec précaution)
       toast.error('Fonctionnalité de suppression temporairement désactivée');
     } catch (error) {
-      console.error('Erreur suppression compte:', error);
+      logger.error('Erreur suppression compte:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

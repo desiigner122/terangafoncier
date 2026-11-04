@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierDemandesTerrains = () => {
   const outletContext = useOutletContext();
@@ -59,23 +60,23 @@ const ParticulierDemandesTerrains = () => {
 
   const loadDemandes = async () => {
     if (!user?.id) {
-      console.log('❌ Utilisateur non disponible');
+      logger.debug('❌ Utilisateur non disponible');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des demandes de terrains communaux...');
+      logger.debug('📊 Chargement des demandes de terrains communaux...');
 
       const result = await ParticulierSupabaseService.getCommunalRequests(user.id);
 
       if (!result.success) throw new Error(result.error);
 
       setDemandes(result.data || []);
-      console.log(`✅ ${result.data?.length || 0} demandes chargées`);
+      logger.debug(`✅ ${result.data?.length || 0} demandes chargées`);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des demandes:', error);
+      logger.error('❌ Erreur lors du chargement des demandes:', error);
       setDemandes([]);
     } finally {
       setLoading(false);
@@ -84,7 +85,7 @@ const ParticulierDemandesTerrains = () => {
 
   const createDemande = async () => {
     try {
-      console.log('🆕 Création nouvelle demande terrain communal...');
+      logger.debug('🆕 Création nouvelle demande terrain communal...');
 
       const applicantName =
         profile?.full_name ||
@@ -116,9 +117,9 @@ const ParticulierDemandesTerrains = () => {
         priority: 'normale'
       });
 
-      console.log('✅ Demande créée avec succès');
+      logger.debug('✅ Demande créée avec succès');
     } catch (error) {
-      console.error('❌ Erreur lors de la création:', error);
+      logger.error('❌ Erreur lors de la création:', error);
     }
   };
 

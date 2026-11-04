@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaEye, FaEdit, FaBan, FaUserCheck, FaSearch, FaUserPlus, FaChartLine } from 'react-icons/fa';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -124,7 +125,7 @@ const UserManagementPage = () => {
       setTotalPages(Math.ceil(filteredUsers.length / 10));
       
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
       setLoading(false);
@@ -141,7 +142,7 @@ const UserManagementPage = () => {
         bannedUsers: 3
       });
     } catch (error) {
-      console.error('Erreur stats:', error);
+      logger.error('Erreur stats:', error);
     }
   };
 
@@ -157,7 +158,7 @@ const UserManagementPage = () => {
       toast.success(`Utilisateur ${newStatus === 'active' ? 'activé' : 'désactivé'} avec succès`);
       
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la modification du statut');
     }
   };

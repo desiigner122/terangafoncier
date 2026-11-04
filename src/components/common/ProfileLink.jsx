@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 /**
  * Composant ProfileLink - Lien vers les pages de profil
@@ -53,7 +54,7 @@ const ProfileLink = ({
   const profileType = routeMap[normalizedType];
 
   if (!profileType) {
-    console.warn(`Type de profil non reconnu: ${type}`);
+    logger.warn(`Type de profil non reconnu: ${type}`);
     return <span className={className}>{children || name}</span>;
   }
 

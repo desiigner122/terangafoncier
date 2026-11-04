@@ -2,6 +2,7 @@
 // Utilise Supabase pour les données de base et API custom pour features avancées
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class HybridDataService {
   constructor() {
@@ -17,7 +18,7 @@ class HybridDataService {
 
   async getUsers() {
     try {
-      console.log('🔍 Récupération des VRAIS utilisateurs depuis auth.users...');
+      logger.debug('🔍 Récupération des VRAIS utilisateurs depuis auth.users...');
       
       // MÉTHODE 1: Essayer de récupérer depuis les profiles jointures avec auth
       const { data: profiles, error: profilesError } = await supabase
@@ -32,7 +33,7 @@ class HybridDataService {
         .order('created_at', { ascending: false });
       
       if (!profilesError && profiles && profiles.length > 0) {
-        console.log(`✅ ${profiles.length} utilisateurs trouvés dans profiles`);
+        logger.debug(`✅ ${profiles.length} utilisateurs trouvés dans profiles`);
         return profiles.map(p => ({
           id: p.id || p.user_id,
           email: p.email,
@@ -47,12 +48,12 @@ class HybridDataService {
       }
 
       // MÉTHODE 2: Si pas de profiles, essayer une requête RPC pour auth.users
-      console.log('⚠️ Pas de profiles, tentative requête directe auth.users...');
+      logger.debug('⚠️ Pas de profiles, tentative requête directe auth.users...');
       
       const { data: authUsers, error: authError } = await supabase.rpc('get_all_users_with_metadata');
       
       if (!authError && authUsers && authUsers.length > 0) {
-        console.log(`✅ ${authUsers.length} utilisateurs trouvés dans auth.users`);
+        logger.debug(`✅ ${authUsers.length} utilisateurs trouvés dans auth.users`);
         return authUsers.map(u => ({
           id: u.id,
           email: u.email,
@@ -66,28 +67,28 @@ class HybridDataService {
       }
 
       // MÉTHODE 3: Fallback avec fonction SQL personnalisée
-      console.log('⚠️ Tentative fonction SQL personnalisée...');
+      logger.debug('⚠️ Tentative fonction SQL personnalisée...');
       const { data: sqlUsers, error: sqlError } = await supabase
         .rpc('get_users_count_and_details');
       
       if (!sqlError && sqlUsers) {
-        console.log('✅ Données obtenues via fonction SQL');
+        logger.debug('✅ Données obtenues via fonction SQL');
         return sqlUsers;
       }
 
       // MÉTHODE 4: Génération d'utilisateurs basés sur les comptes connus
-      console.log('⚠️ Toutes les méthodes ont échoué, génération utilisateurs basés sur comptes réels');
+      logger.debug('⚠️ Toutes les méthodes ont échoué, génération utilisateurs basés sur comptes réels');
       return this.generateRealUsersFromKnownAccounts();
       
     } catch (error) {
-      console.error('❌ Erreur récupération utilisateurs Supabase:', error);
+      logger.error('❌ Erreur récupération utilisateurs Supabase:', error);
       return this.generateRealUsersFromKnownAccounts();
     }
   }
 
   // Génération d'utilisateurs basés sur les VRAIS comptes créés
   generateRealUsersFromKnownAccounts() {
-    console.log('📝 Génération utilisateurs basés sur les comptes réels connus');
+    logger.debug('📝 Génération utilisateurs basés sur les comptes réels connus');
     
     return [
       // Comptes administratifs
@@ -218,12 +219,12 @@ class HybridDataService {
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Erreur récupération propriétés Supabase:', error);
+      logger.error('Erreur récupération propriétés Supabase:', error);
       return [];
     }
   }
@@ -233,7 +234,7 @@ class HybridDataService {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       
@@ -244,7 +245,7 @@ class HybridDataService {
       
       return data;
     } catch (error) {
-      console.error('Erreur récupération transactions Supabase:', error);
+      logger.error('Erreur récupération transactions Supabase:', error);
       return this.generateTestTransactions();
     }
   }
@@ -287,7 +288,7 @@ class HybridDataService {
       });
       return await response.json();
     } catch (error) {
-      console.error('Erreur API IA:', error);
+      logger.error('Erreur API IA:', error);
       return { fraud_score: 0, recommendations: [] };
     }
   }
@@ -299,7 +300,7 @@ class HybridDataService {
       const response = await fetch(`${this.apiUrl}/blockchain/metrics`);
       return await response.json();
     } catch (error) {
-      console.error('Erreur API Blockchain:', error);
+      logger.error('Erreur API Blockchain:', error);
       return { nfts: [], transactions: [] };
     }
   }
@@ -315,7 +316,7 @@ class HybridDataService {
       });
       return await response.json();
     } catch (error) {
-      console.error('Erreur API Paiements:', error);
+      logger.error('Erreur API Paiements:', error);
       return { success: false, error: error.message };
     }
   }
@@ -326,7 +327,7 @@ class HybridDataService {
 
   async getAdminDashboardData() {
     try {
-      console.log('🔄 Chargement données dashboard admin hybride...');
+      logger.debug('🔄 Chargement données dashboard admin hybride...');
 
       // 1. DONNÉES DE BASE depuis Supabase
       const [users, properties, transactions] = await Promise.all([
@@ -335,7 +336,7 @@ class HybridDataService {
         this.getTransactions()
       ]);
 
-      console.log('📊 Données Supabase récupérées:', {
+      logger.debug('📊 Données Supabase récupérées:', {
         users: users.length,
         properties: properties.length,
         transactions: transactions.length
@@ -355,7 +356,7 @@ class HybridDataService {
         try {
           aiInsights = await this.getAIInsights({ users, properties });
         } catch (error) {
-          console.log('⚠️ IA non disponible, utilisation données de base');
+          logger.debug('⚠️ IA non disponible, utilisation données de base');
         }
       }
 
@@ -363,7 +364,7 @@ class HybridDataService {
         try {
           blockchainData = await this.getBlockchainData();
         } catch (error) {
-          console.log('⚠️ Blockchain non disponible, utilisation données de base');
+          logger.debug('⚠️ Blockchain non disponible, utilisation données de base');
         }
       }
 
@@ -400,7 +401,7 @@ class HybridDataService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur dashboard admin hybride:', error);
+      logger.error('❌ Erreur dashboard admin hybride:', error);
       return {
         success: false,
         error: error.message,
@@ -412,7 +413,7 @@ class HybridDataService {
   // Récupérer toutes les données utilisateurs pour l'admin
   async getCompleteUsersData() {
     try {
-      console.log('📊 Récupération données utilisateurs complètes...');
+      logger.debug('📊 Récupération données utilisateurs complètes...');
       
       // 1. Données profiles avec abonnements
       const { data: profiles, error: profilesError } = await supabase
@@ -459,7 +460,7 @@ class HybridDataService {
       };
       
     } catch (error) {
-      console.error('Erreur récupération utilisateurs:', error);
+      logger.error('Erreur récupération utilisateurs:', error);
       return {
         success: false,
         error: error.message,
@@ -477,7 +478,7 @@ class HybridDataService {
           status,
           payment_status,
           subscription_plans(price, role_type)
-        `);
+        `).limit(500);
       
       if (!error && subscriptions) {
         const stats = {
@@ -506,7 +507,7 @@ class HybridDataService {
         }
       };
     } catch (error) {
-      console.error('Erreur stats abonnements:', error);
+      logger.error('Erreur stats abonnements:', error);
       return {
         success: true,
         data: {
@@ -529,13 +530,13 @@ class HybridDataService {
         .select('*')
         .eq('is_active', true)
         .order('role_type', { ascending: true })
-        .order('price', { ascending: true });
+        .order('price', { ascending: true }).limit(500);
       
       if (error) throw error;
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur plans abonnements:', error);
+      logger.error('Erreur plans abonnements:', error);
       return {
         success: true,
         data: this.getDefaultPlansData()
@@ -614,7 +615,7 @@ class HybridDataService {
   // Récupérer les données analytics avancées
   async getAdvancedAnalytics(period = 'month') {
     try {
-      console.log(`📊 Récupération analytics avancées - Période: ${period}`);
+      logger.debug(`📊 Récupération analytics avancées - Période: ${period}`);
       
       // Récupération des données de base
       const [users, properties, transactions, subscriptionStats] = await Promise.all([
@@ -646,7 +647,7 @@ class HybridDataService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur analytics avancées:', error);
+      logger.error('❌ Erreur analytics avancées:', error);
       return {
         success: false,
         error: error.message,

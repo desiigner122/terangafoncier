@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const AgentFoncierClients = () => {
   const { user } = useAuth();
@@ -87,11 +88,11 @@ const AgentFoncierClients = () => {
             .from('crm_contacts')
             .select('id, name, email, phone, company, status, temperature, score, created_at')
             .eq('owner_id', agentId)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('crm_deals')
             .select('id, contact_id, amount, stage')
-            .eq('owner_id', agentId)
+            .eq('owner_id', agentId).limit(500)
         ]);
 
         const contacts = contactsRes.data || [];
@@ -140,7 +141,7 @@ const AgentFoncierClients = () => {
 
         setClients(mapped);
       } catch (e) {
-        console.error('Erreur chargement clients CRM:', e);
+        logger.error('Erreur chargement clients CRM:', e);
         setClients([]);
       } finally {
         setLoading(false);

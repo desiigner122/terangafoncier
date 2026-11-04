@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const CompliancePage = () => {
   const { user } = useAuth();
@@ -40,16 +41,16 @@ const CompliancePage = () => {
           .from('loans')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('guarantees')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('bank_clients')
           .select('client_id, name, credit_score, status, client_type')
-          .eq('bank_id', user.id)
+          .eq('bank_id', user.id).limit(500)
       ]);
 
       if (loansRes.error) throw loansRes.error;
@@ -68,13 +69,13 @@ const CompliancePage = () => {
           .from('disputes')
           .select('id, title, property_id, status, parties')
           .in('property_id', propertyIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         setDisputes(disputesData || []);
       } else {
         setDisputes([]);
       }
     } catch (err) {
-      console.error('Erreur chargement conformité:', err);
+      logger.error('Erreur chargement conformité:', err);
       setError("Impossible de charger les données de conformité.");
       setLoans([]);
       setGuarantees([]);

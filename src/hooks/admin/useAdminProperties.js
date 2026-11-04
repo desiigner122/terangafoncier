@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook personnalisé pour la gestion des propriétés
@@ -26,7 +27,7 @@ export const useAdminProperties = () => {
       let query = supabase
         .from('properties')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Appliquer les filtres
       if (filters.status !== 'all') {
@@ -59,7 +60,7 @@ export const useAdminProperties = () => {
 
       setProperties(filteredData);
     } catch (err) {
-      console.error('Erreur lors de la récupération des propriétés:', err);
+      logger.error('Erreur lors de la récupération des propriétés:', err);
       setError(err.message);
       toast.error('Erreur lors du chargement des propriétés');
     } finally {
@@ -103,7 +104,7 @@ export const useAdminProperties = () => {
       toast.success('Propriété approuvée avec succès');
       await fetchProperties();
     } catch (err) {
-      console.error('Erreur lors de l\'approbation:', err);
+      logger.error('Erreur lors de l\'approbation:', err);
       toast.error('Erreur lors de l\'approbation de la propriété');
     }
   };
@@ -148,7 +149,7 @@ export const useAdminProperties = () => {
       toast.success('Propriété rejetée');
       await fetchProperties();
     } catch (err) {
-      console.error('Erreur lors du rejet:', err);
+      logger.error('Erreur lors du rejet:', err);
       toast.error('Erreur lors du rejet de la propriété');
     }
   };
@@ -184,7 +185,7 @@ export const useAdminProperties = () => {
       toast.success(`Propriété mise en avant pour ${days} jours`);
       await fetchProperties();
     } catch (err) {
-      console.error('Erreur lors de la mise en avant:', err);
+      logger.error('Erreur lors de la mise en avant:', err);
       toast.error('Erreur lors de la mise en avant de la propriété');
     }
   };
@@ -216,7 +217,7 @@ export const useAdminProperties = () => {
       toast.success('Mise en avant retirée');
       await fetchProperties();
     } catch (err) {
-      console.error('Erreur:', err);
+      logger.error('Erreur:', err);
       toast.error('Erreur lors du retrait de la mise en avant');
     }
   };
@@ -245,7 +246,7 @@ export const useAdminProperties = () => {
       toast.success('Propriété supprimée avec succès');
       await fetchProperties();
     } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
+      logger.error('Erreur lors de la suppression:', err);
       toast.error('Erreur lors de la suppression de la propriété');
     }
   };

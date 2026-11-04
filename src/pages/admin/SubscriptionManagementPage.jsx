@@ -29,6 +29,7 @@ import {
   Eye
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 const SubscriptionManagementPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -218,7 +219,7 @@ const SubscriptionManagementPage = () => {
         className: "bg-green-500 text-white"
       });
     } catch (error) {
-      console.error('Erreur création plan:', error);
+      logger.error('Erreur création plan:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de créer le plan",

@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Helper function to calculate score
 const calculateScore = (buyer, source) => {
@@ -31,24 +32,24 @@ const CRMBuyerIntegrationService = {
    */
   syncBuyersFromPlatform: async (userId) => {
     try {
-      console.log('🔄 Starting buyer sync for user:', userId);
+      logger.debug('🔄 Starting buyer sync for user:', userId);
 
       // Fetch from purchase_requests - without filters that don't exist
       const { data: purchaseRequests, error: prError } = await supabase
         .from('purchase_requests')
-        .select('*');
+        .select('*').limit(500);
 
       if (prError) {
-        console.warn('⚠️ Could not fetch purchase_requests:', prError);
+        logger.warn('⚠️ Could not fetch purchase_requests:', prError);
       }
 
       // Fetch from favorites - without filters that don't exist
       const { data: favorites, error: favError } = await supabase
         .from('favorites')
-        .select('*');
+        .select('*').limit(500);
 
       if (favError) {
-        console.warn('⚠️ Could not fetch favorites:', favError);
+        logger.warn('⚠️ Could not fetch favorites:', favError);
       }
 
       // Filter locally for the current user
@@ -114,7 +115,7 @@ const CRMBuyerIntegrationService = {
         });
       }
 
-      console.log(`📋 Found ${allBuyers.length} buyers to import`);
+      logger.debug(`📋 Found ${allBuyers.length} buyers to import`);
 
       // Import buyers into CRM
       let created = 0;
@@ -142,7 +143,7 @@ const CRMBuyerIntegrationService = {
 
             if (!updateError) {
               updated++;
-              console.log(`↻ Updated contact: ${buyer.email}`);
+              logger.debug(`↻ Updated contact: ${buyer.email}`);
             }
           } else {
             // Create new contact
@@ -157,18 +158,18 @@ const CRMBuyerIntegrationService = {
 
             if (!insertError) {
               created++;
-              console.log(`✅ Created contact: ${buyer.email}`);
+              logger.debug(`✅ Created contact: ${buyer.email}`);
             }
           }
         } catch (error) {
-          console.error('Error processing buyer:', buyer.email, error);
+          logger.error('Error processing buyer:', buyer.email, error);
         }
       }
 
-      console.log(`✅ Sync complete: ${created} created, ${updated} updated`);
+      logger.debug(`✅ Sync complete: ${created} created, ${updated} updated`);
       return { created, updated, success: true };
     } catch (error) {
-      console.error('❌ Sync error:', error);
+      logger.error('❌ Sync error:', error);
       return { success: false, error: error.message };
     }
   }

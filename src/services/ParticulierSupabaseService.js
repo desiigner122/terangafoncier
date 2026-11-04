@@ -26,6 +26,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class ParticulierSupabaseService {
   // ===== FAVORIS =====
@@ -35,11 +36,11 @@ class ParticulierSupabaseService {
         .from('favorites')
         .select('id, created_at, property:properties(*)')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getFavorites:', error);
+      logger.error('Erreur getFavorites:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -54,7 +55,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur addFavorite:', error);
+      logger.error('Erreur addFavorite:', error);
       return { success: false, error: error.message };
     }
   }
@@ -65,7 +66,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur removeFavorite:', error);
+      logger.error('Erreur removeFavorite:', error);
       return { success: false, error: error.message };
     }
   }
@@ -77,11 +78,11 @@ class ParticulierSupabaseService {
         .from('saved_searches')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getSavedSearches:', error);
+      logger.error('Erreur getSavedSearches:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -93,11 +94,11 @@ class ParticulierSupabaseService {
         .from('financial_transactions')
         .select('*, property:properties(id, title, name, price, location, region)')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMyOffers:', error);
+      logger.error('Erreur getMyOffers:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -109,11 +110,11 @@ class ParticulierSupabaseService {
         .from('purchase_cases')
         .select('*, property:properties(id, title, name, location, price)')
         .eq('buyer_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMyPurchaseCases:', error);
+      logger.error('Erreur getMyPurchaseCases:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -129,7 +130,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur getPurchaseCaseByNumber:', error);
+      logger.error('Erreur getPurchaseCaseByNumber:', error);
       return { success: false, error: error.message };
     }
   }
@@ -141,11 +142,11 @@ class ParticulierSupabaseService {
         .from('property_visits')
         .select('*, property:properties(id, title, name, city, region, surface, location), owner:profiles!property_visits_owner_id_fkey(id, full_name, phone, email)')
         .eq('visitor_id', userId)
-        .order('requested_date', { ascending: false });
+        .order('requested_date', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMyVisits:', error);
+      logger.error('Erreur getMyVisits:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -160,7 +161,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur requestVisit:', error);
+      logger.error('Erreur requestVisit:', error);
       return { success: false, error: error.message };
     }
   }
@@ -176,7 +177,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur updateVisitStatus:', error);
+      logger.error('Erreur updateVisitStatus:', error);
       return { success: false, error: error.message };
     }
   }
@@ -188,11 +189,11 @@ class ParticulierSupabaseService {
         .from('demandes_financement')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getFinancingRequests:', error);
+      logger.error('Erreur getFinancingRequests:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -204,11 +205,11 @@ class ParticulierSupabaseService {
         .from('communal_requests')
         .select('*')
         .eq('applicant_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCommunalRequests:', error);
+      logger.error('Erreur getCommunalRequests:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -219,7 +220,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createCommunalRequest:', error);
+      logger.error('Erreur createCommunalRequest:', error);
       return { success: false, error: error.message };
     }
   }
@@ -231,11 +232,11 @@ class ParticulierSupabaseService {
         .from('construction_requests')
         .select('*, property:properties(id, title, name, location)')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getConstructionRequests:', error);
+      logger.error('Erreur getConstructionRequests:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -247,11 +248,11 @@ class ParticulierSupabaseService {
         .from('promoter_applications')
         .select('*')
         .eq('candidat_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getPromoterApplications:', error);
+      logger.error('Erreur getPromoterApplications:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -262,7 +263,7 @@ class ParticulierSupabaseService {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', userId);
+        .eq('user_id', userId).limit(500);
       if (partError) throw partError;
 
       const conversationIds = participations?.map(p => p.conversation_id) || [];
@@ -272,11 +273,11 @@ class ParticulierSupabaseService {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getConversations:', error);
+      logger.error('Erreur getConversations:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -287,11 +288,11 @@ class ParticulierSupabaseService {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMessages:', error);
+      logger.error('Erreur getMessages:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -306,7 +307,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur sendMessage:', error);
+      logger.error('Erreur sendMessage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -318,11 +319,11 @@ class ParticulierSupabaseService {
         .from('documents')
         .select('*')
         .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getDocuments:', error);
+      logger.error('Erreur getDocuments:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -339,7 +340,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getNotifications:', error);
+      logger.error('Erreur getNotifications:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -350,7 +351,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur markNotificationRead:', error);
+      logger.error('Erreur markNotificationRead:', error);
       return { success: false, error: error.message };
     }
   }
@@ -362,11 +363,11 @@ class ParticulierSupabaseService {
         .from('support_tickets')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getSupportTickets:', error);
+      logger.error('Erreur getSupportTickets:', error);
       return { success: false, data: [], error: error.message };
     }
   }
@@ -377,7 +378,7 @@ class ParticulierSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createSupportTicket:', error);
+      logger.error('Erreur createSupportTicket:', error);
       return { success: false, error: error.message };
     }
   }
@@ -410,7 +411,7 @@ class ParticulierSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur getOverviewStats:', error);
+      logger.error('Erreur getOverviewStats:', error);
       return { success: false, data: null, error: error.message };
     }
   }

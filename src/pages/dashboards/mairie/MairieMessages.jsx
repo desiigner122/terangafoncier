@@ -31,6 +31,7 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const MairieMessages = () => {
   const { user } = useAuth();
@@ -62,7 +63,7 @@ const MairieMessages = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
@@ -79,12 +80,12 @@ const MairieMessages = () => {
         supabase
           .from('conversations')
           .select('*, participants:conversation_participants(user_id)')
-          .in('id', conversationIds),
+          .in('id', conversationIds).limit(500),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
       if (conversationsRes.error) throw conversationsRes.error;
       if (messagesRes.error) throw messagesRes.error;
@@ -106,7 +107,7 @@ const MairieMessages = () => {
         ? await supabase
             .from('profiles')
             .select('id, first_name, last_name, full_name, email, avatar_url')
-            .in('id', participantIds)
+            .in('id', participantIds).limit(500)
         : { data: [] };
 
       const profilesById = new Map((profilesData || []).map(p => [p.id, p]));
@@ -183,7 +184,7 @@ const MairieMessages = () => {
       setContacts(contactList);
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
       toast.error('Erreur lors du chargement des messages');
       setInboxMessages([]);
       setSentMessages([]);
@@ -203,7 +204,7 @@ const MairieMessages = () => {
           m.id === message.id ? { ...m, isRead: true } : m
         ));
       } catch (error) {
-        console.error('Erreur marquage lu:', error);
+        logger.error('Erreur marquage lu:', error);
       }
     }
   };
@@ -246,7 +247,7 @@ const MairieMessages = () => {
       setActiveTab('sent');
       await loadMessages();
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       toast.error("Erreur lors de l'envoi du message");
     } finally {
       setSending(false);

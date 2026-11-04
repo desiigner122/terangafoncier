@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierTickets = () => {
   const { user } = useOutletContext();
@@ -45,7 +46,7 @@ const ParticulierTickets = () => {
       const res = await ParticulierSupabaseService.getSupportTickets(user.id);
       setTickets(res.data || []);
     } catch (error) {
-      console.error('Erreur chargement tickets:', error);
+      logger.error('Erreur chargement tickets:', error);
       setTickets([]);
     } finally {
       setLoading(false);
@@ -214,7 +215,7 @@ const NewTicketForm = ({ user, onSuccess }) => {
       window.safeGlobalToast({ description: 'Ticket créé avec succès', variant: 'success' });
       onSuccess();
     } catch (error) {
-      console.error('Erreur création ticket:', error);
+      logger.error('Erreur création ticket:', error);
       window.safeGlobalToast({ description: 'Erreur lors de la création du ticket', variant: 'destructive' });
     } finally {
       setSubmitting(false);

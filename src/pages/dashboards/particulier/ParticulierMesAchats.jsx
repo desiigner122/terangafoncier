@@ -36,6 +36,7 @@ import {
   getVendorStatusBadge 
 } from '@/utils/financingStatusHelpers';
 import RealtimeSyncService from '@/services/RealtimeSyncService';
+import { logger } from '@/lib/logger';
 
 const ParticulierMesAchats = () => {
   const outletContext = useOutletContext();
@@ -50,22 +51,22 @@ const ParticulierMesAchats = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('🎯 [BUYER DASHBOARD] Mount with user:', user.id);
+      logger.debug('🎯 [BUYER DASHBOARD] Mount with user:', user.id);
       loadPurchaseRequests();
       
       // 🔄 REALTIME: Subscribe à purchase_cases changes
       const unsubscribe = RealtimeSyncService.subscribeToBuyerRequests(
         user.id,
         (payload) => {
-          console.log('� [BUYER DASHBOARD] REAL-TIME EVENT RECEIVED!');
-          console.log('   Payload:', payload);
-          console.log('   🔄 Reloading purchase requests...');
+          logger.debug('� [BUYER DASHBOARD] REAL-TIME EVENT RECEIVED!');
+          logger.debug('   Payload:', payload);
+          logger.debug('   🔄 Reloading purchase requests...');
           // Recharger les demandes quand il y a un changement
           loadPurchaseRequests();
         }
       );
       
-      console.log('🎯 [BUYER DASHBOARD] Subscription established, returning cleanup');
+      logger.debug('🎯 [BUYER DASHBOARD] Subscription established, returning cleanup');
       // Unsubscribe au unmount
       return unsubscribe;
     }
@@ -88,7 +89,7 @@ const ParticulierMesAchats = () => {
   const loadPurchaseRequests = async () => {
     try {
       setLoading(true);
-      console.log('🎯 [LOAD] Starting loadPurchaseRequests for user:', user.id);
+      logger.debug('🎯 [LOAD] Starting loadPurchaseRequests for user:', user.id);
 
       // 🔗 SOURCES RÉELLES :
       //   - purchase_cases (buyer_id) : dossiers d'achat (vendeur a accepté → suivi en cours)
@@ -100,7 +101,7 @@ const ParticulierMesAchats = () => {
 
       const casesData = casesRes?.data || [];
       const offersData = offersRes?.data || [];
-      console.log('✅ [LOAD] Purchase cases:', casesData.length, '| Offres (financial_transactions):', offersData.length);
+      logger.debug('✅ [LOAD] Purchase cases:', casesData.length, '| Offres (financial_transactions):', offersData.length);
 
       // Regrouper les transactions financières par propriété (pour rattacher le montant réel au dossier)
       const offersByProperty = {};
@@ -159,10 +160,10 @@ const ParticulierMesAchats = () => {
       );
 
       setRequests(merged);
-      console.log('✅ [LOAD] FINAL requests set:', merged.length,
+      logger.debug('✅ [LOAD] FINAL requests set:', merged.length,
         `(dossiers=${caseRequests.length}, offres=${offerRequests.length})`);
     } catch (error) {
-      console.error('🔴 [LOAD] Error:', error);
+      logger.error('🔴 [LOAD] Error:', error);
       window.safeGlobalToast?.({
         description: 'Erreur lors du chargement de vos demandes d\'achat',
         variant: 'destructive'
@@ -231,27 +232,27 @@ const ParticulierMesAchats = () => {
     
     if (activeTab === 'all') {
       matchesTab = true;
-      console.log(`📋 [FILTER] ALL: ${request.id} matches`);
+      logger.debug(`📋 [FILTER] ALL: ${request.id} matches`);
     } else if (activeTab === 'pending') {
       // Demandes en attente: pas de purchase_case OU pas d'acceptation
       matchesTab = !request.purchaseCase && request.status === 'pending';
-      if (matchesTab) console.log(`📋 [FILTER] PENDING: ${request.id} matches (hasCase=${!!request.purchaseCase})`);
+      if (matchesTab) logger.debug(`📋 [FILTER] PENDING: ${request.id} matches (hasCase=${!!request.purchaseCase})`);
     } else if (activeTab === 'accepted') {
       // Demandes acceptées: purchase_case existe (vendeur a accepté)
       matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'preliminary_agreement';
-      if (matchesTab) console.log(`📋 [FILTER] ACCEPTED: ${request.id} matches (caseStatus=${request.purchaseCase?.caseStatus})`);
+      if (matchesTab) logger.debug(`📋 [FILTER] ACCEPTED: ${request.id} matches (caseStatus=${request.purchaseCase?.caseStatus})`);
     } else if (activeTab === 'processing') {
       // En cours: purchase_case en cours de traitement
       matchesTab = !!request.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(request.purchaseCase.caseStatus);
-      if (matchesTab) console.log(`📋 [FILTER] PROCESSING: ${request.id} matches`);
+      if (matchesTab) logger.debug(`📋 [FILTER] PROCESSING: ${request.id} matches`);
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case terminé
       matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'completed';
-      if (matchesTab) console.log(`📋 [FILTER] COMPLETED: ${request.id} matches`);
+      if (matchesTab) logger.debug(`📋 [FILTER] COMPLETED: ${request.id} matches`);
     } else if (activeTab === 'rejected') {
       // Refusées: transaction status = 'rejected'
       matchesTab = request.status === 'rejected';
-      if (matchesTab) console.log(`📋 [FILTER] REJECTED: ${request.id} matches`);
+      if (matchesTab) logger.debug(`📋 [FILTER] REJECTED: ${request.id} matches`);
     }
     
     const matchesSearch = searchTerm === '' || 
@@ -261,7 +262,7 @@ const ParticulierMesAchats = () => {
     return matchesTab && matchesSearch;
   });
 
-  console.log(`📊 [FILTER] Tab '${activeTab}': ${filteredRequests.length} results`);
+  logger.debug(`📊 [FILTER] Tab '${activeTab}': ${filteredRequests.length} results`);
 
   const stats = {
     total: requests.length,

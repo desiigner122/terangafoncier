@@ -35,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const GeometreTopographie = () => {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ const GeometreTopographie = () => {
           .from('field_measurements')
           .select('*')
           .eq('geometre_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (fmError) throw fmError;
         const fieldMeasurements = fm || [];
 
@@ -69,7 +70,7 @@ const GeometreTopographie = () => {
         const { data: ownedProps, error: propError } = await supabase
           .from('properties')
           .select('*')
-          .eq('owner_id', user.id);
+          .eq('owner_id', user.id).limit(500);
         if (propError) throw propError;
         const owned = ownedProps || [];
 
@@ -88,7 +89,7 @@ const GeometreTopographie = () => {
           const { data: extra } = await supabase
             .from('properties')
             .select('*')
-            .in('id', missingIds);
+            .in('id', missingIds).limit(500);
           allProps = [...owned, ...(extra || [])];
         }
 
@@ -98,7 +99,7 @@ const GeometreTopographie = () => {
           const { data: ph } = await supabase
             .from('property_photos')
             .select('*')
-            .in('property_id', allPropIds);
+            .in('property_id', allPropIds).limit(500);
           photos = (ph || []).filter(
             (p) => p.gps_latitude != null && p.gps_longitude != null
           );
@@ -108,7 +109,7 @@ const GeometreTopographie = () => {
         setMeasurements(fieldMeasurements);
         setGpsPhotos(photos);
       } catch (err) {
-        console.error('Erreur chargement topographie:', err);
+        logger.error('Erreur chargement topographie:', err);
         setProperties([]);
         setMeasurements([]);
         setGpsPhotos([]);

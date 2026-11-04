@@ -62,6 +62,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import TerangaLogo from '@/components/ui/TerangaLogo';
+import { logger } from '@/lib/logger';
 
 const DashboardParticulierRefonte = () => {
   const { user, profile, signOut } = useAuth();
@@ -133,7 +134,7 @@ const DashboardParticulierRefonte = () => {
       
       setUnreadTicketsCount(ticketsCount || 0);
     } catch (error) {
-      console.error('Erreur chargement compteurs:', error);
+      logger.error('Erreur chargement compteurs:', error);
     }
   };
 
@@ -144,7 +145,7 @@ const DashboardParticulierRefonte = () => {
       toast.success('Déconnexion réussie');
       navigate('/');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
       toast.error('Erreur lors de la déconnexion');
     }
   };

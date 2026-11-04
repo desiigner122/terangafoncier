@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ const AdminLoginPage = () => {
       }
 
     } catch (error) {
-      console.error('Erreur de connexion:', error);
+      logger.error('Erreur de connexion:', error);
       
       setLoginAttempts(prev => prev + 1);
       

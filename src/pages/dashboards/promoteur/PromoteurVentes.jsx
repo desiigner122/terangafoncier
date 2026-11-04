@@ -28,6 +28,7 @@ import {
   Target,
   Loader2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurVentes = () => {
   const { user } = useAuth();
@@ -67,16 +68,16 @@ const PromoteurVentes = () => {
             .from('developer_projects')
             .select('*')
             .eq('developer_id', user.id)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('project_sales')
             .select('*')
-            .eq('promoteur_id', user.id),
+            .eq('promoteur_id', user.id).limit(500),
           supabase
             .from('crm_contacts')
             .select('*')
             .eq('owner_id', user.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }).limit(500)
         ]);
 
         const projectList = projects || [];
@@ -174,7 +175,7 @@ const PromoteurVentes = () => {
           ).length
         );
       } catch (e) {
-        console.error('Erreur chargement ventes:', e);
+        logger.error('Erreur chargement ventes:', e);
       } finally {
         setLoading(false);
       }

@@ -27,6 +27,7 @@ import {
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { generatePropertySlug } from '@/utils/propertySlug';
+import { logger } from '@/lib/logger';
 
 const AdminPropertyValidation = () => {
   const [pendingProperties, setPendingProperties] = useState([]);
@@ -49,14 +50,14 @@ const AdminPropertyValidation = () => {
         .from('properties')
         .select('*')
         .eq('verification_status', 'pending')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (propError) throw propError;
 
       // Profils des propriétaires concernés uniquement (pas toute la table)
       const ownerIds = [...new Set((properties || []).map((p) => p.owner_id).filter(Boolean))];
       const { data: profiles } = ownerIds.length
-        ? await supabase.from('profiles').select('id, email, full_name').in('id', ownerIds)
+        ? await supabase.from('profiles').select('id, email, full_name').in('id', ownerIds).limit(500)
         : { data: [] };
 
       // Create lookup map
@@ -72,7 +73,7 @@ const AdminPropertyValidation = () => {
             .from('property_photos')
             .select('property_id, file_url, is_primary, display_order')
             .in('property_id', propertyIds)
-            .order('display_order', { ascending: true })
+            .order('display_order', { ascending: true }).limit(500)
         : { data: [] };
       const photosByProperty = (allPhotos || []).reduce((map, ph) => {
         (map[ph.property_id] ||= []).push(ph);
@@ -96,7 +97,7 @@ const AdminPropertyValidation = () => {
 
       setPendingProperties(enrichedData);
     } catch (error) {
-      console.error('Erreur chargement:', error);
+      logger.error('Erreur chargement:', error);
       toast.error('Erreur lors du chargement des propriétés');
     } finally {
       setLoading(false);
@@ -127,7 +128,7 @@ const AdminPropertyValidation = () => {
 
       loadPendingProperties();
     } catch (error) {
-      console.error('Erreur approbation:', error);
+      logger.error('Erreur approbation:', error);
       toast.error('Erreur lors de l\'approbation');
     } finally {
       setActionLoading(false);
@@ -164,7 +165,7 @@ const AdminPropertyValidation = () => {
       setSelectedProperty(null);
       loadPendingProperties();
     } catch (error) {
-      console.error('Erreur rejet:', error);
+      logger.error('Erreur rejet:', error);
       toast.error('Erreur lors du rejet');
     } finally {
       setActionLoading(false);

@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Image de couverture par défaut selon le type de bien (property_photos vide)
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=500&fit=crop';
@@ -33,7 +34,7 @@ class PropertyService {
         .from('properties')
         .select(this.columns)
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Par défaut on ne montre que les biens vérifiés (comme le catalogue)
       if (opts.verifiedOnly !== false) {
@@ -48,7 +49,7 @@ class PropertyService {
 
       return { success: true, properties: data || [] };
     } catch (error) {
-      console.error('Erreur PropertyService.getProperties:', error);
+      logger.error('Erreur PropertyService.getProperties:', error);
       return { success: false, error: error.message, properties: [] };
     }
   }
@@ -66,7 +67,7 @@ class PropertyService {
       if (error) throw error;
       return { success: true, property: data };
     } catch (error) {
-      console.error('Erreur PropertyService.getPropertyById:', error);
+      logger.error('Erreur PropertyService.getPropertyById:', error);
       return { success: false, error: error.message };
     }
   }
@@ -80,14 +81,14 @@ class PropertyService {
         .from('properties')
         .select(this.columns)
         .or(`city.ilike.%${zone}%,region.ilike.%${zone}%,location.ilike.%${zone}%`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (opts.limit) query = query.limit(opts.limit);
 
       const { data, error } = await query;
       if (error) throw error;
       return { success: true, properties: data || [] };
     } catch (error) {
-      console.error('Erreur PropertyService.getPropertiesByZone:', error);
+      logger.error('Erreur PropertyService.getPropertiesByZone:', error);
       return { success: false, error: error.message, properties: [] };
     }
   }

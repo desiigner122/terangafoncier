@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const GeometreCommunication = () => {
   const { user } = useAuth();
@@ -73,7 +74,7 @@ const GeometreCommunication = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id).filter(Boolean))];
@@ -87,7 +88,7 @@ const GeometreCommunication = () => {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (convError) throw convError;
 
       // Autres participants (interlocuteurs) et propriétés liées
@@ -100,16 +101,16 @@ const GeometreCommunication = () => {
 
       const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
         otherParticipantIds.length > 0
-          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, role, avatar_url').in('id', otherParticipantIds)
+          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, role, avatar_url').in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -154,7 +155,7 @@ const GeometreCommunication = () => {
 
       setConversations(formatted);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
+      logger.error('Erreur chargement conversations:', error);
       toast.error('Erreur lors du chargement des conversations');
       setConversations([]);
     } finally {
@@ -168,7 +169,7 @@ const GeometreCommunication = () => {
         .from('messages')
         .select('id, conversation_id, sender_id, content, read, created_at')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
 
       const formatted = (data || []).map(msg => ({
@@ -190,7 +191,7 @@ const GeometreCommunication = () => {
 
       setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread: 0 } : c));
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
       toast.error('Erreur lors du chargement des messages');
     }
   };
@@ -226,7 +227,7 @@ const GeometreCommunication = () => {
         c.id === activeChat.id ? { ...c, lastMessage: content, timestamp: formatTimestamp(data.created_at) } : c
       ));
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } finally {
       setSending(false);
@@ -248,7 +249,7 @@ const GeometreCommunication = () => {
       if (error) throw error;
       setMeetings(data || []);
     } catch (error) {
-      console.error('Erreur chargement RDV:', error);
+      logger.error('Erreur chargement RDV:', error);
       setMeetings([]);
     }
   };

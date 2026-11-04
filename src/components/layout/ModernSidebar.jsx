@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/useUser';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
+import { logger } from '@/lib/logger';
 
 const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -131,7 +132,7 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
       await signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
     }
   };
 

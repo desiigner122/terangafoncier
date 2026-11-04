@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Key, FileText, CheckCircle, Clock, XCircle, RefreshCw, Copy } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const STATUS_META = {
   pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
@@ -29,12 +30,12 @@ const AuthenticationPage = () => {
         .from('document_authentication')
         .select('id, document_name, document_type, verification_status, authenticity_hash, verified_at, created_at')
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setAuthentications(data || []);
     } catch (error) {
-      console.error('Erreur chargement authentifications:', error);
+      logger.error('Erreur chargement authentifications:', error);
       setAuthentications([]);
     } finally {
       setIsLoading(false);
@@ -51,7 +52,7 @@ const AuthenticationPage = () => {
     try {
       await navigator.clipboard.writeText(text);
     } catch (error) {
-      console.error('Erreur copie:', error);
+      logger.error('Erreur copie:', error);
     }
   };
 

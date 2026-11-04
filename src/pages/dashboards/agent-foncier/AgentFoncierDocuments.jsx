@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Déduit le format (extension) à partir de l'URL réelle, sinon du type
 const getFormat = (url, type) => {
@@ -117,7 +118,7 @@ const AgentFoncierDocuments = () => {
           .from('documents')
           .select('id, owner_id, property_id, name, type, url, status, created_at')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
 
@@ -130,7 +131,7 @@ const AgentFoncierDocuments = () => {
           const { data: props } = await supabase
             .from('properties')
             .select('id, title, location, city, region')
-            .in('id', propIds);
+            .in('id', propIds).limit(500);
           (props || []).forEach((p) => {
             locationByProperty[p.id] =
               p.location || [p.city, p.region].filter(Boolean).join(', ') || p.title || null;
@@ -150,7 +151,7 @@ const AgentFoncierDocuments = () => {
           }))
         );
       } catch (e) {
-        console.error('Erreur chargement documents agent:', e);
+        logger.error('Erreur chargement documents agent:', e);
         setDocuments([]);
       } finally {
         setLoading(false);

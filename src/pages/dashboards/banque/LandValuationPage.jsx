@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const formatXOF = (value) => {
   const n = Number(value);
@@ -71,17 +72,17 @@ const LandValuationPage = () => {
           'id, title, name, type, price, surface, location, region, city, ' +
             'status, verification_status, ai_score, estimated_value, market_value, created_at'
         )
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (fetchError) {
-        console.error('Erreur chargement properties:', fetchError);
+        logger.error('Erreur chargement properties:', fetchError);
         setError("Impossible de charger les biens à évaluer.");
         setData([]);
       } else {
         setData(rows || []);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       setError("Une erreur est survenue lors du chargement.");
       setData([]);
     } finally {

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import QRCode from 'qrcode';
+import { logger } from '@/lib/logger';
 
 /**
  * Service de génération de PDF pour TerangaFoncier
@@ -314,7 +315,7 @@ class PDFGenerator {
       pdf.setTextColor(...this.colors.gray);
       pdf.text('Scanner pour vérifier', pageWidth - 45, 225, { align: 'center' });
     } catch (error) {
-      console.error('Erreur génération QR Code:', error);
+      logger.error('Erreur génération QR Code:', error);
     }
 
     // Signature et date

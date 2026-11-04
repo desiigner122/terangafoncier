@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import BlogService from '@/services/admin/BlogService';
+import { logger } from '@/lib/logger';
 
 const BlogPostPage = () => {
   const { slug } = useParams();
@@ -34,7 +35,7 @@ const BlogPostPage = () => {
         setPost(result.post);
       } catch (err) {
         setError(err.message);
-        console.error('Error loading blog post:', err);
+        logger.error('Error loading blog post:', err);
       } finally {
         setLoading(false);
       }

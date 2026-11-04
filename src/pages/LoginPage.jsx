@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 
     import React, { useState, useEffect } from 'react';
     import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -27,7 +28,7 @@
     const profile = user.profile || user;
     const userRole = profile.role || profile.user_type || (roles.length > 0 ? roles[0] : 'Particulier');
     
-    console.log('🔍 Détermination dashboard pour:', { roles, userRole, user });
+    logger.debug('🔍 Détermination dashboard pour:', { roles, userRole, user });
     
     // Vérification par rôle avec priorité admin
     if (roles.includes('admin') || userRole === 'Admin') return '/admin/dashboard';
@@ -68,12 +69,12 @@
           
           if (user) {
             // Debug: afficher les données utilisateur
-            console.log('🔍 Utilisateur connecté:', user);
-            console.log('🎭 Rôles utilisateur:', user.roles);
+            logger.debug('🔍 Utilisateur connecté:', user);
+            logger.debug('🎭 Rôles utilisateur:', user.roles);
             
             // Redirection basée sur le rôle de l'utilisateur
             const dashboardPath = getDashboardPath(user);
-            console.log('🎯 Redirection vers:', dashboardPath);
+            logger.debug('🎯 Redirection vers:', dashboardPath);
             
             const from = location.state?.from?.pathname || dashboardPath;
             navigate(from, { replace: true });
@@ -85,7 +86,7 @@
               className: "bg-green-500 text-white",
           });
         } catch (err) {
-          console.error("Login error:", err);
+          logger.error("Login error:", err);
           const errorMessage = err.message?.includes('Invalid login credentials') || err.message?.includes('incorrect')
             ? "Email ou mot de passe incorrect."
             : err.message || "Une erreur est survenue lors de la connexion.";
@@ -123,7 +124,7 @@
             navigate(dashboardPath, { replace: true });
           }
         } catch (err) {
-          console.error("Quick login error:", err);
+          logger.error("Quick login error:", err);
           setError(err.message || "Une erreur est survenue lors de la connexion.");
           window.safeGlobalToast({
             title: "Échec de la Connexion",

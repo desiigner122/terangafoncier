@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaHome, FaCheckCircle, FaTimesCircle, FaClock, FaUser, FaMapMarkerAlt, FaEye, FaEdit } from 'react-icons/fa';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const PropertyManagementPage = () => {
   const [properties, setProperties] = useState([]);
@@ -36,7 +37,7 @@ const PropertyManagementPage = () => {
         toast.error('Erreur lors du chargement des propriétés');
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur de connexion');
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ const PropertyManagementPage = () => {
         toast.error(result.error.message);
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de l\'approbation');
     }
   };

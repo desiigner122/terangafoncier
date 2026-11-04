@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const getInitials = (name) => {
   if (!name) return '??';
@@ -68,7 +69,7 @@ const SecureMessagingPage = () => {
         const { data: convs, error: convsError } = await supabase
           .from('conversations')
           .select('*')
-          .contains('participant_ids', [user.id]);
+          .contains('participant_ids', [user.id]).limit(500);
         if (convsError) throw convsError;
         // Récupérer les infos des autres utilisateurs
         const userIds = convs.flatMap(c => c.participant_ids.filter(id => id !== user.id));
@@ -77,7 +78,7 @@ const SecureMessagingPage = () => {
           const { data: users, error: usersError } = await supabase
             .from('users')
             .select('id, name, avatar')
-            .in('id', userIds);
+            .in('id', userIds).limit(500);
           if (!usersError && users) {
             usersMap = Object.fromEntries(users.map(u => [u.id, u]));
           }
@@ -112,7 +113,7 @@ const SecureMessagingPage = () => {
       } catch (err) {
         setError(err.message);
         setConversations([]);
-        console.error('Erreur lors du chargement des conversations:', err);
+        logger.error('Erreur lors du chargement des conversations:', err);
       } finally {
         setLoadingConversations(false);
       }
@@ -130,13 +131,13 @@ const SecureMessagingPage = () => {
             .from('messages')
             .select('*')
             .eq('thread_id', selectedConversationId)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: true }).limit(500);
           if (msgsError) throw msgsError;
           setMessages(msgs);
           setConversations(prev => prev.map(c => c.id === selectedConversationId ? {...c, unread_count: 0} : c));
         } catch (err) {
           setMessages([]);
-          console.error('Erreur lors du chargement des messages:', err);
+          logger.error('Erreur lors du chargement des messages:', err);
         } finally {
           setLoadingMessages(false);
         }

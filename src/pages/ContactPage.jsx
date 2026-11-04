@@ -32,6 +32,7 @@ import {
   Youtube
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const ContactPage = () => {
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,7 @@ const ContactPage = () => {
     setLoading(true);
 
     try {
-      console.log('📝 [ContactPage] Début soumission formulaire:', formData);
+      logger.debug('📝 [ContactPage] Début soumission formulaire:', formData);
       
       // Capture lead in marketing_leads table (Phase 1)
       const leadResult = await MarketingService.createLead({
@@ -76,7 +77,7 @@ const ContactPage = () => {
         }
       });
 
-      console.log('📊 [ContactPage] Résultat createLead:', leadResult);
+      logger.debug('📊 [ContactPage] Résultat createLead:', leadResult);
 
       if (!leadResult.success) {
         throw new Error(leadResult.error || 'Erreur lors de la création du lead');
@@ -98,7 +99,7 @@ const ContactPage = () => {
         ]);
 
       if (error) {
-        console.warn('Legacy contact_messages insert failed:', error);
+        logger.warn('Legacy contact_messages insert failed:', error);
         // Don't throw - lead capture is primary, this is just backup
       }
 
@@ -118,7 +119,7 @@ const ContactPage = () => {
       });
 
     } catch (error) {
-      console.error('Error sending contact form:', error);
+      logger.error('Error sending contact form:', error);
       window.safeGlobalToast({
         title: "Erreur d'envoi",
         description: "Une erreur est survenue. Veuillez réessayer plus tard.",

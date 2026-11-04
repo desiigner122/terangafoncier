@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from 'react-router-dom';
 import BlogService from '@/services/admin/BlogService';
+import { logger } from '@/lib/logger';
 
 const AdminBlogPage = () => {
   const [posts, setPosts] = useState([]);
@@ -36,7 +37,7 @@ const AdminBlogPage = () => {
       } catch (err) {
         setFetchError(err.message);
         setPosts([]);
-        console.error('Erreur lors du chargement des articles de blog:', err);
+        logger.error('Erreur lors du chargement des articles de blog:', err);
       } finally {
         setLoading(false);
       }

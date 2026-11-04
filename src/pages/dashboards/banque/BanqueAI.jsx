@@ -29,6 +29,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const BanqueAI = () => {
   const { user } = useAuth();
@@ -60,20 +61,20 @@ const BanqueAI = () => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // 2) Historique de conversation IA
       const chatRes = await supabase
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       // 3) Biens liés aux dossiers de la banque (pour les scores/estimations IA réels)
       const loansRes = await supabase
         .from('loans')
         .select('property_id')
-        .eq('bank_id', user.id);
+        .eq('bank_id', user.id).limit(500);
 
       const propertyIds = Array.from(
         new Set((loansRes.data || []).map(l => l.property_id).filter(Boolean))
@@ -84,7 +85,7 @@ const BanqueAI = () => {
         const propsRes = await supabase
           .from('properties')
           .select('id, title, name, location, region, city, ai_score, estimated_value, market_value, price')
-          .in('id', propertyIds);
+          .in('id', propertyIds).limit(500);
         props = propsRes.data || [];
       }
 
@@ -98,7 +99,7 @@ const BanqueAI = () => {
       }));
       setChatHistory(mappedChat);
     } catch (err) {
-      console.error('Erreur chargement BanqueAI:', err);
+      logger.error('Erreur chargement BanqueAI:', err);
       setAnalyses([]);
       setProperties([]);
       setChatHistory([]);
@@ -159,7 +160,7 @@ const BanqueAI = () => {
         content: text
       });
     } catch (err) {
-      console.error('Erreur enregistrement message IA:', err);
+      logger.error('Erreur enregistrement message IA:', err);
     }
 
     // Réponse honnête : aucune intégration LLM disponible (pas de fabrication)

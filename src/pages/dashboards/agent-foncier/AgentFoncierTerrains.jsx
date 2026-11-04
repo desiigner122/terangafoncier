@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Formatage monétaire XOF compact (ex: 850M, 2.5Md)
 const formatXOF = (value) => {
@@ -67,7 +68,7 @@ const AgentFoncierTerrains = () => {
           .from('properties')
           .select('id, title, name, type, price, surface, location, region, city, status, verification_status, estimated_value, owner_id, created_at')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
 
@@ -80,7 +81,7 @@ const AgentFoncierTerrains = () => {
           const { data: photos } = await supabase
             .from('property_photos')
             .select('property_id, url, is_primary')
-            .in('property_id', ids);
+            .in('property_id', ids).limit(500);
           (photos || []).forEach((ph) => {
             if (!photosByProperty[ph.property_id] || ph.is_primary) {
               photosByProperty[ph.property_id] = ph.url;
@@ -97,7 +98,7 @@ const AgentFoncierTerrains = () => {
           }))
         );
       } catch (e) {
-        console.error('Erreur chargement terrains agent:', e);
+        logger.error('Erreur chargement terrains agent:', e);
         setTerrains([]);
       } finally {
         setLoading(false);

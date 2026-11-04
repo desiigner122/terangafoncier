@@ -22,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/lib/supabaseClient';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParcelFileTextsDialog = ({ parcel }) => {
     const [FileTexts, setFileTexts] = useState([]);
@@ -33,10 +34,10 @@ const ParcelFileTextsDialog = ({ parcel }) => {
             const { data, error } = await supabase
                 .from('FileTexts')
                 .select('*')
-                .eq('parcel_id', parcel.id);
+                .eq('parcel_id', parcel.id).limit(500);
             
             if (error) {
-                console.error("Error fetching FileTexts:", error);
+                logger.error("Error fetching FileTexts:", error);
             } else {
                 setFileTexts(data);
             }
@@ -89,10 +90,10 @@ const AdminParcelsPage = () => {
         setLoading(true);
         const { data, error } = await supabase
             .from('parcels')
-            .select('*, seller:seller_id(full_name)');
+            .select('*, seller:seller_id(full_name)').limit(500);
         
         if (error) {
-            console.error("Error fetching parcels:", error);
+            logger.error("Error fetching parcels:", error);
             window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les annonces.', variant: 'destructive' });
         } else {
             setParcels(data.map(p => ({...p, sellerName: p.seller?.full_name || 'Vendeur Inconnu'})));

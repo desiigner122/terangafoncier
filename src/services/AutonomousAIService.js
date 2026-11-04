@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabaseClient';
 import AIService from './AIService';
 import AdvancedAIService from './AdvancedAIService';
 import BlockchainAIService from './BlockchainAIService';
+import { logger } from '@/lib/logger';
 
 /**
  * IA AUTONOME - CERVEAU CENTRAL DE LA PLATEFORME
@@ -30,7 +31,7 @@ export class AutonomousAIService {
    * L'IA démarre ses processus autonomes de gestion
    */
   async initializeAutonomousOperations() {
-    // console.log('🧠 Démarrage de l\'IA Autonome Teranga Foncier...');
+    // logger.debug('🧠 Démarrage de l\'IA Autonome Teranga Foncier...');
     
     // Surveillance continue des utilisateurs et décisions automatiques
     this.startContinuousMonitoring();
@@ -401,17 +402,17 @@ export class AutonomousAIService {
 
   async updateAllDashboardMetrics(insights) {
     // Mise à jour automatique de tous les dashboards
-    // console.log('🔄 Mise à jour automatique des métriques par IA');
+    // logger.debug('🔄 Mise à jour automatique des métriques par IA');
   }
 
   async notifyRelevantUsers(opportunities) {
     // Notification intelligente des utilisateurs
-    // console.log('🔔 Notification automatique IA des utilisateurs');
+    // logger.debug('🔔 Notification automatique IA des utilisateurs');
   }
 
   // Méthodes manquantes ajoutées
   startContinuousMonitoring() {
-    // console.log('🔍 Démarrage surveillance continue IA...');
+    // logger.debug('🔍 Démarrage surveillance continue IA...');
     // Surveillance en temps réel des utilisateurs et de la plateforme
     setInterval(() => {
       this.performAutonomousAnalysis();
@@ -419,7 +420,7 @@ export class AutonomousAIService {
   }
 
   startDashboardAutomation() {
-    // console.log('📊 Démarrage automation des dashboards...');
+    // logger.debug('📊 Démarrage automation des dashboards...');
     // Automation des mises à jour de dashboards
     setInterval(() => {
       this.updateDashboardsAutomatically();
@@ -427,7 +428,7 @@ export class AutonomousAIService {
   }
 
   startPlatformAdministration() {
-    // console.log('⚙️ Démarrage administration autonome...');
+    // logger.debug('⚙️ Démarrage administration autonome...');
     // Administration automatique de la plateforme
     setInterval(() => {
       this.performPlatformMaintenance();
@@ -435,7 +436,7 @@ export class AutonomousAIService {
   }
 
   activateUniversalAIAssistant() {
-    // console.log('🤖 Activation assistant IA universel...');
+    // logger.debug('🤖 Activation assistant IA universel...');
     // Activation de l'assistant IA disponible partout
   }
 
@@ -444,28 +445,28 @@ export class AutonomousAIService {
       // Analyse autonome silencieuse
       const insights = await this.generateMarketInsights();
       if (insights.alertLevel > 0.8) {
-        // console.log('⚠️ IA: Alerte marché détectée', insights);
+        // logger.debug('⚠️ IA: Alerte marché détectée', insights);
       }
     } catch (error) {
-      // console.log('🔄 IA: Analyse en cours...');
+      // logger.debug('🔄 IA: Analyse en cours...');
     }
   }
 
   async updateDashboardsAutomatically() {
     try {
       // Mise à jour automatique des données
-      // console.log('📈 IA: Mise à jour dashboards...');
+      // logger.debug('📈 IA: Mise à jour dashboards...');
     } catch (error) {
-      // console.log('🔄 IA: Synchronisation données...');
+      // logger.debug('🔄 IA: Synchronisation données...');
     }
   }
 
   async performPlatformMaintenance() {
     try {
       // Maintenance automatique
-      // console.log('🛠️ IA: Maintenance plateforme...');
+      // logger.debug('🛠️ IA: Maintenance plateforme...');
     } catch (error) {
-      // console.log('🔄 IA: Optimisation en cours...');
+      // logger.debug('🔄 IA: Optimisation en cours...');
     }
   }
 }

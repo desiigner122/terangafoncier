@@ -30,6 +30,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { logger } from '@/lib/logger';
 
 // Contenu ÉDITORIAL statique (présentation des fonctionnalités, ne prétend pas être une métrique).
 const aiFeatures = [
@@ -125,7 +126,7 @@ const NotaireAIModernized = () => {
           .from('ai_chat_history')
           .select('id, role, content, confidence, created_at')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: true }),
+          .order('created_at', { ascending: true }).limit(500),
         supabase
           .from('ai_analyses')
           .select('id', { count: 'exact', head: true })
@@ -183,7 +184,7 @@ const NotaireAIModernized = () => {
       });
       setMonthlyUsage(buckets);
     } catch (error) {
-      console.error('Erreur chargement données IA notaire:', error);
+      logger.error('Erreur chargement données IA notaire:', error);
       setChatHistory([]);
       setAiStats({ totalQueries: 0, documentsAnalyzed: 0, avgConfidence: null });
       setMonthlyUsage([]);
@@ -222,7 +223,7 @@ const NotaireAIModernized = () => {
         .insert({ user_id: user.id, role: 'user', content });
       setAiStats((prev) => ({ ...prev, totalQueries: prev.totalQueries + 1 }));
     } catch (error) {
-      console.error('Erreur enregistrement question IA:', error);
+      logger.error('Erreur enregistrement question IA:', error);
     }
 
     window.safeGlobalToast?.({

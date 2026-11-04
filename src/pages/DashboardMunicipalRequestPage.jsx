@@ -26,6 +26,7 @@ import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const StepIndicator = ({ currentStep, totalSteps }) => (
   <div className="flex justify-center items-center space-x-2 mb-8">
@@ -60,7 +61,7 @@ const safeToast = (message, type = 'default') => {
     }
     
     // Fallback 1: Console pour développement
-    console.log(`📢 TOAST [${type.toUpperCase()}]: ${message}`);
+    logger.debug(`📢 TOAST [${type.toUpperCase()}]: ${message}`);
     
     // Fallback 2: Alert pour utilisateur en cas d'erreur critique
     if (type === 'destructive' || type === 'error') {
@@ -95,8 +96,8 @@ const safeToast = (message, type = 'default') => {
       }
     }
   } catch (error) {
-    console.error('Erreur dans safeToast:', error);
-    console.log(`📢 MESSAGE: ${message}`);
+    logger.error('Erreur dans safeToast:', error);
+    logger.debug(`📢 MESSAGE: ${message}`);
   }
 };
 
@@ -189,7 +190,7 @@ const safeToast = (message, type = 'default') => {
                 safeToast("Demande envoyée avec succès !", 'success');
             }
         } catch (e) {
-            console.error('Erreur en soumettant la demande communale:', e);
+            logger.error('Erreur en soumettant la demande communale:', e);
             safeToast("Impossible d'envoyer la demande. Veuillez réessayer.", 'error');
         } finally {
             setIsSubmitting(false);

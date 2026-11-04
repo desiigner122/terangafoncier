@@ -77,6 +77,7 @@ import {
   formatCurrency as formatPrice,
   getProgressScore 
 } from '@/utils/financingStatusHelpers';
+import { logger } from '@/lib/logger';
 
 const ParticulierFinancement = () => {
   const { user, profile } = useOutletContext();
@@ -126,7 +127,7 @@ const ParticulierFinancement = () => {
         const result = await ParticulierSupabaseService.getFinancingRequests(user.id);
 
         if (!result.success) {
-          console.error('❌ Erreur chargement demandes financement:', result.error);
+          logger.error('❌ Erreur chargement demandes financement:', result.error);
           toast.error('Erreur lors du chargement de vos demandes');
           setDemandes([]);
         } else {
@@ -210,7 +211,7 @@ const ParticulierFinancement = () => {
       ]);
 
     } catch (error) {
-      console.error('Erreur chargement financement:', error);
+      logger.error('Erreur chargement financement:', error);
     } finally {
       setLoading(false);
     }
@@ -279,7 +280,7 @@ const ParticulierFinancement = () => {
         });
 
       if (error) {
-        console.error('Erreur insertion demande financement:', error);
+        logger.error('Erreur insertion demande financement:', error);
         toast.error('Erreur lors de la soumission de la demande');
         return;
       }
@@ -303,7 +304,7 @@ const ParticulierFinancement = () => {
       setShowDemandeDialog(false);
 
     } catch (error) {
-      console.error('Erreur soumission demande:', error);
+      logger.error('Erreur soumission demande:', error);
       toast.error('Erreur lors de la soumission de la demande');
     }
   };

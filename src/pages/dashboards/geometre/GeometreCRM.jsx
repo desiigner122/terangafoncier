@@ -51,11 +51,11 @@ const GeometreCRM = () => {
             .from('crm_contacts')
             .select('id, name, email, phone, company, status, temperature, score, created_at')
             .eq('owner_id', geometreId)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('survey_missions')
             .select('id, client_id, client_name, title, status, price, scheduled_date, created_at')
-            .eq('geometre_id', geometreId)
+            .eq('geometre_id', geometreId).limit(500)
         ]);
 
         if (!active) return;

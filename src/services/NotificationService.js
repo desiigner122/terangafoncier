@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export class NotificationService {
   // Templates de notifications par statut
@@ -190,7 +191,7 @@ export class NotificationService {
 
       const template = this.NOTIFICATION_TEMPLATES[status];
       if (!template) {
-        console.warn(`Pas de template de notification pour le statut: ${status}`);
+        logger.warn(`Pas de template de notification pour le statut: ${status}`);
         return { success: false, error: 'Template non trouvé' };
       }
 
@@ -246,7 +247,7 @@ export class NotificationService {
           .catch(err => {
             // Si la table n'existe pas, ignorer l'erreur (non bloquante)
             if (err.code === 'PGRST205' || err.message?.includes('Could not find the table')) {
-              console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
+              logger.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
               return { error: null };
             }
             throw err;
@@ -262,7 +263,7 @@ export class NotificationService {
 
       return { success: true, sent: notifications.length };
     } catch (error) {
-      console.error('Erreur envoi notifications workflow:', error);
+      logger.error('Erreur envoi notifications workflow:', error);
       return { success: false, error: error.message };
     }
   }
@@ -295,7 +296,7 @@ export class NotificationService {
         // Marquer le canal comme envoyé
         await this.updateNotificationChannelStatus(notification.id, channel, true);
       } catch (error) {
-        console.error(`Erreur envoi ${channel}:`, error);
+        logger.error(`Erreur envoi ${channel}:`, error);
         await this.updateNotificationChannelStatus(notification.id, channel, false);
       }
     }
@@ -352,7 +353,7 @@ export class NotificationService {
 
     // Envoyer via Twilio ou autre service SMS
     // Implementation à ajouter selon le provider choisi
-    console.log('SMS à envoyer:', { to: user.phone, message: smsMessage });
+    logger.debug('SMS à envoyer:', { to: user.phone, message: smsMessage });
   }
 
   /**
@@ -366,14 +367,14 @@ export class NotificationService {
       .from('user_push_tokens')
       .select('token')
       .eq('user_id', notification.user_id)
-      .eq('active', true);
+      .eq('active', true).limit(500);
 
     if (error || !tokens.length) return;
 
     // Envoyer via Firebase FCM ou autre service push
     for (const tokenRow of tokens) {
       // Implementation FCM à ajouter
-      console.log('Push à envoyer:', { 
+      logger.debug('Push à envoyer:', { 
         token: tokenRow.token, 
         title: notification.title, 
         body: notification.message 
@@ -552,7 +553,7 @@ export class NotificationService {
       const { data, error } = await supabase
         .from('purchase_case_notifications')
         .select('status, email_sent, sms_sent, push_sent, in_app_read')
-        .eq('case_id', caseId);
+        .eq('case_id', caseId).limit(500);
 
       if (error) throw error;
 
@@ -583,7 +584,7 @@ export class NotificationService {
     purchasePrice
   }) {
     try {
-      console.log('📧 Envoi notification acceptation:', { buyerEmail, caseNumber });
+      logger.debug('📧 Envoi notification acceptation:', { buyerEmail, caseNumber });
       
       // Pour l'instant, envoyer juste un log et un toast local
       // Car la table purchase_case_notifications n'existe pas encore
@@ -599,11 +600,11 @@ export class NotificationService {
       };
 
       // Envoyer via email (mock pour l'instant)
-      console.log('✉️ Email à envoyer:', notification);
+      logger.debug('✉️ Email à envoyer:', notification);
       
       return { success: true, notification };
     } catch (error) {
-      console.error('❌ Erreur envoi notification acceptation:', error);
+      logger.error('❌ Erreur envoi notification acceptation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -618,7 +619,7 @@ export class NotificationService {
     parcelTitle
   }) {
     try {
-      console.log('📧 Envoi notification refus:', { buyerEmail });
+      logger.debug('📧 Envoi notification refus:', { buyerEmail });
       
       const notification = {
         user_id: buyerId,
@@ -630,11 +631,11 @@ export class NotificationService {
         priority: 'medium'
       };
 
-      console.log('✉️ Email à envoyer:', notification);
+      logger.debug('✉️ Email à envoyer:', notification);
       
       return { success: true, notification };
     } catch (error) {
-      console.error('❌ Erreur envoi notification refus:', error);
+      logger.error('❌ Erreur envoi notification refus:', error);
       return { success: false, error: error.message };
     }
   }
@@ -651,7 +652,7 @@ export class NotificationService {
     message
   }) {
     try {
-      console.log('📧 Envoi notification négociation:', { buyerEmail });
+      logger.debug('📧 Envoi notification négociation:', { buyerEmail });
       
       const notification = {
         user_id: buyerId,
@@ -665,11 +666,11 @@ export class NotificationService {
         priority: 'high'
       };
 
-      console.log('✉️ Email à envoyer:', notification);
+      logger.debug('✉️ Email à envoyer:', notification);
       
       return { success: true, notification };
     } catch (error) {
-      console.error('❌ Erreur envoi notification négociation:', error);
+      logger.error('❌ Erreur envoi notification négociation:', error);
       return { success: false, error: error.message };
     }
   }

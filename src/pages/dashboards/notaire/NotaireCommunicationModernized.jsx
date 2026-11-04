@@ -52,6 +52,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const NotaireCommunicationModernized = () => {
   const { dashboardStats } = useOutletContext();
@@ -112,7 +113,7 @@ const NotaireCommunicationModernized = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
@@ -133,7 +134,7 @@ const NotaireCommunicationModernized = () => {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (convError) throw convError;
 
       // 3) Profils des participants, biens liés et messages en parallèle
@@ -146,15 +147,15 @@ const NotaireCommunicationModernized = () => {
         participantIds.length > 0
           ? supabase.from('profiles')
               .select('id, first_name, last_name, full_name, email, role, avatar_url')
-              .in('id', participantIds)
+              .in('id', participantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title, name').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title, name').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase.from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -249,7 +250,7 @@ const NotaireCommunicationModernized = () => {
         return formattedConversations[0] || null;
       });
     } catch (error) {
-      console.error('Erreur chargement communications:', error);
+      logger.error('Erreur chargement communications:', error);
       window.safeGlobalToast({
         title: "Erreur de chargement",
         description: "Impossible de charger les communications",
@@ -291,7 +292,7 @@ const NotaireCommunicationModernized = () => {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       window.safeGlobalToast({
         title: "Erreur d'envoi",
         description: "Impossible d'envoyer le message",

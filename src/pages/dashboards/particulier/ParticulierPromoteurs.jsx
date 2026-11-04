@@ -34,6 +34,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierPromoteurs = () => {
   const { user } = useOutletContext();
@@ -61,21 +62,21 @@ const ParticulierPromoteurs = () => {
 
   const loadCandidaturesPromoteurs = async () => {
     if (!user?.id) {
-      console.log('❌ Utilisateur non disponible');
+      logger.debug('❌ Utilisateur non disponible');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des candidatures promoteurs...');
+      logger.debug('📊 Chargement des candidatures promoteurs...');
 
       // Table réelle : promoter_applications (candidat_id = user.id)
       const result = await ParticulierSupabaseService.getPromoterApplications(user.id);
       const data = result?.data || [];
 
       if (!result?.success) {
-        console.error('❌ Erreur getPromoterApplications:', result?.error);
+        logger.error('❌ Erreur getPromoterApplications:', result?.error);
       }
 
       // Séparer les candidatures par statut (statuts réels : en_cours | acceptee | refusee)
@@ -84,9 +85,9 @@ const ParticulierPromoteurs = () => {
       const refusees = data.filter(c => c.statut === 'refusee');
 
       setCandidaturesPromoteurs({ enCours, acceptees, refusees });
-      console.log(`✅ ${data.length} candidatures promoteurs chargées`);
+      logger.debug(`✅ ${data.length} candidatures promoteurs chargées`);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des candidatures promoteurs:', error);
+      logger.error('❌ Erreur lors du chargement des candidatures promoteurs:', error);
       setCandidaturesPromoteurs({ enCours: [], acceptees: [], refusees: [] });
     } finally {
       setLoading(false);

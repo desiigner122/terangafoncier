@@ -66,6 +66,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
+import { logger } from '@/lib/logger';
 
 const ModernUsersPage = () => {
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
@@ -96,7 +97,7 @@ const ModernUsersPage = () => {
     setError(null);
     
     try {
-      console.log('🔄 Chargement des utilisateurs réels...');
+      logger.debug('🔄 Chargement des utilisateurs réels...');
       
       // Charger utilisateurs et statistiques en parallèle
       const [usersResult, statsResult] = await Promise.all([
@@ -107,14 +108,14 @@ const ModernUsersPage = () => {
       if (usersResult.success) {
         setUsers(usersResult.data);
         setFilteredUsers(usersResult.data);
-        console.log(`✅ ${usersResult.data.length} utilisateurs réels chargés`);
+        logger.debug(`✅ ${usersResult.data.length} utilisateurs réels chargés`);
       } else {
         throw new Error(usersResult.error);
       }
 
       if (statsResult.success) {
         setUserStats(statsResult.data);
-        console.log('✅ Statistiques utilisateurs chargées');
+        logger.debug('✅ Statistiques utilisateurs chargées');
       }
 
       // Charger les insights IA
@@ -124,7 +125,7 @@ const ModernUsersPage = () => {
       await loadBlockchainStatus();
 
     } catch (error) {
-      console.error('❌ Erreur chargement utilisateurs:', error);
+      logger.error('❌ Erreur chargement utilisateurs:', error);
       setError(error.message);
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
@@ -161,7 +162,7 @@ const ModernUsersPage = () => {
       
       setAiInsights(insights);
     } catch (error) {
-      console.error('Erreur insights IA:', error);
+      logger.error('Erreur insights IA:', error);
     }
   };
 
@@ -174,7 +175,7 @@ const ModernUsersPage = () => {
         readyForBlockchain: userStats.activeUsers || 0
       });
     } catch (error) {
-      console.error('Erreur statut blockchain:', error);
+      logger.error('Erreur statut blockchain:', error);
     }
   };
 

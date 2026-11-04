@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Helmet } from 'react-helmet-async';
 import ModernSidebar from '@/components/layout/ModernSidebar';
 import { useUser } from '@/hooks/useUser';
+import { logger } from '@/lib/logger';
 
 const DocumentsPage = () => {
   const { user, profile } = useUser();
@@ -85,7 +86,7 @@ const DocumentsPage = () => {
   const handleFileUpload = (event) => {
     const files = event.target.files;
     if (files) {
-      console.log('Fichiers Ï  uploader:', files);
+      logger.debug('Fichiers Ï  uploader:', files);
       // Logique d'upload ici
     }
   };

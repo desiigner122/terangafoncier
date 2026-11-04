@@ -36,6 +36,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const ParticulierBlockchain = () => {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ const ParticulierBlockchain = () => {
       const { data: props } = await supabase
         .from('properties')
         .select('id, title, name, location, price')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
       const properties = props || [];
       setOwnedProperties(properties);
       const propertyIds = properties.map((p) => p.id);
@@ -71,7 +72,7 @@ const ParticulierBlockchain = () => {
         .from('blockchain_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       setTransactions(
         (txs || []).map((t) => ({
           ...t,
@@ -85,7 +86,7 @@ const ParticulierBlockchain = () => {
           .from('blockchain_certificates')
           .select('*')
           .in('property_id', propertyIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         setCertificates(
           (certs || []).map((c) => ({
             ...c,
@@ -96,7 +97,7 @@ const ParticulierBlockchain = () => {
         setCertificates([]);
       }
     } catch (error) {
-      console.error('Erreur chargement blockchain:', error);
+      logger.error('Erreur chargement blockchain:', error);
       setCertificates([]);
       setTransactions([]);
       setOwnedProperties([]);

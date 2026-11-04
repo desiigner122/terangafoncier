@@ -73,6 +73,7 @@ import { supabase } from '@/lib/supabaseClient';
 // Imports des composants d'étapes
 import { Step1BasicInfo, Step2Location, Step3DimensionsPrice, Step4Features } from './AddPropertyAdvanced/FormSteps';
 import { Step5Documents, Step6Photos, Step7AIBlockchain, Step8Confirmation } from './AddPropertyAdvanced/AdvancedSteps';
+import { logger } from '@/lib/logger';
 
 const AddPropertyAdvanced = () => {
   const navigate = useNavigate();
@@ -272,7 +273,7 @@ const AddPropertyAdvanced = () => {
           uploaded: false
         });
       } catch (error) {
-        console.error('Erreur upload image:', error);
+        logger.error('Erreur upload image:', error);
       }
     }
 
@@ -404,14 +405,14 @@ const AddPropertyAdvanced = () => {
       // Si blockchain activée, créer le NFT
       if (formData.blockchain.enabled && formData.blockchain.tokenize) {
         // Logique de création NFT ici (à implémenter avec le smart contract)
-        console.log('Création NFT pour la propriété:', data.id);
+        logger.debug('Création NFT pour la propriété:', data.id);
       }
 
       toast.success('Propriété ajoutée avec succès !');
   navigate(`/parcelle/${generatePropertySlug(data.title || '')}`);
       
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de l\'ajout de la propriété');
     } finally {
       setLoading(false);

@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUserFixed';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const SettingsPageNew = () => {
   const { user, profile, updateProfile } = useUser();
@@ -113,7 +114,7 @@ const SettingsPageNew = () => {
       // Toast de succès
       window.safeGlobalToast?.({ title: 'Profil mis à jour' });
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      logger.error('Erreur lors de la sauvegarde:', error);
       // Toast d'erreur
       window.safeGlobalToast?.({ variant: 'destructive', title: 'Échec mise à jour', description: error.message });
     } finally {
@@ -140,7 +141,7 @@ const SettingsPageNew = () => {
       setPasswordData({ current: '', new: '', confirm: '' });
       // Toast de succès
     } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error);
+      logger.error('Erreur lors du changement de mot de passe:', error);
       // Toast d'erreur
     } finally {
       setIsLoading(false);
@@ -234,7 +235,7 @@ const SettingsPageNew = () => {
                         setHasChanges(true);
                         window.safeGlobalToast?.({ title: 'Photo téléchargée' });
                       } catch (err) {
-                        console.error('Upload avatar error', err);
+                        logger.error('Upload avatar error', err);
                         window.safeGlobalToast?.({ variant: 'destructive', title: 'Échec upload avatar', description: err.message });
                       } finally {
                         setIsLoading(false);

@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
+import { logger } from '@/lib/logger';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 export const useUserStatusMonitor = () => {
@@ -12,7 +13,7 @@ export const useUserStatusMonitor = () => {
   const handleUserStatusChange = useCallback(async (change) => {
     if (!user) return;
 
-    console.log('📡 Changement statut reçu:', change);
+    logger.debug('📡 Changement statut reçu:', change);
 
     // Si le changement concerne l'utilisateur actuel
     if (change.user.id === user.id) {

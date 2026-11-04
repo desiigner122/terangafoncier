@@ -225,7 +225,7 @@ export default defineConfig({
 		'process.env': '{}'
 	},
 	esbuild: {
-		drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
+		drop: process.env.NODE_ENV === 'production' ? ['debugger'] : []
 	},
 	build: {
 		chunkSizeWarningLimit: 1500,

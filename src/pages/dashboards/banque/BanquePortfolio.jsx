@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Statuts loans considérés comme "portefeuille actif"
 const ACTIVE_STATUSES = ['approved', 'disbursed'];
@@ -49,11 +50,11 @@ const BanquePortfolio = ({ dashboardStats }) => {
           .from('loans')
           .select('*')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         supabase
           .from('guarantees')
           .select('*')
-          .eq('bank_id', user.id)
+          .eq('bank_id', user.id).limit(500)
       ]);
 
       if (loansRes.error) throw loansRes.error;
@@ -69,14 +70,14 @@ const BanquePortfolio = ({ dashboardStats }) => {
         const { data: propsData, error: propsError } = await supabase
           .from('properties')
           .select('id, region, city, title')
-          .in('id', propertyIds);
+          .in('id', propertyIds).limit(500);
         if (propsError) throw propsError;
         setProperties(propsData || []);
       } else {
         setProperties([]);
       }
     } catch (err) {
-      console.error('Erreur chargement portefeuille:', err);
+      logger.error('Erreur chargement portefeuille:', err);
       setLoans([]);
       setGuarantees([]);
       setProperties([]);

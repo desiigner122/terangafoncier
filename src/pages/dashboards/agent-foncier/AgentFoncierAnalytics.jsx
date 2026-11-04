@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -66,16 +67,16 @@ const AgentFoncierAnalytics = () => {
         const [missionsRes, contactsRes, propertiesRes, documentsRes] = await Promise.all([
           supabase.from('agent_missions')
             .select('id, mission_type, status, commission, created_at, updated_at')
-            .eq('agent_id', agentId),
+            .eq('agent_id', agentId).limit(500),
           supabase.from('crm_contacts')
             .select('id, created_at')
-            .eq('owner_id', agentId),
+            .eq('owner_id', agentId).limit(500),
           supabase.from('properties')
             .select('id, price, estimated_value, region, location, created_at')
-            .eq('owner_id', agentId),
+            .eq('owner_id', agentId).limit(500),
           supabase.from('documents')
             .select('id, type, created_at')
-            .eq('owner_id', agentId)
+            .eq('owner_id', agentId).limit(500)
         ]);
 
         if (!isMounted) return;
@@ -243,7 +244,7 @@ const AgentFoncierAnalytics = () => {
           }));
         setTypeDocuments(docs);
       } catch (error) {
-        console.error('Erreur AgentFoncierAnalytics:', error);
+        logger.error('Erreur AgentFoncierAnalytics:', error);
       } finally {
         if (isMounted) setLoading(false);
       }

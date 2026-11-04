@@ -11,6 +11,7 @@
 
 import { supabase } from '../lib/supabaseClient';
 import { terangaAI } from './TerangaAIService';
+import { logger } from '@/lib/logger';
 
 class PersonalizedRecommendationEngine {
   constructor() {
@@ -28,7 +29,7 @@ class PersonalizedRecommendationEngine {
   }
 
   async initialize() {
-    console.log('🎯 Initialisation moteur de recommandations...');
+    logger.debug('🎯 Initialisation moteur de recommandations...');
     
     try {
       await this.loadUserProfiles();
@@ -39,15 +40,15 @@ class PersonalizedRecommendationEngine {
       // Démarrer mise à jour temps réel
       this.startRealtimeUpdates();
       
-      console.log('✅ Moteur de recommandations opérationnel');
+      logger.debug('✅ Moteur de recommandations opérationnel');
     } catch (error) {
-      console.error('❌ Erreur initialisation recommandations:', error);
+      logger.error('❌ Erreur initialisation recommandations:', error);
     }
   }
 
   // === GÉNÉRATION RECOMMANDATIONS PRINCIPALES ===
   async generatePersonalizedRecommendations(userId, context = {}) {
-    console.log('🎯 Génération recommandations pour utilisateur:', userId);
+    logger.debug('🎯 Génération recommandations pour utilisateur:', userId);
     
     const startTime = Date.now();
 
@@ -101,7 +102,7 @@ class PersonalizedRecommendationEngine {
       return result;
 
     } catch (error) {
-      console.error('❌ Erreur génération recommandations:', error);
+      logger.error('❌ Erreur génération recommandations:', error);
       return this.getFallbackRecommendations(userId);
     }
   }
@@ -155,7 +156,7 @@ class PersonalizedRecommendationEngine {
       };
 
     } catch (error) {
-      console.error('❌ Erreur construction profil:', error);
+      logger.error('❌ Erreur construction profil:', error);
       return this.getMinimalUserProfile(userId);
     }
   }
@@ -193,7 +194,7 @@ class PersonalizedRecommendationEngine {
 
   // === PROPRIÉTÉS CORRESPONDANTES ===
   async findMatchingProperties(userProfile) {
-    console.log('🏠 Recherche propriétés correspondantes...');
+    logger.debug('🏠 Recherche propriétés correspondantes...');
 
     try {
       // Critères de recherche basés sur le profil
@@ -217,7 +218,7 @@ class PersonalizedRecommendationEngine {
         .gte('price', searchCriteria.priceRange.min)
         .lte('price', searchCriteria.priceRange.max)
         .in('type', searchCriteria.propertyTypes)
-        .eq('status', 'available');
+        .eq('status', 'available').limit(500);
 
       const { data: properties, error } = await query.limit(20);
 
@@ -258,14 +259,14 @@ class PersonalizedRecommendationEngine {
         .slice(0, 10);
 
     } catch (error) {
-      console.error('❌ Erreur recherche propriétés:', error);
+      logger.error('❌ Erreur recherche propriétés:', error);
       return [];
     }
   }
 
   // === OPPORTUNITÉS D'INVESTISSEMENT ===
   async findInvestmentOpportunities(userProfile) {
-    console.log('📈 Recherche opportunités d\'investissement...');
+    logger.debug('📈 Recherche opportunités d\'investissement...');
 
     try {
       // Analyse du marché pour trouver les sous-évaluations
@@ -276,7 +277,7 @@ class PersonalizedRecommendationEngine {
         .from('properties')
         .select('*, neighborhood_stats(*)')
         .eq('status', 'available')
-        .lte('price_per_sqm', marketAnalysis.average_price_per_sqm * 0.85); // 15% sous la moyenne
+        .lte('price_per_sqm', marketAnalysis.average_price_per_sqm * 0.85).limit(500); // 15% sous la moyenne
 
       const opportunities = [];
 
@@ -307,14 +308,14 @@ class PersonalizedRecommendationEngine {
         .slice(0, 5);
 
     } catch (error) {
-      console.error('❌ Erreur opportunités investissement:', error);
+      logger.error('❌ Erreur opportunités investissement:', error);
       return [];
     }
   }
 
   // === ZONES RECOMMANDÉES ===
   async recommendAreas(userProfile, behaviorAnalysis) {
-    console.log('🗺️ Recommandation de zones...');
+    logger.debug('🗺️ Recommandation de zones...');
 
     try {
       // Analyse des zones selon le profil utilisateur
@@ -358,7 +359,7 @@ class PersonalizedRecommendationEngine {
         .slice(0, 5);
 
     } catch (error) {
-      console.error('❌ Erreur recommandation zones:', error);
+      logger.error('❌ Erreur recommandation zones:', error);
       return [];
     }
   }
@@ -583,7 +584,7 @@ class PersonalizedRecommendationEngine {
         created_at: new Date().toISOString()
       });
     } catch (error) {
-      console.error('❌ Erreur sauvegarde session recommandations:', error);
+      logger.error('❌ Erreur sauvegarde session recommandations:', error);
     }
   }
 
@@ -594,7 +595,7 @@ class PersonalizedRecommendationEngine {
       await this.updateMarketData();
     }, 300000);
 
-    console.log('🔄 Mises à jour temps réel activées');
+    logger.debug('🔄 Mises à jour temps réel activées');
   }
 
   // Méthodes utilitaires supplémentaires...

@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import ProfileLink from '@/components/common/ProfileLink';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const ZoneCommunaleDetailPage = () => {
   const { id } = useParams();
@@ -64,7 +65,7 @@ const ZoneCommunaleDetailPage = () => {
           setActiveImageIndex(0);
         }
       } catch (err) {
-        console.error('Erreur chargement zone communale:', err);
+        logger.error('Erreur chargement zone communale:', err);
         if (isMounted) setZone(null);
       } finally {
         if (isMounted) setLoading(false);
@@ -166,7 +167,7 @@ const ZoneCommunaleDetailPage = () => {
         motivation: ''
       });
     } catch (err) {
-      console.error('Erreur envoi candidature:', err);
+      logger.error('Erreur envoi candidature:', err);
       setApplicationFeedback({
         type: 'error',
         message: "Une erreur est survenue lors de l'envoi de votre candidature. Veuillez réessayer."

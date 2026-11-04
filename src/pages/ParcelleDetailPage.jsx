@@ -25,6 +25,7 @@ import { supabase, fetchDirect } from '@/lib/supabaseClient';
 import { generatePropertySlug, extractIdFromPropertySlug, isUUID as isUUIDValue } from '@/utils/propertySlug';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
+import { logger } from '@/lib/logger';
 
 const ParcelleDetailPage = () => {
   const { id: rawParam } = useParams();
@@ -52,7 +53,7 @@ const ParcelleDetailPage = () => {
       try {
         setLoading(true);
 
-        console.log('🔍 Chargement parcelle:', {
+        logger.debug('🔍 Chargement parcelle:', {
           rawParam,
           isSlugLookup,
           slugFromParam
@@ -62,12 +63,12 @@ const ParcelleDetailPage = () => {
         let error;
 
         // Recherche par slug uniquement (titre)
-        console.log('🔍 Using slug lookup (titre seul):', effectiveSlug);
+        logger.debug('🔍 Using slug lookup (titre seul):', effectiveSlug);
         
         // Charger TOUTES les propriétés avec filtre sur le slug
         const { data: properties, error: slugError } = await supabase
           .from('properties')
-          .select('*');
+          .select('*').limit(500);
           
         if (slugError) {
           error = slugError;
@@ -87,13 +88,13 @@ const ParcelleDetailPage = () => {
           }
         }
 
-        console.log('📦 Property chargée:', property);
-        console.log('❌ Erreur:', error);
+        logger.debug('📦 Property chargée:', property);
+        logger.debug('❌ Erreur:', error);
 
         let propertyData = property;
 
         if (error && !propertyData) {
-          console.error('❌ Erreur chargement:', error);
+          logger.error('❌ Erreur chargement:', error);
           navigate('/404');
           return;
         }
@@ -115,20 +116,20 @@ const ParcelleDetailPage = () => {
               .maybeSingle();
 
             if (ownerError) {
-              console.error('❌ Erreur supabase récupération profil:', ownerError);
+              logger.error('❌ Erreur supabase récupération profil:', ownerError);
             }
 
             if (ownerProfile) {
               propertyData = { ...propertyData, profiles: ownerProfile };
-              console.log('✅ Profil vendeur (service) chargé:', ownerProfile.full_name || ownerProfile.id);
+              logger.debug('✅ Profil vendeur (service) chargé:', ownerProfile.full_name || ownerProfile.id);
             } else {
               // Fallback: use any seller name stored on property (owner_name, seller_name, created_by)
               const fallbackName = propertyData.owner_name || propertyData.seller_name || propertyData.created_by || 'Vendeur';
               propertyData = { ...propertyData, profiles: { id: propertyData.owner_id, full_name: fallbackName, email: propertyData.owner_email || '' } };
-              console.log('ℹ️  Aucun profil dans profiles table, fallback seller name utilisé:', fallbackName);
+              logger.debug('ℹ️  Aucun profil dans profiles table, fallback seller name utilisé:', fallbackName);
             }
           } catch (profileError) {
-            console.error('❌ Erreur récupération profil propriétaire (unexpected):', profileError);
+            logger.error('❌ Erreur récupération profil propriétaire (unexpected):', profileError);
             const fallbackName = propertyData.owner_name || propertyData.seller_name || propertyData.created_by || 'Vendeur';
             propertyData = { ...propertyData, profiles: { id: propertyData.owner_id, full_name: fallbackName, email: propertyData.owner_email || '' } };
           }
@@ -325,9 +326,9 @@ const ParcelleDetailPage = () => {
               .rpc('increment_property_views', { property_id: propertyData.id });
             
             if (error) {
-              console.error('❌ Erreur incrémentation des vues:', error);
+              logger.error('❌ Erreur incrémentation des vues:', error);
             } else {
-              console.log('✅ Vue incrémentée pour la propriété:', propertyData.id);
+              logger.debug('✅ Vue incrémentée pour la propriété:', propertyData.id);
               setViewsIncremented(true);
               
               // Mettre à jour les vues locales
@@ -335,14 +336,14 @@ const ParcelleDetailPage = () => {
               setParcelle(mappedData);
             }
           } catch (error) {
-            console.error('❌ Erreur lors de l\'incrémentation des vues:', error);
+            logger.error('❌ Erreur lors de l\'incrémentation des vues:', error);
           }
         }
 
         setLoading(false);
 
       } catch (error) {
-        console.error('Erreur chargement parcelle:', error);
+        logger.error('Erreur chargement parcelle:', error);
         setLoading(false);
       }
     };
@@ -356,7 +357,7 @@ const ParcelleDetailPage = () => {
   useEffect(() => {
     if (parcelle && user) {
       const isOwner = user.id === parcelle.owner_id;
-      console.log('🔍 DEBUG BOUTON ÉDITER:', {
+      logger.debug('🔍 DEBUG BOUTON ÉDITER:', {
         user_id: user.id,
         parcelle_owner_id: parcelle.owner_id,
         is_owner: isOwner,
@@ -527,7 +528,7 @@ const ParcelleDetailPage = () => {
         toast.success('Ajouté à vos favoris');
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour des favoris:', error);
+      logger.error('❌ Erreur lors de la mise à jour des favoris:', error);
       toast.error('Erreur lors de la mise à jour des favoris');
     }
   };

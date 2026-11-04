@@ -20,6 +20,7 @@ import CRMBuyerIntegrationService from '@/services/CRMBuyerIntegrationService';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Normalize a real crm_contacts row for the (unmodified) CRM widgets.
 // Only real columns exist: id, owner_id, name, email, phone, company,
@@ -156,7 +157,7 @@ const CRMPageNew = () => {
       setSelectedContact(null);
       await fetchAll();
     } catch (err) {
-      console.error('Error saving contact:', err);
+      logger.error('Error saving contact:', err);
       setError(err.message);
     }
   };
@@ -193,7 +194,7 @@ const CRMPageNew = () => {
       setSelectedDeal(null);
       await fetchAll();
     } catch (err) {
-      console.error('Error saving deal:', err);
+      logger.error('Error saving deal:', err);
       setError(err.message);
     }
   };
@@ -210,7 +211,7 @@ const CRMPageNew = () => {
       if (deleteErr) throw deleteErr;
       setContacts((prev) => prev.filter((c) => c.id !== contactId));
     } catch (err) {
-      console.error('Error deleting contact:', err);
+      logger.error('Error deleting contact:', err);
       setError(err.message);
     }
   };
@@ -229,7 +230,7 @@ const CRMPageNew = () => {
         prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d))
       );
     } catch (err) {
-      console.error('Error moving deal:', err);
+      logger.error('Error moving deal:', err);
       setError(err.message);
     }
   };
@@ -246,7 +247,7 @@ const CRMPageNew = () => {
       if (deleteErr) throw deleteErr;
       setDeals((prev) => prev.filter((d) => d.id !== dealId));
     } catch (err) {
-      console.error('Error deleting deal:', err);
+      logger.error('Error deleting deal:', err);
       setError(err.message);
     }
   };
@@ -291,7 +292,7 @@ const CRMPageNew = () => {
       alert(`✅ ${result?.created || 0} acheteur(s) créé(s), ${result?.updated || 0} mis à jour`);
       await fetchAll();
     } catch (error) {
-      console.error('Import error:', error);
+      logger.error('Import error:', error);
       alert('❌ Erreur lors de l\'import: ' + (error.message || 'Unknown error'));
     } finally {
       setImporting(false);

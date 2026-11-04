@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { logger } from '@/lib/logger';
 
 const AgentParcelsPage = () => {
   // toast remplacé par window.safeGlobalToast
@@ -47,7 +48,7 @@ const AgentParcelsPage = () => {
           })));
         }
       } catch (err) {
-        console.error('Erreur chargement parcelles agent:', err.message);
+        logger.error('Erreur chargement parcelles agent:', err.message);
         if (!cancelled) setParcels([]);
       } finally {
         if (!cancelled) setLoading(false);

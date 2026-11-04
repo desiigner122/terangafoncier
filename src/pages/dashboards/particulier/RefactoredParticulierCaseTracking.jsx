@@ -48,6 +48,7 @@ import {
   Zap,
   Scale
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const RefactoredParticulierCaseTracking = () => {
   const { caseNumber } = useParams();
@@ -76,7 +77,7 @@ const RefactoredParticulierCaseTracking = () => {
   const loadAllData = async () => {
     try {
       setLoading(true);
-      console.log('📁 Loading case:', caseNumber);
+      logger.debug('📁 Loading case:', caseNumber);
 
       // Get case
       const { data: cData } = await supabase
@@ -99,9 +100,9 @@ const RefactoredParticulierCaseTracking = () => {
       setTimeline(summary.timeline || []);
       setTotalFees(summary.total_fees || 0);
 
-      console.log('✅ Case data loaded successfully');
+      logger.debug('✅ Case data loaded successfully');
     } catch (error) {
-      console.error('❌ Error loading case:', error);
+      logger.error('❌ Error loading case:', error);
       toast.error('Impossible de charger le dossier');
       navigate(-1);
     } finally {
@@ -115,7 +116,7 @@ const RefactoredParticulierCaseTracking = () => {
     const unsub = RealtimeSyncService.subscribeToCaseUpdates(
       caseNumber,
       () => {
-        console.log('🔄 Case updated, reloading...');
+        logger.debug('🔄 Case updated, reloading...');
         loadAllData();
       }
     );

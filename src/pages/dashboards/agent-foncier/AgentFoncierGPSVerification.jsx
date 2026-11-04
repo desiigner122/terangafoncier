@@ -83,7 +83,7 @@ const AgentFoncierGPSVerification = () => {
           const { data: profs } = await supabase
             .from('profiles')
             .select('id, full_name, first_name, last_name')
-            .in('id', ownerIds);
+            .in('id', ownerIds).limit(500);
           (profs || []).forEach(pr => {
             ownerMap[pr.id] = pr.full_name || [pr.first_name, pr.last_name].filter(Boolean).join(' ') || null;
           });

@@ -3,6 +3,7 @@
 
 import { supabase } from '@/lib/supabaseClient';
 import { localAuth } from './LocalAuthService';
+import { logger } from '@/lib/logger';
 
 class UnifiedAuthService {
   constructor() {
@@ -19,17 +20,17 @@ class UnifiedAuthService {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('Erreur récupération session Supabase:', error);
+        logger.error('Erreur récupération session Supabase:', error);
         return;
       }
       
       if (session) {
         this.session = session;
         this.currentUser = session.user;
-        console.log('✅ Session Supabase restaurée:', session.user.email);
+        logger.debug('✅ Session Supabase restaurée:', session.user.email);
       }
     } catch (error) {
-      console.error('Erreur initialisation auth Supabase:', error);
+      logger.error('Erreur initialisation auth Supabase:', error);
     }
   }
 
@@ -39,7 +40,7 @@ class UnifiedAuthService {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('Erreur getSession:', error);
+        logger.error('Erreur getSession:', error);
         return { data: { session: null }, error };
       }
       
@@ -48,7 +49,7 @@ class UnifiedAuthService {
       
       return { data: { session }, error: null };
     } catch (error) {
-      console.error('Erreur getSession:', error);
+      logger.error('Erreur getSession:', error);
       return { data: { session: null }, error };
     }
   }
@@ -56,7 +57,7 @@ class UnifiedAuthService {
   // Écouter les changements d'état d'authentification
   onAuthStateChange(callback) {
     return supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state change:', event, session?.user?.email);
+      logger.debug('🔄 Auth state change:', event, session?.user?.email);
       
       this.session = session;
       this.currentUser = session?.user || null;
@@ -68,7 +69,7 @@ class UnifiedAuthService {
   // Connexion avec email/password
   async signIn(email, password) {
     try {
-      console.log('🔐 Tentative connexion Supabase:', email);
+      logger.debug('🔐 Tentative connexion Supabase:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -76,11 +77,11 @@ class UnifiedAuthService {
       });
 
       if (error) {
-        console.error('❌ Erreur connexion Supabase:', error);
+        logger.error('❌ Erreur connexion Supabase:', error);
         return { user: null, error };
       }
 
-      console.log('✅ Connexion Supabase réussie:', data.user.email);
+      logger.debug('✅ Connexion Supabase réussie:', data.user.email);
       
       this.session = data.session;
       this.currentUser = data.user;
@@ -91,7 +92,7 @@ class UnifiedAuthService {
         error: null 
       };
     } catch (error) {
-      console.error('❌ Erreur inattendue connexion:', error);
+      logger.error('❌ Erreur inattendue connexion:', error);
       return { user: null, error };
     }
   }
@@ -120,11 +121,11 @@ class UnifiedAuthService {
       });
 
       if (error) {
-        console.error('❌ Erreur inscription Supabase:', error);
+        logger.error('❌ Erreur inscription Supabase:', error);
         return { user: null, error };
       }
 
-      console.log('✅ Inscription Supabase réussie:', data.user?.email);
+      logger.debug('✅ Inscription Supabase réussie:', data.user?.email);
       
       this.session = data.session;
       this.currentUser = data.user;
@@ -135,7 +136,7 @@ class UnifiedAuthService {
         error: null 
       };
     } catch (error) {
-      console.error('❌ Erreur inattendue inscription:', error);
+      logger.error('❌ Erreur inattendue inscription:', error);
       return { user: null, error };
     }
   }
@@ -149,14 +150,14 @@ class UnifiedAuthService {
       this.currentUser = null;
       
       if (error) {
-        console.error('Erreur déconnexion Supabase:', error);
+        logger.error('Erreur déconnexion Supabase:', error);
         return { error };
       }
       
-      console.log('✅ Déconnexion Supabase réussie');
+      logger.debug('✅ Déconnexion Supabase réussie');
       return { error: null };
     } catch (error) {
-      console.error('❌ Erreur inattendue déconnexion:', error);
+      logger.error('❌ Erreur inattendue déconnexion:', error);
       return { error };
     }
   }
@@ -181,7 +182,7 @@ class UnifiedAuthService {
         .eq('id', this.currentUser.id);
 
       if (profileError) {
-        console.error('Erreur mise à jour profil Supabase:', profileError);
+        logger.error('Erreur mise à jour profil Supabase:', profileError);
         return { success: false, error: profileError.message };
       }
 
@@ -191,14 +192,14 @@ class UnifiedAuthService {
       });
 
       if (error) {
-        console.warn('Metadata non synchronisées:', error.message);
+        logger.warn('Metadata non synchronisées:', error.message);
         return { success: true, user: this.currentUser };
       }
 
       this.currentUser = data.user;
       return { success: true, user: data.user };
     } catch (error) {
-      console.error('❌ Erreur inattendue mise à jour profil:', error);
+      logger.error('❌ Erreur inattendue mise à jour profil:', error);
       return { success: false, error: error.message };
     }
   }
@@ -248,7 +249,7 @@ class UnifiedAuthService {
     ].filter(acc => acc.email && acc.password);
 
     if (accounts.length === 0) {
-      console.warn(
+      logger.warn(
         'ℹ️ Aucun compte de test configuré. Définissez VITE_TEST_*_EMAIL / ' +
         'VITE_TEST_*_PASSWORD dans votre .env de développement pour les activer.'
       );
@@ -262,13 +263,13 @@ class UnifiedAuthService {
   // strictement interdit en production — il ne peut être activé qu'en dev.
   setLocalMode(enabled) {
     if (enabled && !import.meta.env.DEV) {
-      console.error('⛔ Mode auth local interdit en production. Ignoré.');
+      logger.error('⛔ Mode auth local interdit en production. Ignoré.');
       this.isLocalMode = false;
       return;
     }
 
     this.isLocalMode = enabled;
-    console.log(`🔄 Mode auth changé: ${enabled ? 'Local (DEV)' : 'Supabase'}`);
+    logger.debug(`🔄 Mode auth changé: ${enabled ? 'Local (DEV)' : 'Supabase'}`);
   }
 
   // Obtenir l'utilisateur actuel

@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurPhotosRealData = () => {
   const { user } = useAuth();
@@ -87,7 +88,7 @@ const VendeurPhotosRealData = () => {
         .from('properties')
         .select('id, title, name')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (propertiesError) throw propertiesError;
       setProperties(propertiesData || []);
@@ -123,7 +124,7 @@ const VendeurPhotosRealData = () => {
       });
 
     } catch (error) {
-      console.error('Erreur chargement données:', error);
+      logger.error('Erreur chargement données:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
@@ -207,7 +208,7 @@ const VendeurPhotosRealData = () => {
       setShowUploadDialog(false);
 
     } catch (error) {
-      console.error('Erreur upload:', error);
+      logger.error('Erreur upload:', error);
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploading(false);
@@ -232,7 +233,7 @@ const VendeurPhotosRealData = () => {
       toast.success('Photo supprimée');
       await loadData();
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -258,7 +259,7 @@ const VendeurPhotosRealData = () => {
       toast.success('Photo principale définie');
       await loadData();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la mise à jour');
     }
   };
@@ -341,7 +342,7 @@ const VendeurPhotosRealData = () => {
 
       toast.success(`Rapport GPS téléchargé (${photosWithGPS.length} photos)`);
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      logger.error('Erreur génération rapport:', error);
       toast.error('Erreur lors de la génération du rapport');
     }
   };

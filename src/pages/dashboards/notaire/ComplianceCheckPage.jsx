@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Shield, CheckCircle, Clock, XCircle, Search, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Page Vérification Conformité (routée)
@@ -57,12 +58,12 @@ const ComplianceCheckPage = () => {
           act:notarial_acts(reference, client_name, act_type)
         `)
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (qError) throw qError;
       setChecks(data || []);
     } catch (err) {
-      console.error('Erreur chargement conformité:', err);
+      logger.error('Erreur chargement conformité:', err);
       setError(err.message || 'Impossible de charger les vérifications de conformité.');
       setChecks([]);
     } finally {

@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import StatsService from '@/services/StatsService';
+import { logger } from '@/lib/logger';
 
 // Libellés / couleurs par type d'investissement réel (investments.type)
 const TYPE_META = {
@@ -54,7 +55,7 @@ const InvestisseurAnalytics = () => {
         setAnalytics(computeAnalytics(investments));
         setMarket(Array.isArray(marketData) ? marketData : []);
       } catch (error) {
-        console.error('Erreur chargement analytics investisseur:', error);
+        logger.error('Erreur chargement analytics investisseur:', error);
         setAnalytics(computeAnalytics([]));
         setMarket([]);
       } finally {

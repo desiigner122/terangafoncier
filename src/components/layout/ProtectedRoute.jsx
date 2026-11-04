@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { logger } from '@/lib/logger';
 
 const ProtectedRoute = ({ children }) => {
   const { user, session, loading, profile } = useAuth();
@@ -38,14 +39,14 @@ export const VerifiedRoute = ({ children }) => {
       return <Navigate to="/login" state={{ from: location }} replace />;
     }
     
-    console.log('🔍 VerifiedRoute DEBUG:');
-    console.log('Profile verification_status:', profile.verification_status);
-    console.log('Profile user_type:', profile.user_type);
-    console.log('Location pathname:', location.pathname);
+    logger.debug('🔍 VerifiedRoute DEBUG:');
+    logger.debug('Profile verification_status:', profile.verification_status);
+    logger.debug('Profile user_type:', profile.user_type);
+    logger.debug('Location pathname:', location.pathname);
     
     // SOLUTION: Permettre l'accès aux vendeurs sans vérification
     if (profile.user_type === 'Vendeur Particulier' && location.pathname.startsWith('/dashboard/vendeur')) {
-        console.log('🔧 SOLUTION: Accès vendeur autorisé sans vérification');
+        logger.debug('🔧 SOLUTION: Accès vendeur autorisé sans vérification');
         return children ? children : <Outlet />;
     }
     
@@ -69,7 +70,7 @@ export const AdminRoute = ({ children }) => {
   const isAdmin = userRole === 'admin' || userRole === 'administrateur';
 
   if (!profile || !isAdmin) {
-    console.error('❌ ACCÈS REFUSÉ: Utilisateur non-admin tenté d\'accéder à', location.pathname);
+    logger.error('❌ ACCÈS REFUSÉ: Utilisateur non-admin tenté d\'accéder à', location.pathname);
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 
@@ -126,7 +127,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
   const normalizedAllowed = allowedRoles.map(r => normalizeRole(r));
 
   if (!normalizedAllowed.includes(currentRole)) {
-    console.log('❌ Role not allowed:', { 
+    logger.debug('❌ Role not allowed:', { 
       originalRole: profile.role || profile.user_type, 
       normalizedCurrent: currentRole, 
       allowedRoles,
@@ -171,7 +172,7 @@ export const BuyerOnlyRoute = ({ children }) => {
   const currentRole = normalizeRole(profile.role || profile.user_type || '');
   const buyerRoles = ['particulier', 'acheteur', 'investisseur', 'promoteur'];
 
-  console.log('🛒 BuyerOnlyRoute CHECK:', { 
+  logger.debug('🛒 BuyerOnlyRoute CHECK:', { 
     role: profile.role, 
     user_type: profile.user_type, 
     currentRole, 
@@ -180,7 +181,7 @@ export const BuyerOnlyRoute = ({ children }) => {
   });
 
   if (!buyerRoles.includes(currentRole)) {
-    console.warn('❌ ACCÈS REFUSÉ: Seuls les acheteurs peuvent acheter des terrains. Rôle:', currentRole);
+    logger.warn('❌ ACCÈS REFUSÉ: Seuls les acheteurs peuvent acheter des terrains. Rôle:', currentRole);
     return (
       <Navigate 
         to="/dashboard" 

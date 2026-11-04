@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class BlogService {
   
@@ -36,7 +37,7 @@ class BlogService {
           created_at,
           updated_at
         `)
-        .order('published_at', { ascending: false });
+        .order('published_at', { ascending: false }).limit(500);
 
       // Filtrer par status.
       // - status absent  => 'published' par défaut (frontend public)
@@ -69,7 +70,7 @@ class BlogService {
 
       return { success: true, posts: data };
     } catch (error) {
-      console.error('Erreur getPosts:', error);
+      logger.error('Erreur getPosts:', error);
       return { success: false, error: error.message };
     }
   }
@@ -92,7 +93,7 @@ class BlogService {
 
       return { success: true, post: data };
     } catch (error) {
-      console.error('Erreur getPostBySlug:', error);
+      logger.error('Erreur getPostBySlug:', error);
       return { success: false, error: error.message };
     }
   }
@@ -114,7 +115,7 @@ class BlogService {
 
       return { success: true, post: data };
     } catch (error) {
-      console.error('Erreur getPostById:', error);
+      logger.error('Erreur getPostById:', error);
       return { success: false, error: error.message };
     }
   }
@@ -156,7 +157,7 @@ class BlogService {
 
       return { success: true, post: data };
     } catch (error) {
-      console.error('Erreur createPost:', error);
+      logger.error('Erreur createPost:', error);
       return { success: false, error: error.message };
     }
   }
@@ -197,7 +198,7 @@ class BlogService {
 
       return { success: true, post: data };
     } catch (error) {
-      console.error('Erreur updatePost:', error);
+      logger.error('Erreur updatePost:', error);
       return { success: false, error: error.message };
     }
   }
@@ -223,7 +224,7 @@ class BlogService {
 
       return { success: true, post: data };
     } catch (error) {
-      console.error('Erreur publishPost:', error);
+      logger.error('Erreur publishPost:', error);
       return { success: false, error: error.message };
     }
   }
@@ -244,7 +245,7 @@ class BlogService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deletePost:', error);
+      logger.error('Erreur deletePost:', error);
       return { success: false, error: error.message };
     }
   }
@@ -271,7 +272,7 @@ class BlogService {
 
       return { success: true, posts: data };
     } catch (error) {
-      console.error('Erreur getSimilarPosts:', error);
+      logger.error('Erreur getSimilarPosts:', error);
       return { success: false, error: error.message };
     }
   }
@@ -285,7 +286,7 @@ class BlogService {
       const { data, error } = await supabase
         .from('blog_posts')
         .select('category')
-        .eq('status', 'published');
+        .eq('status', 'published').limit(500);
 
       if (error) throw error;
 
@@ -294,7 +295,7 @@ class BlogService {
 
       return { success: true, categories: uniqueCategories };
     } catch (error) {
-      console.error('Erreur getCategories:', error);
+      logger.error('Erreur getCategories:', error);
       return { success: false, error: error.message };
     }
   }
@@ -307,7 +308,7 @@ class BlogService {
     try {
       const { data: allPosts, error } = await supabase
         .from('blog_posts')
-        .select('status, category, created_at');
+        .select('status, category, created_at').limit(500);
 
       if (error) throw error;
 
@@ -331,7 +332,7 @@ class BlogService {
 
       return { success: true, stats };
     } catch (error) {
-      console.error('Erreur getStats:', error);
+      logger.error('Erreur getStats:', error);
       return { success: false, error: error.message };
     }
   }

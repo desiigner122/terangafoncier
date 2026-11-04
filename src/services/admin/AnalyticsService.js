@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class AnalyticsService {
   
@@ -52,7 +53,7 @@ class AnalyticsService {
 
       return { success: true, view: data };
     } catch (error) {
-      console.error('Erreur trackPageView:', error);
+      logger.error('Erreur trackPageView:', error);
       return { success: false, error: error.message };
     }
   }
@@ -79,7 +80,7 @@ class AnalyticsService {
       sessionStorage.removeItem('current_page_view_id');
       sessionStorage.removeItem('page_view_start_time');
     } catch (error) {
-      console.error('Erreur updatePageViewDuration:', error);
+      logger.error('Erreur updatePageViewDuration:', error);
     }
   }
 
@@ -93,7 +94,7 @@ class AnalyticsService {
       let query = supabase
         .from('page_views')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (filters.page) {
         query = query.eq('page', filters.page);
@@ -125,7 +126,7 @@ class AnalyticsService {
 
       return { success: true, views: data };
     } catch (error) {
-      console.error('Erreur getPageViews:', error);
+      logger.error('Erreur getPageViews:', error);
       return { success: false, error: error.message };
     }
   }
@@ -154,7 +155,7 @@ class AnalyticsService {
       const { data: sessions, error: sessionsError } = await supabase
         .from('page_views')
         .select('session_id')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (sessionsError) throw sessionsError;
 
@@ -164,7 +165,7 @@ class AnalyticsService {
       const { data: topPages, error: topPagesError } = await supabase
         .from('page_views')
         .select('page')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (topPagesError) throw topPagesError;
 
@@ -174,7 +175,7 @@ class AnalyticsService {
       const { data: sources, error: sourcesError } = await supabase
         .from('page_views')
         .select('referrer, utm_source, utm_medium')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (sourcesError) throw sourcesError;
 
@@ -184,7 +185,7 @@ class AnalyticsService {
       const { data: devices, error: devicesError } = await supabase
         .from('page_views')
         .select('device_type')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (devicesError) throw devicesError;
 
@@ -195,7 +196,7 @@ class AnalyticsService {
         .from('page_views')
         .select('duration_seconds')
         .gte('created_at', dateFrom)
-        .gt('duration_seconds', 0);
+        .gt('duration_seconds', 0).limit(500);
 
       if (durationsError) throw durationsError;
 
@@ -216,7 +217,7 @@ class AnalyticsService {
         }
       };
     } catch (error) {
-      console.error('Erreur getGlobalAnalytics:', error);
+      logger.error('Erreur getGlobalAnalytics:', error);
       return { success: false, error: error.message };
     }
   }
@@ -245,7 +246,7 @@ class AnalyticsService {
         .from('page_views')
         .select('session_id')
         .eq('page', page)
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (sessionsError) throw sessionsError;
 
@@ -257,7 +258,7 @@ class AnalyticsService {
         .select('duration_seconds')
         .eq('page', page)
         .gte('created_at', dateFrom)
-        .gt('duration_seconds', 0);
+        .gt('duration_seconds', 0).limit(500);
 
       if (durationsError) throw durationsError;
 
@@ -279,7 +280,7 @@ class AnalyticsService {
         }
       };
     } catch (error) {
-      console.error('Erreur getPageAnalytics:', error);
+      logger.error('Erreur getPageAnalytics:', error);
       return { success: false, error: error.message };
     }
   }
@@ -305,7 +306,7 @@ class AnalyticsService {
       const { data: leadsBySource, error: sourcesError } = await supabase
         .from('marketing_leads')
         .select('source')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (sourcesError) throw sourcesError;
 
@@ -315,7 +316,7 @@ class AnalyticsService {
       const { data: sessions, error: sessionsError } = await supabase
         .from('page_views')
         .select('session_id')
-        .gte('created_at', dateFrom);
+        .gte('created_at', dateFrom).limit(500);
 
       if (sessionsError) throw sessionsError;
 
@@ -335,7 +336,7 @@ class AnalyticsService {
         }
       };
     } catch (error) {
-      console.error('Erreur getConversionAnalytics:', error);
+      logger.error('Erreur getConversionAnalytics:', error);
       return { success: false, error: error.message };
     }
   }

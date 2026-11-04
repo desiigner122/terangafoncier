@@ -12,6 +12,7 @@ import { fr } from 'date-fns/locale';
 // ...existing code...
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 const getActionBadge = (action) => {
@@ -52,10 +53,10 @@ const AdminAuditLogPage = () => {
         const { data, error } = await supabase
             .from('audit_logs')
             .select('*, actor:actor_id(full_name)')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }).limit(500);
         
         if (error) {
-            console.error("Error fetching audit logs:", error);
+            logger.error("Error fetching audit logs:", error);
             window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger le journal d\'audit.', variant: 'destructive' });
         } else {
             setLogs(data.map(log => ({

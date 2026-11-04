@@ -3,6 +3,7 @@ import { Bell, X, AlertCircle, CheckCircle, Info, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const NotificationContext = createContext();
 
@@ -35,7 +36,7 @@ export const NotificationProvider = ({ children }) => {
       )
     );
     supabase.from('notifications').update({ read: true }).eq('id', id).then(({ error }) => {
-      if (error) console.error('Erreur markAsRead:', error);
+      if (error) logger.error('Erreur markAsRead:', error);
     });
   };
 
@@ -46,7 +47,7 @@ export const NotificationProvider = ({ children }) => {
     );
     if (unreadIds.length > 0) {
       supabase.from('notifications').update({ read: true }).in('id', unreadIds).then(({ error }) => {
-        if (error) console.error('Erreur markAllAsRead:', error);
+        if (error) logger.error('Erreur markAllAsRead:', error);
       });
     }
   };
@@ -54,7 +55,7 @@ export const NotificationProvider = ({ children }) => {
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
     supabase.from('notifications').delete().eq('id', id).then(({ error }) => {
-      if (error) console.error('Erreur removeNotification:', error);
+      if (error) logger.error('Erreur removeNotification:', error);
     });
   };
 
@@ -79,7 +80,7 @@ export const NotificationProvider = ({ children }) => {
         .limit(50);
       if (!active) return;
       if (error) {
-        console.error('Erreur chargement notifications:', error);
+        logger.error('Erreur chargement notifications:', error);
         return;
       }
       setNotifications((data || []).map(n => ({

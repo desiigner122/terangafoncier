@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export class RealtimeSyncService {
   static subscriptions = [];
@@ -20,12 +21,12 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToPurchaseCaseUpdates(requestId, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux purchase_case changes pour request: ${requestId}`);
+    logger.debug(`🔄 [REALTIME] Subscribe aux purchase_case changes pour request: ${requestId}`);
 
     const subscription = supabase
       .from('purchase_cases')
       .on('*', (payload) => {
-        console.log('📨 [REALTIME] Purchase case update:', payload);
+        logger.debug('📨 [REALTIME] Purchase case update:', payload);
         
         // Vérifier que c'est la bonne request
         if (payload.new?.request_id === requestId || payload.old?.request_id === requestId) {
@@ -38,7 +39,7 @@ export class RealtimeSyncService {
 
     // Retourner une fonction pour unsubscribe
     return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe purchase_cases pour request: ${requestId}`);
+      logger.debug(`🔴 [REALTIME] Unsubscribe purchase_cases pour request: ${requestId}`);
       supabase.removeSubscription(subscription);
       this.subscriptions = this.subscriptions.filter(s => s !== subscription);
     };
@@ -53,12 +54,12 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToTransactionUpdates(transactionIds, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux transaction changes:`, transactionIds);
+    logger.debug(`🔄 [REALTIME] Subscribe aux transaction changes:`, transactionIds);
 
     const subscription = supabase
       .from('transactions')
       .on('*', (payload) => {
-        console.log('📨 [REALTIME] Transaction update:', payload);
+        logger.debug('📨 [REALTIME] Transaction update:', payload);
         
         // Vérifier que c'est une des transactions suivies
         if (
@@ -73,7 +74,7 @@ export class RealtimeSyncService {
     this.subscriptions.push(subscription);
 
     return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe transactions`);
+      logger.debug(`🔴 [REALTIME] Unsubscribe transactions`);
       supabase.removeSubscription(subscription);
       this.subscriptions = this.subscriptions.filter(s => s !== subscription);
     };
@@ -88,12 +89,12 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToNotifications(userId, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux notifications pour user: ${userId}`);
+    logger.debug(`🔄 [REALTIME] Subscribe aux notifications pour user: ${userId}`);
 
     const subscription = supabase
       .from(`notifications:user_id=eq.${userId}`)
       .on('INSERT', (payload) => {
-        console.log('📨 [REALTIME] Nouvelle notification:', payload);
+        logger.debug('📨 [REALTIME] Nouvelle notification:', payload);
         callback(payload);
       })
       .subscribe();
@@ -101,7 +102,7 @@ export class RealtimeSyncService {
     this.subscriptions.push(subscription);
 
     return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe notifications`);
+      logger.debug(`🔴 [REALTIME] Unsubscribe notifications`);
       supabase.removeSubscription(subscription);
       this.subscriptions = this.subscriptions.filter(s => s !== subscription);
     };
@@ -116,12 +117,12 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToMessages(conversationId, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux messages pour conversation: ${conversationId}`);
+    logger.debug(`🔄 [REALTIME] Subscribe aux messages pour conversation: ${conversationId}`);
 
     const subscription = supabase
       .from(`messages:conversation_id=eq.${conversationId}`)
       .on('INSERT', (payload) => {
-        console.log('📨 [REALTIME] Nouveau message:', payload);
+        logger.debug('📨 [REALTIME] Nouveau message:', payload);
         callback(payload);
       })
       .subscribe();
@@ -129,7 +130,7 @@ export class RealtimeSyncService {
     this.subscriptions.push(subscription);
 
     return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe messages`);
+      logger.debug(`🔴 [REALTIME] Unsubscribe messages`);
       supabase.removeSubscription(subscription);
       this.subscriptions = this.subscriptions.filter(s => s !== subscription);
     };
@@ -140,12 +141,12 @@ export class RealtimeSyncService {
    * À appeler lors du unmount d'un composant
    */
   static unsubscribeAll() {
-    console.log(`🔴 [REALTIME] Unsubscribing from all ${this.subscriptions.length} subscriptions`);
+    logger.debug(`🔴 [REALTIME] Unsubscribing from all ${this.subscriptions.length} subscriptions`);
     this.subscriptions.forEach(sub => {
       try {
         supabase.removeSubscription(sub);
       } catch (error) {
-        console.warn('⚠️ Erreur unsubscribe:', error);
+        logger.warn('⚠️ Erreur unsubscribe:', error);
       }
     });
     this.subscriptions = [];
@@ -160,7 +161,7 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToVendorRequests(parcelIds, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux demandes vendeur:`, parcelIds);
+    logger.debug(`🔄 [REALTIME] Subscribe aux demandes vendeur:`, parcelIds);
 
     try {
       const subscription = supabase
@@ -177,7 +178,7 @@ export class RealtimeSyncService {
             if (parcelIds.length === 0 || 
                 parcelIds.includes(payload.new?.parcel_id) || 
                 parcelIds.includes(payload.old?.parcel_id)) {
-              console.log('📨 [REALTIME] Vendor request update:', payload);
+              logger.debug('📨 [REALTIME] Vendor request update:', payload);
               callback(payload);
             }
           }
@@ -188,16 +189,16 @@ export class RealtimeSyncService {
 
       return async () => {
         try {
-          console.log(`🔴 [REALTIME] Unsubscribe vendor requests`);
+          logger.debug(`🔴 [REALTIME] Unsubscribe vendor requests`);
           await supabase.channel('vendor-requests').unsubscribe();
           this.subscriptions = this.subscriptions.filter(s => s !== subscription);
-          console.log(`✅ [REALTIME] Vendor unsubscribe successful`);
+          logger.debug(`✅ [REALTIME] Vendor unsubscribe successful`);
         } catch (err) {
-          console.log(`⚠️ [REALTIME] Vendor unsubscribe error (acceptable):`, err.message);
+          logger.debug(`⚠️ [REALTIME] Vendor unsubscribe error (acceptable):`, err.message);
         }
       };
     } catch (error) {
-      console.error('❌ [REALTIME] Error subscribing to vendor requests:', error);
+      logger.error('❌ [REALTIME] Error subscribing to vendor requests:', error);
       return () => {};
     }
   }
@@ -211,7 +212,7 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToBuyerRequests(buyerId, callback) {
-    console.log(`� [REALTIME] Creating subscription for buyer: ${buyerId}`);
+    logger.debug(`� [REALTIME] Creating subscription for buyer: ${buyerId}`);
 
     try {
       const subscription = supabase
@@ -224,33 +225,33 @@ export class RealtimeSyncService {
             table: 'purchase_cases'
           },
           (payload) => {
-            console.log('� [REALTIME] CALLBACK TRIGGERED!');
-            console.log('   Event type:', payload.eventType);
-            console.log('   New data:', payload.new);
-            console.log('   Old data:', payload.old);
-            console.log('   🔄 Calling callback to reload...');
+            logger.debug('� [REALTIME] CALLBACK TRIGGERED!');
+            logger.debug('   Event type:', payload.eventType);
+            logger.debug('   New data:', payload.new);
+            logger.debug('   Old data:', payload.old);
+            logger.debug('   🔄 Calling callback to reload...');
             callback(payload);
           }
         )
         .subscribe((status) => {
-          console.log(`🟢 [REALTIME] Subscription status: ${status}`);
+          logger.debug(`🟢 [REALTIME] Subscription status: ${status}`);
         });
 
       this.subscriptions.push(subscription);
-      console.log(`🟢 [REALTIME] Subscription established successfully`);
+      logger.debug(`🟢 [REALTIME] Subscription established successfully`);
 
       return async () => {
         try {
-          console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
+          logger.debug(`🔴 [REALTIME] Unsubscribe buyer requests`);
           await supabase.channel(`buyer-requests-${buyerId}`).unsubscribe();
           this.subscriptions = this.subscriptions.filter(s => s !== subscription);
-          console.log(`✅ [REALTIME] Unsubscribe successful`);
+          logger.debug(`✅ [REALTIME] Unsubscribe successful`);
         } catch (err) {
-          console.log(`⚠️ [REALTIME] Unsubscribe error (acceptable):`, err.message);
+          logger.debug(`⚠️ [REALTIME] Unsubscribe error (acceptable):`, err.message);
         }
       };
     } catch (error) {
-      console.error('🔴 [REALTIME] Error subscribing to buyer requests:', error);
+      logger.error('🔴 [REALTIME] Error subscribing to buyer requests:', error);
       return () => {}; // Return empty cleanup function
     }
   }

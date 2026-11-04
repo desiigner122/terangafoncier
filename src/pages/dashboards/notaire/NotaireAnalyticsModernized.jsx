@@ -34,6 +34,7 @@ import {
 	TableHeader,
 	TableRow
 } from '@/components/ui/table';
+import { logger } from '@/lib/logger';
 
 const periodOptions = [
 	{ value: 'monthly', label: 'Mensuel' },
@@ -95,12 +96,12 @@ const NotaireAnalyticsModernized = () => {
 					.from('notarial_acts')
 					.select('id, act_type, status, notary_fees, amount, client_id, client_satisfaction, signed_at, created_at')
 					.eq('notaire_id', user.id)
-					.order('created_at', { ascending: false }),
+					.order('created_at', { ascending: false }).limit(500),
 				supabase
 					.from('compliance_checks')
 					.select('id, check_type, compliance_score, status, act_id, created_at')
 					.eq('notaire_id', user.id)
-					.order('created_at', { ascending: false }),
+					.order('created_at', { ascending: false }).limit(500),
 				supabase
 					.from('document_authentication')
 					.select('id', { count: 'exact', head: true })
@@ -125,7 +126,7 @@ const NotaireAnalyticsModernized = () => {
 				aiQueries: aiResult.error ? 0 : aiResult.count || 0
 			});
 		} catch (error) {
-			console.error('Erreur chargement analytics notaire:', error);
+			logger.error('Erreur chargement analytics notaire:', error);
 			window.safeGlobalToast?.({
 				title: 'Erreur de chargement',
 				description: "Impossible d'actualiser les métriques analytiques.",

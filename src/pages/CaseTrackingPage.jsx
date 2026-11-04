@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import BlockchainVerification from '@/components/blockchain/BlockchainVerification';
+import { logger } from '@/lib/logger';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR', {
   year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -123,7 +124,7 @@ const CaseTrackingPage = () => {
           });
         }
       } catch (err) {
-        console.error('Erreur lors du chargement du dossier:', err);
+        logger.error('Erreur lors du chargement du dossier:', err);
         setPurchaseCase(null);
       } finally {
         setLoading(false);

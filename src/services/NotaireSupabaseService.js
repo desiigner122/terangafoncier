@@ -1,4 +1,5 @@
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Empreinte SHA-256 (hex) calculée côté client — un vrai hash, pas une valeur inventée.
 async function sha256Hex(input) {
@@ -50,13 +51,13 @@ export class NotaireSupabaseService {
         .eq('participants.user_id', notaireId)
         .eq('participants.role', 'notary')
         .eq('participants.status', 'active')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       
       if (error) throw error;
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getAssignedCases:', error);
+      logger.error('Erreur getAssignedCases:', error);
       return { success: false, error: error.message };
     }
   }
@@ -70,7 +71,7 @@ export class NotaireSupabaseService {
       const { data: acts, error: actsError } = await supabase
         .from('notarial_acts')
         .select('status, notary_fees, client_satisfaction, created_at, actual_duration_days')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (actsError) throw actsError;
 
@@ -90,7 +91,7 @@ export class NotaireSupabaseService {
         .from('document_authentication')
         .select('id')
         .eq('notaire_id', notaireId)
-        .eq('verification_status', 'verified');
+        .eq('verification_status', 'verified').limit(500);
 
       // Satisfaction client moyenne
       const satisfactionScores = acts?.filter(act => act.client_satisfaction).map(act => act.client_satisfaction) || [];
@@ -103,7 +104,7 @@ export class NotaireSupabaseService {
         .from('compliance_checks')
         .select('compliance_score')
         .eq('notaire_id', notaireId)
-        .eq('check_status', 'completed');
+        .eq('check_status', 'completed').limit(500);
 
       const avgCompliance = complianceData?.length > 0
         ? complianceData.reduce((sum, check) => sum + (check.compliance_score || 0), 0) / complianceData.length
@@ -119,14 +120,14 @@ export class NotaireSupabaseService {
       const { data: clients } = await supabase
         .from('clients_notaire')
         .select('id')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       // Communications non lues
       const { data: communications } = await supabase
         .from('tripartite_communications')
         .select('id, status')
         .eq('notaire_id', notaireId)
-        .in('status', ['active', 'pending']);
+        .in('status', ['active', 'pending']).limit(500);
 
       // Tickets en attente (vérifier si la table existe)
       let pendingTickets = 0;
@@ -135,11 +136,11 @@ export class NotaireSupabaseService {
           .from('support_tickets')
           .select('id')
           .eq('user_id', notaireId)
-          .in('status', ['open', 'in_progress']);
+          .in('status', ['open', 'in_progress']).limit(500);
         pendingTickets = tickets?.length || 0;
       } catch (ticketsError) {
         // Table support_tickets n'existe pas encore
-        console.log('Table support_tickets non disponible');
+        logger.debug('Table support_tickets non disponible');
       }
 
       return {
@@ -160,7 +161,7 @@ export class NotaireSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur récupération stats dashboard:', error);
+      logger.error('Erreur récupération stats dashboard:', error);
       return { success: false, error: error.message };
     }
   }
@@ -178,7 +179,7 @@ export class NotaireSupabaseService {
         .select('created_at, notary_fees, status')
         .eq('notaire_id', notaireId)
         .gte('created_at', monthsAgo.toISOString())
-        .eq('status', 'completed');
+        .eq('status', 'completed').limit(500);
 
       if (error) throw error;
 
@@ -206,7 +207,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: sortedData };
     } catch (error) {
-      console.error('Erreur récupération données revenus:', error);
+      logger.error('Erreur récupération données revenus:', error);
       return { success: false, error: error.message };
     }
   }
@@ -238,7 +239,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: acts || [] };
     } catch (error) {
-      console.error('Erreur récupération actes récents:', error);
+      logger.error('Erreur récupération actes récents:', error);
       return { success: false, error: error.message };
     }
   }
@@ -251,7 +252,7 @@ export class NotaireSupabaseService {
       const { data: acts, error } = await supabase
         .from('notarial_acts')
         .select('act_type')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (error) throw error;
 
@@ -284,7 +285,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: distribution };
     } catch (error) {
-      console.error('Erreur récupération distribution types:', error);
+      logger.error('Erreur récupération distribution types:', error);
       return { success: false, error: error.message };
     }
   }
@@ -313,7 +314,7 @@ export class NotaireSupabaseService {
           estimated_completion,
           blockchain_verified
         `)
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       // Appliquer les filtres
       if (filters.status && filters.status !== 'all') {
@@ -334,7 +335,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération transactions:', error);
+      logger.error('Erreur récupération transactions:', error);
       return { success: false, error: error.message };
     }
   }
@@ -366,7 +367,7 @@ export class NotaireSupabaseService {
           documents_count,
           completed_documents
         `)
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (filters.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
@@ -382,7 +383,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération dossiers:', error);
+      logger.error('Erreur récupération dossiers:', error);
       return { success: false, error: error.message };
     }
   }
@@ -415,7 +416,7 @@ export class NotaireSupabaseService {
           supabase
             .from('notarial_acts')
             .select('id')
-            .eq('notaire_id', notaireId)
+            .eq('notaire_id', notaireId).limit(500)
         );
       }
 
@@ -425,7 +426,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération documents:', error);
+      logger.error('Erreur récupération documents:', error);
       return { success: false, error: error.message };
     }
   }
@@ -454,13 +455,13 @@ export class NotaireSupabaseService {
           client:profiles(first_name, last_name, email)
         `)
         .eq('notaire_id', notaireId)
-        .order('last_contact', { ascending: false });
+        .order('last_contact', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération clients CRM:', error);
+      logger.error('Erreur récupération clients CRM:', error);
       return { success: false, error: error.message };
     }
   }
@@ -475,13 +476,13 @@ export class NotaireSupabaseService {
         .select('*')
         .eq('notaire_id', notaireId)
         .eq('active', true)
-        .order('partnership_start', { ascending: false });
+        .order('partnership_start', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération partenaires bancaires:', error);
+      logger.error('Erreur récupération partenaires bancaires:', error);
       return { success: false, error: error.message };
     }
   }
@@ -512,7 +513,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération vérifications conformité:', error);
+      logger.error('Erreur récupération vérifications conformité:', error);
       return { success: false, error: error.message };
     }
   }
@@ -534,7 +535,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération analytics:', error);
+      logger.error('Erreur récupération analytics:', error);
       return { success: false, error: error.message };
     }
   }
@@ -582,7 +583,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur récupération paramètres notaire:', error);
+      logger.error('Erreur récupération paramètres notaire:', error);
       return { success: false, error: error.message };
     }
   }
@@ -606,7 +607,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur mise à jour paramètres:', error);
+      logger.error('Erreur mise à jour paramètres:', error);
       return { success: false, error: error.message };
     }
   }
@@ -619,7 +620,7 @@ export class NotaireSupabaseService {
       let query = supabase
         .from('archived_acts')
         .select('*')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (filters.year) {
         query = query.eq('archive_year', filters.year);
@@ -639,7 +640,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération archives:', error);
+      logger.error('Erreur récupération archives:', error);
       return { success: false, error: error.message };
     }
   }
@@ -663,7 +664,7 @@ export class NotaireSupabaseService {
           sender:profiles(first_name, last_name, email),
           case:notarial_cases(title, buyer_name, seller_name)
         `)
-        .or(`sender_id.eq.${notaireId},recipients.cs.{"id":"${notaireId}"}`);
+        .or(`sender_id.eq.${notaireId},recipients.cs.{"id":"${notaireId}"}`).limit(500);
 
       if (caseId) {
         query = query.eq('case_id', caseId);
@@ -675,7 +676,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération communications:', error);
+      logger.error('Erreur récupération communications:', error);
       return { success: false, error: error.message };
     }
   }
@@ -689,7 +690,7 @@ export class NotaireSupabaseService {
       const { data: clients, error: clientsError } = await supabase
         .from('clients_notaire')
         .select('total_acts, active_acts, completed_acts, total_revenue, client_status')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (clientsError) throw clientsError;
 
@@ -697,7 +698,7 @@ export class NotaireSupabaseService {
       const { data: partners, error: partnersError } = await supabase
         .from('banking_partners')
         .select('active, total_referrals, successful_loans')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (partnersError) throw partnersError;
 
@@ -722,7 +723,7 @@ export class NotaireSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur récupération stats CRM:', error);
+      logger.error('Erreur récupération stats CRM:', error);
       return { success: false, error: error.message };
     }
   }
@@ -751,7 +752,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       return { success: false, error: error.message };
     }
   }
@@ -771,13 +772,13 @@ export class NotaireSupabaseService {
           )
         `)
         .eq('notaire_id', notaireId)
-        .order('authenticated_at', { ascending: false });
+        .order('authenticated_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur récupération authentifications:', error);
+      logger.error('Erreur récupération authentifications:', error);
       return { success: false, error: error.message };
     }
   }
@@ -809,7 +810,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur authentification document:', error);
+      logger.error('Erreur authentification document:', error);
       return { success: false, error: error.message };
     }
   }
@@ -819,7 +820,7 @@ export class NotaireSupabaseService {
       const { data: authentications, error } = await supabase
         .from('document_authentication')
         .select('verification_status, total_cost')
-        .eq('notaire_id', notaireId);
+        .eq('notaire_id', notaireId).limit(500);
 
       if (error) throw error;
 
@@ -840,7 +841,7 @@ export class NotaireSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur récupération stats authentification:', error);
+      logger.error('Erreur récupération stats authentification:', error);
       return { success: false, error: error.message };
     }
   }
@@ -883,7 +884,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur création dossier:', error);
+      logger.error('Erreur création dossier:', error);
       return { success: false, error: error.message };
     }
   }
@@ -919,7 +920,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur mise à jour statut:', error);
+      logger.error('Erreur mise à jour statut:', error);
       return { success: false, error: error.message };
     }
   }
@@ -944,7 +945,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur archivage dossier:', error);
+      logger.error('Erreur archivage dossier:', error);
       return { success: false, error: error.message };
     }
   }
@@ -971,7 +972,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur création client:', error);
+      logger.error('Erreur création client:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1028,7 +1029,7 @@ export class NotaireSupabaseService {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur création acte notarié:', error);
+      logger.error('Erreur création acte notarié:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1061,7 +1062,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getSupportTickets:', error);
+      logger.error('Erreur getSupportTickets:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1084,7 +1085,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createSupportTicket:', error);
+      logger.error('Erreur createSupportTicket:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1106,7 +1107,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur respondToTicket:', error);
+      logger.error('Erreur respondToTicket:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1120,12 +1121,12 @@ export class NotaireSupabaseService {
         .from('subscription_plans')
         .select('*')
         .eq('status', 'active')
-        .order('price', { ascending: true, nullsFirst: false });
+        .order('price', { ascending: true, nullsFirst: false }).limit(500);
 
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getSubscriptionPlans:', error);
+      logger.error('Erreur getSubscriptionPlans:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1142,7 +1143,7 @@ export class NotaireSupabaseService {
       if (error && error.code !== 'PGRST116') throw error;
       return { success: true, data: data || null };
     } catch (error) {
-      console.error('Erreur getUserSubscription:', error);
+      logger.error('Erreur getUserSubscription:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1159,7 +1160,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getInvoices:', error);
+      logger.error('Erreur getInvoices:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1173,7 +1174,7 @@ export class NotaireSupabaseService {
         .from('notifications')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       
       if (filters.is_read !== undefined) query = query.eq('is_read', filters.is_read);
       if (filters.category) query = query.eq('category', filters.category);
@@ -1184,7 +1185,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getNotifications:', error);
+      logger.error('Erreur getNotifications:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1209,7 +1210,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createNotification:', error);
+      logger.error('Erreur createNotification:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1226,7 +1227,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur markNotificationAsRead:', error);
+      logger.error('Erreur markNotificationAsRead:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1240,7 +1241,7 @@ export class NotaireSupabaseService {
         .from('video_meetings')
         .select('*')
         .eq('notaire_id', notaireId)
-        .order('scheduled_at', { ascending: true });
+        .order('scheduled_at', { ascending: true }).limit(500);
       
       if (filters.status) query = query.eq('status', filters.status);
       if (filters.upcoming) query = query.gte('scheduled_at', new Date().toISOString());
@@ -1250,7 +1251,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getVideoMeetings:', error);
+      logger.error('Erreur getVideoMeetings:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1278,7 +1279,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('Erreur createVideoMeeting:', error);
+      logger.error('Erreur createVideoMeeting:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1292,7 +1293,7 @@ export class NotaireSupabaseService {
         .from('elearning_courses')
         .select('*')
         .eq('is_published', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       
       if (filters.category) query = query.eq('category', filters.category);
       
@@ -1301,7 +1302,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getELearningCourses:', error);
+      logger.error('Erreur getELearningCourses:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1312,12 +1313,12 @@ export class NotaireSupabaseService {
         .from('course_enrollments')
         .select(`*, course:elearning_courses(*)`)
         .eq('user_id', userId)
-        .order('enrolled_at', { ascending: false });
+        .order('enrolled_at', { ascending: false }).limit(500);
       
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getUserEnrollments:', error);
+      logger.error('Erreur getUserEnrollments:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1331,7 +1332,7 @@ export class NotaireSupabaseService {
         .from('marketplace_products')
         .select('*')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       
       if (filters.category) query = query.eq('category', filters.category);
       
@@ -1340,7 +1341,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getMarketplaceProducts:', error);
+      logger.error('Erreur getMarketplaceProducts:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1360,7 +1361,7 @@ export class NotaireSupabaseService {
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getCadastralSearchHistory:', error);
+      logger.error('Erreur getCadastralSearchHistory:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1374,12 +1375,12 @@ export class NotaireSupabaseService {
         .from('notaire_offices')
         .select('*')
         .eq('notaire_id', notaireId)
-        .order('is_primary', { ascending: false });
+        .order('is_primary', { ascending: false }).limit(500);
       
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getNotaireOffices:', error);
+      logger.error('Erreur getNotaireOffices:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1393,7 +1394,7 @@ export class NotaireSupabaseService {
         .from('help_articles')
         .select('*')
         .eq('is_published', true)
-        .order('order_index', { ascending: true });
+        .order('order_index', { ascending: true }).limit(500);
       
       if (category) query = query.eq('category', category);
       
@@ -1402,7 +1403,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getHelpArticles:', error);
+      logger.error('Erreur getHelpArticles:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1413,7 +1414,7 @@ export class NotaireSupabaseService {
         .from('faq_items')
         .select('*')
         .eq('is_published', true)
-        .order('order_index', { ascending: true });
+        .order('order_index', { ascending: true }).limit(500);
       
       if (category) query = query.eq('category', category);
       
@@ -1422,7 +1423,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getFAQItems:', error);
+      logger.error('Erreur getFAQItems:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1436,7 +1437,7 @@ export class NotaireSupabaseService {
         .from('financial_transactions')
         .select('*')
         .eq('notaire_id', notaireId)
-        .order('transaction_date', { ascending: false });
+        .order('transaction_date', { ascending: false }).limit(500);
       
       if (filters.type) query = query.eq('transaction_type', filters.type);
       if (filters.start_date) query = query.gte('transaction_date', filters.start_date);
@@ -1447,7 +1448,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getFinancialTransactions:', error);
+      logger.error('Erreur getFinancialTransactions:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1466,7 +1467,7 @@ export class NotaireSupabaseService {
         .select('*')
         .eq('notaire_id', notaireId)
         .eq('status', 'archived')
-        .order('archived_at', { ascending: false });
+        .order('archived_at', { ascending: false }).limit(500);
       
       if (filters.year) query = query.gte('archived_at', `${filters.year}-01-01`).lte('archived_at', `${filters.year}-12-31`);
       if (filters.type) query = query.eq('act_type', filters.type);
@@ -1479,7 +1480,7 @@ export class NotaireSupabaseService {
       
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Erreur getArchivedActs:', error);
+      logger.error('Erreur getArchivedActs:', error);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -1504,7 +1505,7 @@ export class NotaireSupabaseService {
         .from('notaire_certifications')
         .select('*')
         .eq('notaire_id', notaireId)
-        .eq('status', 'active');
+        .eq('status', 'active').limit(500);
       
       if (certsError) throw certsError;
 
@@ -1537,7 +1538,7 @@ export class NotaireSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur getComplianceData:', error);
+      logger.error('Erreur getComplianceData:', error);
       return { success: false, error: error.message, data: null };
     }
   }
@@ -1563,7 +1564,7 @@ export class NotaireSupabaseService {
         .select('*')
         .eq('notaire_id', notaireId)
         .not('blockchain_hash', 'is', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       
       if (docsError) throw docsError;
 
@@ -1599,7 +1600,7 @@ export class NotaireSupabaseService {
         }
       };
     } catch (error) {
-      console.error('Erreur getBlockchainData:', error);
+      logger.error('Erreur getBlockchainData:', error);
       return { success: false, error: error.message, data: null };
     }
   }

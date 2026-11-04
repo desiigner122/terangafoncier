@@ -22,6 +22,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/supabaseClient';
 import terangaBlockchain, { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const MyRequestsPage = () => {
     const { user } = useAuth();
@@ -42,16 +43,16 @@ const MyRequestsPage = () => {
             const { data: sent, error: sentError } = await supabase
                 .from('requests')
                 .select('*, parcels(name, zone), users!requests_recipient_id_fkey(full_name)')
-                .eq('user_id', user.id);
-            if (sentError) console.error("Error fetching sent requests:", sentError);
+                .eq('user_id', user.id).limit(500);
+            if (sentError) logger.error("Error fetching sent requests:", sentError);
             else setMySentRequests(sent);
             
             // Requests received by me (as a seller)
             const { data: received, error: receivedError } = await supabase
                 .from('requests')
                 .select('*, parcels(name), users!requests_user_id_fkey(full_name)')
-                .eq('recipient_id', user.id);
-            if (receivedError) console.error("Error fetching received requests:", receivedError);
+                .eq('recipient_id', user.id).limit(500);
+            if (receivedError) logger.error("Error fetching received requests:", receivedError);
             else setMyReceivedRequests(received);
             
             setLoading(false);

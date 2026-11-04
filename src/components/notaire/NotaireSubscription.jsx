@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/config/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * NotaireSubscription - Gestion des abonnements pour notaires
@@ -122,13 +123,13 @@ export default function NotaireSubscription() {
         .from('invoices')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (!invoicesError) {
         setInvoices(invoicesData || []);
       }
     } catch (error) {
-      console.error('Erreur chargement abonnement:', error);
+      logger.error('Erreur chargement abonnement:', error);
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +161,7 @@ export default function NotaireSubscription() {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur changement plan:', error);
+      logger.error('Erreur changement plan:', error);
       window.safeGlobalToast?.({
         title: "Erreur",
         description: "Impossible de changer de plan",
@@ -191,7 +192,7 @@ export default function NotaireSubscription() {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur annulation:', error);
+      logger.error('Erreur annulation:', error);
     }
   };
 

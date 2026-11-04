@@ -31,6 +31,7 @@ import {
   TrendingUp,
   Wallet
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurChantiers = () => {
   const { user } = useAuth();
@@ -78,13 +79,13 @@ const PromoteurChantiers = () => {
           .from('developer_projects')
           .select('*')
           .eq('developer_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         // Ventes du promoteur (pour compter les lots vendus par projet)
         const { data: sales } = await supabase
           .from('project_sales')
           .select('project_id, status')
-          .eq('promoteur_id', user.id);
+          .eq('promoteur_id', user.id).limit(500);
 
         // Demandes de construction associées au promoteur
         const { count: reqCount } = await supabase
@@ -135,7 +136,7 @@ const PromoteurChantiers = () => {
           delayed: delayedCount
         });
       } catch (err) {
-        console.error('Erreur chargement chantiers:', err);
+        logger.error('Erreur chargement chantiers:', err);
       } finally {
         setLoading(false);
       }

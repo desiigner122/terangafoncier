@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export class AvatarManager {
   constructor() {
@@ -10,7 +11,7 @@ export class AvatarManager {
    */
   async uploadAvatar(file, userId) {
     try {
-      console.log('🔄 Début upload avatar pour utilisateur:', userId);
+      logger.debug('🔄 Début upload avatar pour utilisateur:', userId);
 
       if (!file || !userId) {
         throw new Error('Fichier et ID utilisateur requis');
@@ -40,7 +41,7 @@ export class AvatarManager {
         });
 
       if (uploadError) {
-        console.error('❌ Erreur upload storage:', uploadError);
+        logger.error('❌ Erreur upload storage:', uploadError);
         throw new Error(`Erreur upload: ${uploadError.message}`);
       }
 
@@ -60,13 +61,13 @@ export class AvatarManager {
         .single();
 
       if (updateError) {
-        console.error('❌ Erreur mise à jour profil:', updateError);
+        logger.error('❌ Erreur mise à jour profil:', updateError);
         // Nettoyer le fichier uploadé si la mise à jour échoue
         await this.deleteAvatar(filePath);
         throw new Error(`Erreur profil: ${updateError.message}`);
       }
 
-      console.log('✅ Avatar uploadé avec succès:', avatarUrl);
+      logger.debug('✅ Avatar uploadé avec succès:', avatarUrl);
       return {
         success: true,
         avatarUrl,
@@ -74,7 +75,7 @@ export class AvatarManager {
       };
 
     } catch (error) {
-      console.error('❌ Erreur upload avatar:', error);
+      logger.error('❌ Erreur upload avatar:', error);
       return {
         success: false,
         error: error.message
@@ -92,10 +93,10 @@ export class AvatarManager {
         .remove([filePath]);
 
       if (error) {
-        console.error('⚠️ Erreur suppression avatar:', error);
+        logger.error('⚠️ Erreur suppression avatar:', error);
       }
     } catch (error) {
-      console.error('⚠️ Erreur suppression avatar:', error);
+      logger.error('⚠️ Erreur suppression avatar:', error);
     }
   }
 
@@ -111,13 +112,13 @@ export class AvatarManager {
         .single();
 
       if (error) {
-        console.error('❌ Erreur récupération avatar:', error);
+        logger.error('❌ Erreur récupération avatar:', error);
         return null;
       }
 
       return data?.avatar_url || null;
     } catch (error) {
-      console.error('❌ Erreur récupération avatar:', error);
+      logger.error('❌ Erreur récupération avatar:', error);
       return null;
     }
   }

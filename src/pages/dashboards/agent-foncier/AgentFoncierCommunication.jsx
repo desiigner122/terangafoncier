@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Initiales à partir d'un nom (ex: "Amadou Diallo" -> "AD")
 const getInitials = (name) => {
@@ -126,7 +127,7 @@ const AgentFoncierCommunication = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id).filter(Boolean))];
@@ -142,7 +143,7 @@ const AgentFoncierCommunication = () => {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (convError) throw convError;
 
       // 3) Profils des interlocuteurs, biens liés et messages
@@ -157,16 +158,16 @@ const AgentFoncierCommunication = () => {
 
       const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
         otherParticipantIds.length > 0
-          ? supabase.from('profiles').select('id, full_name, first_name, last_name, avatar_url, city, region').in('id', otherParticipantIds)
+          ? supabase.from('profiles').select('id, full_name, first_name, last_name, avatar_url, city, region').in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -224,7 +225,7 @@ const AgentFoncierCommunication = () => {
       });
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
+      logger.error('Erreur chargement conversations:', error);
       setConversations([]);
       setStats({ totalMessages: 0, messagesNonLus: 0, conversationsActives: 0, tempsReponse: '—' });
       setLoading(false);
@@ -237,7 +238,7 @@ const AgentFoncierCommunication = () => {
         .from('messages')
         .select('id, conversation_id, sender_id, content, read, created_at')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
 
       const formatted = (data || []).map(msg => ({
@@ -251,7 +252,7 @@ const AgentFoncierCommunication = () => {
       setMessages(formatted);
       markConversationRead(conversationId);
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
       setMessages([]);
     }
   };
@@ -264,7 +265,7 @@ const AgentFoncierCommunication = () => {
         .select('id')
         .eq('conversation_id', conversationId)
         .eq('read', false)
-        .neq('sender_id', user.id);
+        .neq('sender_id', user.id).limit(500);
       const readCount = (convBefore || []).length;
       if (readCount === 0) return;
 
@@ -283,7 +284,7 @@ const AgentFoncierCommunication = () => {
         messagesNonLus: Math.max(0, prev.messagesNonLus - readCount)
       }));
     } catch (error) {
-      console.error('Erreur marquage lu:', error);
+      logger.error('Erreur marquage lu:', error);
     }
   };
 
@@ -327,7 +328,7 @@ const AgentFoncierCommunication = () => {
       ));
       setStats(prev => ({ ...prev, totalMessages: prev.totalMessages + 1 }));
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
     } finally {
       setSending(false);
     }

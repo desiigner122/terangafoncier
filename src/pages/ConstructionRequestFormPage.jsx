@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Hammer, MapPin, Building2, Euro, Upload } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const ConstructionRequestFormPage = () => {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ const ConstructionRequestFormPage = () => {
       window.safeGlobalToast?.({ title: 'Demande publiée', description: 'Votre demande de construction a été soumise.' });
       navigate(`/construction-request/${data.id}`);
     } catch (err) {
-      console.error('Submit construction request failed:', err);
+      logger.error('Submit construction request failed:', err);
       window.safeGlobalToast?.({ title: 'Erreur', description: 'Impossible de soumettre la demande.', variant: 'destructive' });
     } finally {
       setSubmitting(false);

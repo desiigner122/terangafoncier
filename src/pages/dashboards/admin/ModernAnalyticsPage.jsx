@@ -57,6 +57,7 @@ import {
 import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
 import { useAnalytics } from '@/hooks/admin/usePageTracking';
+import { logger } from '@/lib/logger';
 
 const ModernAnalyticsPage = () => {
   // Phase 1: Use AnalyticsService for page tracking analytics
@@ -96,7 +97,7 @@ const ModernAnalyticsPage = () => {
     setError(null);
     
     try {
-      console.log('🔄 Chargement des analytics réelles...');
+      logger.debug('🔄 Chargement des analytics réelles...');
       
       // Phase 1: Load page tracking analytics from AnalyticsService
       await loadGlobalAnalytics({ period: selectedPeriod });
@@ -139,10 +140,10 @@ const ModernAnalyticsPage = () => {
       // Charger les métriques Blockchain
       await loadBlockchainAnalytics(realAnalyticsData);
 
-      console.log('✅ Analytics réelles chargées avec succès');
-      console.log('📊 Page tracking analytics:', analytics);
+      logger.debug('✅ Analytics réelles chargées avec succès');
+      logger.debug('📊 Page tracking analytics:', analytics);
     } catch (error) {
-      console.error('❌ Erreur chargement analytics:', error);
+      logger.error('❌ Erreur chargement analytics:', error);
       setError(error.message || analyticsError);
       toast.error('Erreur lors du chargement des analytics');
     } finally {
@@ -280,7 +281,7 @@ const ModernAnalyticsPage = () => {
       });
 
     } catch (error) {
-      console.error('Erreur insights IA:', error);
+      logger.error('Erreur insights IA:', error);
     }
   };
 
@@ -296,7 +297,7 @@ const ModernAnalyticsPage = () => {
         preparationScore: 75
       });
     } catch (error) {
-      console.error('Erreur métriques blockchain:', error);
+      logger.error('Erreur métriques blockchain:', error);
     }
   };
 

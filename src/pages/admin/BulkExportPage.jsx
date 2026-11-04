@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaDownload, FaFileExcel, FaFilePdf, FaFileAlt, FaCalendarAlt, FaFilter, FaDatabase } from 'react-icons/fa';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const BulkExportPage = () => {
   const [loading, setLoading] = useState(false);
@@ -90,7 +91,7 @@ const BulkExportPage = () => {
       ];
       setExportHistory(mockHistory);
     } catch (error) {
-      console.error('Erreur chargement historique:', error);
+      logger.error('Erreur chargement historique:', error);
     }
   };
 
@@ -119,7 +120,7 @@ const BulkExportPage = () => {
         setExportHistory([newExport, ...exportHistory]);
       }
     } catch (error) {
-      console.error('Erreur export:', error);
+      logger.error('Erreur export:', error);
       toast.error('Erreur lors de la génération de l\'export');
     } finally {
       setLoading(false);

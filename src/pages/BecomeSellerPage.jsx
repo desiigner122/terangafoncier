@@ -16,6 +16,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const FileUploadField = ({ id, label, required, onFileChange, fileName, description }) => (
   <div className="space-y-2">
@@ -188,7 +189,7 @@ const BecomeSellerPage = () => {
       navigate('/dashboard');
 
     } catch (err) {
-      console.error('Erreur lors de la soumission:', err);
+      logger.error('Erreur lors de la soumission:', err);
       setError('Erreur lors de l\'envoi de votre demande. Veuillez réessayer.');
     } finally {
       setIsLoading(false);

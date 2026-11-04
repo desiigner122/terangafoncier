@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import PropertyService from '@/services/PropertyService';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierTerrainsPrive = () => {
   const { user } = useAuth();
@@ -55,7 +56,7 @@ const ParticulierTerrainsPrive = () => {
         setFavorites(map);
       }
     } catch (error) {
-      console.error('Erreur chargement terrains privés:', error);
+      logger.error('Erreur chargement terrains privés:', error);
     } finally {
       setLoading(false);
     }

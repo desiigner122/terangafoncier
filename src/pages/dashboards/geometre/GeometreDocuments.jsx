@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Normalise une ligne `documents` en objet d'affichage.
 // Colonnes réelles : name, type, url, status, owner_id, property_id, created_at.
@@ -71,12 +72,12 @@ const GeometreDocuments = () => {
           .from('documents')
           .select('*')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setDocuments((data || []).map(mapDocument));
       } catch (err) {
-        console.error('Erreur chargement documents:', err);
+        logger.error('Erreur chargement documents:', err);
         setDocuments([]);
       } finally {
         setLoading(false);

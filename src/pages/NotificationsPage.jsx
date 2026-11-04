@@ -17,6 +17,7 @@ import {
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue';
@@ -108,10 +109,10 @@ const NotificationsPage = () => {
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }).limit(500);
 
     if (error) {
-      console.error("Error fetching notifications:", error);
+      logger.error("Error fetching notifications:", error);
       setError("Impossible de charger vos notifications.");
     } else {
       setNotifications(data);

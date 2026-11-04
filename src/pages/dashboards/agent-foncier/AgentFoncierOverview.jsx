@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const formatXOF = (value) => {
   if (!value) return '0 XOF';
@@ -69,10 +70,10 @@ const AgentFoncierOverview = () => {
         const agentId = user.id;
 
         const [missionsRes, contactsRes, propertiesRes, documentsRes] = await Promise.all([
-          supabase.from('agent_missions').select('*').eq('agent_id', agentId),
-          supabase.from('crm_contacts').select('id, name, status, created_at').eq('owner_id', agentId),
-          supabase.from('properties').select('id, title, name, location, verification_status, created_at').eq('owner_id', agentId),
-          supabase.from('documents').select('id, name, status, created_at').eq('owner_id', agentId)
+          supabase.from('agent_missions').select('*').eq('agent_id', agentId).limit(500),
+          supabase.from('crm_contacts').select('id, name, status, created_at').eq('owner_id', agentId).limit(500),
+          supabase.from('properties').select('id, title, name, location, verification_status, created_at').eq('owner_id', agentId).limit(500),
+          supabase.from('documents').select('id, name, status, created_at').eq('owner_id', agentId).limit(500)
         ]);
 
         if (!isMounted) return;
@@ -187,7 +188,7 @@ const AgentFoncierOverview = () => {
           documents: documents.length > 0 ? Math.round((processedDocuments / documents.length) * 100) : 0
         });
       } catch (err) {
-        console.error('Erreur chargement vue d\'ensemble agent foncier:', err);
+        logger.error('Erreur chargement vue d\'ensemble agent foncier:', err);
       } finally {
         if (isMounted) setLoading(false);
       }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Gestionnaire global d'erreurs pour éviter le spam d'API et les erreurs de sécurité
  */
@@ -39,11 +40,11 @@ class ErrorManager {
 
     // Log différent selon le type d'erreur
     if (error.message?.includes('insecure') || error.message?.includes('https')) {
-      console.warn(`[${apiName}] Erreur de sécurité:`, error.message);
+      logger.warn(`[${apiName}] Erreur de sécurité:`, error.message);
     } else if (error.message?.includes('geolocation') || error.message?.includes('location')) {
-      console.warn(`[${apiName}] Erreur de géolocalisation:`, error.message);
+      logger.warn(`[${apiName}] Erreur de géolocalisation:`, error.message);
     } else {
-      console.error(`[${apiName}] Erreur API:`, error);
+      logger.error(`[${apiName}] Erreur API:`, error);
     }
   }
 
@@ -97,7 +98,7 @@ class ErrorManager {
   safeHistoryCall(method, ...args) {
     try {
       if (!this.canMakeApiCall('history')) {
-        console.warn('Trop d\'appels à l\'API History. Navigation ignorée.');
+        logger.warn('Trop d\'appels à l\'API History. Navigation ignorée.');
         return;
       }
 
@@ -106,7 +107,7 @@ class ErrorManager {
       }
     } catch (error) {
       this.recordApiError('history', error);
-      console.warn('Erreur lors de la navigation:', error);
+      logger.warn('Erreur lors de la navigation:', error);
     }
   }
 
@@ -134,7 +135,7 @@ window.addEventListener('error', (event) => {
   if (event.error?.message?.includes('insecure') || 
       event.error?.message?.includes('geolocation') ||
       event.error?.message?.includes('history')) {
-    console.warn('Erreur capturée globalement:', event.error.message);
+    logger.warn('Erreur capturée globalement:', event.error.message);
     event.preventDefault(); // Empêche l'affichage dans la console
   }
 });
@@ -144,7 +145,7 @@ window.addEventListener('unhandledrejection', (event) => {
   if (event.reason?.message?.includes('insecure') || 
       event.reason?.message?.includes('geolocation') ||
       event.reason?.message?.includes('history')) {
-    console.warn('Promesse rejetée capturée:', event.reason.message);
+    logger.warn('Promesse rejetée capturée:', event.reason.message);
     event.preventDefault();
   }
 });

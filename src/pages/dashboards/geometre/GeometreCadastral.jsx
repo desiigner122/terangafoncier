@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const GeometreCadastral = () => {
   const { user } = useAuth();
@@ -47,12 +48,12 @@ const GeometreCadastral = () => {
           .from('properties')
           .select('*')
           .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setParcelles(data || []);
       } catch (err) {
-        console.error('Erreur chargement parcelles:', err);
+        logger.error('Erreur chargement parcelles:', err);
         setParcelles([]);
       } finally {
         setLoading(false);

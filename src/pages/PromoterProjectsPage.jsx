@@ -56,6 +56,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const PromoterProjectsPage = () => {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ const PromoterProjectsPage = () => {
         if (error) throw error;
         setProjects(data || []);
       } catch (err) {
-        console.error('Erreur chargement developer_projects:', err);
+        logger.error('Erreur chargement developer_projects:', err);
         setProjects([]);
       } finally {
         setLoading(false);

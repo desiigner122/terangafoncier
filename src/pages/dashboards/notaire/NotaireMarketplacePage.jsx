@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Search, Star, ShoppingBag, X, Plus, Minus } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { logger } from '@/lib/logger';
 
 const NotaireMarketplacePage = () => {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ const NotaireMarketplacePage = () => {
         setProducts([]);
       }
     } catch (error) {
-      console.error('Erreur chargement Marketplace:', error);
+      logger.error('Erreur chargement Marketplace:', error);
       setProducts([]);
     } finally {
       setIsLoading(false);

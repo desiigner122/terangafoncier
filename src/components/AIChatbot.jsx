@@ -20,6 +20,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import aiManager from '@/lib/aiManager';
+import { logger } from '@/lib/logger';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -138,7 +139,7 @@ const AIChatbot = () => {
       
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Erreur chatbot IA:', error);
+      logger.error('Erreur chatbot IA:', error);
       
       // Message d'erreur convivial
       const errorMessage = {

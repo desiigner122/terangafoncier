@@ -17,6 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { Helmet } from 'react-helmet-async';
 import ModernSidebar from '@/components/layout/ModernSidebar';
 import { useUser } from '@/hooks/useUser';
+import { logger } from '@/lib/logger';
 
 const ExportPage = () => {
   const { user, profile } = useUser();
@@ -191,7 +192,7 @@ const ExportPage = () => {
     const filename = `${exportType}_export_${timestamp}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`;
 
     // Simuler le téléchargement
-    console.log(`Export ${exportType}:`, {
+    logger.debug(`Export ${exportType}:`, {
       filename,
       selectedColumns: selectedCols,
       format: exportFormat,

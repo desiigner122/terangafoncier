@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
+import { logger } from '@/lib/logger';
 
 const CATEGORY_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
@@ -45,7 +46,7 @@ const RevenueManagementPage = () => {
         toast.error('Erreur lors du chargement des revenus');
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur de connexion');
     } finally {
       setLoading(false);

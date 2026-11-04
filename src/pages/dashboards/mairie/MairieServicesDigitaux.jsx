@@ -45,6 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Catalogue statique des outils digitaux municipaux (outils réels de la plateforme).
 // Les compteurs d'usage sont injectés depuis la vraie donnée (communal_requests / documents).
@@ -148,7 +149,7 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
         let crBase = supabase
           .from('communal_requests')
           .select('id, applicant_name, commune, zone, type, status, created_at')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (commune) crBase = crBase.eq('commune', commune);
         const crResp = await crBase;
 
@@ -223,7 +224,7 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
         );
       } catch (err) {
         if (active) {
-          console.error('Erreur chargement services digitaux:', err);
+          logger.error('Erreur chargement services digitaux:', err);
         }
       } finally {
         if (active) setLoading(false);

@@ -39,6 +39,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Lazy loading des composants de pages
 const GeometreOverview = React.lazy(() => import('./GeometreOverview.jsx'));
@@ -663,7 +664,7 @@ const CompleteSidebarGeometreDashboard = () => {
                     <hr className="my-2" />
                     <button
                       onClick={() => {
-                        console.log('Déconnexion...');
+                        logger.debug('Déconnexion...');
                         setProfileDropdownOpen(false);
                       }}
                       className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"

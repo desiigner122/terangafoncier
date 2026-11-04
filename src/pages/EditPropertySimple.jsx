@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
 import { notify } from '@/components/ui/NotificationToast';
 import LoadingState from '@/components/ui/LoadingState';
+import { logger } from '@/lib/logger';
 
 const EditPropertySimple = () => {
   const { id } = useParams();
@@ -82,7 +83,7 @@ const EditPropertySimple = () => {
         features: data.features || {}
       });
     } catch (err) {
-      console.error('Erreur chargement propriété:', err);
+      logger.error('Erreur chargement propriété:', err);
       setError(err.message);
       notify.error('Erreur lors du chargement');
     } finally {
@@ -118,7 +119,7 @@ const EditPropertySimple = () => {
       notify.success('✅ Propriété mise à jour avec succès !');
       setTimeout(() => navigate('/dashboard/properties'), 1500);
     } catch (err) {
-      console.error('Erreur sauvegarde:', err);
+      logger.error('Erreur sauvegarde:', err);
       notify.error('❌ Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);

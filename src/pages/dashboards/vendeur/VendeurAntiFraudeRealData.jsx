@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurAntiFraudeRealData = () => {
   const { user } = useAuth();
@@ -47,12 +48,12 @@ const VendeurAntiFraudeRealData = () => {
     try {
       const { data, error } = await supabase
         .from('properties').select('id, title, location, price, surface, status').eq('owner_id', user.id)
-        .order('created_at', { ascending: false});
+        .order('created_at', { ascending: false}).limit(500);
 
       if (error) throw error;
       setProperties(data || []);
     } catch (error) {
-      console.error('Erreur chargement propriétés:', error);
+      logger.error('Erreur chargement propriétés:', error);
     }
   };
 
@@ -62,7 +63,7 @@ const VendeurAntiFraudeRealData = () => {
       if (!result.success) throw new Error(result.error || 'Erreur inconnue');
       setDisputes(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement litiges:', error);
+      logger.error('Erreur chargement litiges:', error);
       toast.error('Erreur lors du chargement des litiges');
       setDisputes([]);
     }
@@ -127,7 +128,7 @@ const VendeurAntiFraudeRealData = () => {
           : 'Vérification terminée : aucun litige ouvert sur cette propriété'
       );
     } catch (error) {
-      console.error('Erreur vérification propriété:', error);
+      logger.error('Erreur vérification propriété:', error);
       toast.error('Erreur lors de la vérification');
     } finally {
       setIsScanning(false);
@@ -182,7 +183,7 @@ Pour toute question, contactez: support@terangafoncier.sn
 
       toast.success('Rapport téléchargé');
     } catch (error) {
-      console.error('Erreur export:', error);
+      logger.error('Erreur export:', error);
       toast.error('Erreur lors de l\'export');
     }
   };

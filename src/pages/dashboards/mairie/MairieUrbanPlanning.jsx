@@ -58,7 +58,7 @@ const MairieUrbanPlanning = ({ dashboardStats, profile: profileProp }) => {
         let reqQuery = supabase
           .from('communal_requests')
           .select('id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         // Les mairies gèrent les zones de leur commune si connue
         if (profile?.city) {
           reqQuery = reqQuery.eq('commune', profile.city);

@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurAnalyticsRealData = () => {
   const { user } = useAuth();
@@ -67,7 +68,7 @@ const VendeurAnalyticsRealData = () => {
           created_at,
           updated_at
         `).eq('owner_id', user.id)
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', startDate.toISOString()).limit(500);
 
       if (propError) throw propError;
 
@@ -90,7 +91,7 @@ const VendeurAnalyticsRealData = () => {
           .from('conversations')
           .select('id, property_id, created_at')
           .in('property_id', propertyIds)
-          .gte('created_at', startDate.toISOString());
+          .gte('created_at', startDate.toISOString()).limit(500);
 
         if (convError) throw convError;
 
@@ -123,7 +124,7 @@ const VendeurAnalyticsRealData = () => {
       const { data: previousProps } = await supabase
         .from('properties').select('views_count').eq('owner_id', user.id)
         .gte('created_at', previousStartDate.toISOString())
-        .lt('created_at', startDate.toISOString());
+        .lt('created_at', startDate.toISOString()).limit(500);
 
       const previousViews = previousProps?.reduce((sum, p) => sum + (p.views_count || 0), 0) || 0;
       const growthRate = previousViews > 0 
@@ -186,7 +187,7 @@ const VendeurAnalyticsRealData = () => {
       });
 
     } catch (error) {
-      console.error('Erreur chargement analytics:', error);
+      logger.error('Erreur chargement analytics:', error);
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);

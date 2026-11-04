@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const GeometreNotifications = () => {
   const { user } = useAuth();
@@ -45,12 +46,12 @@ const GeometreNotifications = () => {
         .from('notifications')
         .select('id, user_id, title, message, type, read, created_at')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setNotifications(data || []);
     } catch (err) {
-      console.error('Erreur chargement notifications:', err);
+      logger.error('Erreur chargement notifications:', err);
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -70,7 +71,7 @@ const GeometreNotifications = () => {
       if (error) throw error;
       setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
     } catch (err) {
-      console.error('Erreur marquage notification:', err);
+      logger.error('Erreur marquage notification:', err);
     }
   };
 
@@ -85,7 +86,7 @@ const GeometreNotifications = () => {
       if (error) throw error;
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (err) {
-      console.error('Erreur marquage global:', err);
+      logger.error('Erreur marquage global:', err);
     }
   };
 

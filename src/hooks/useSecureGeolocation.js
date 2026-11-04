@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import errorManager from '@/lib/errorManager';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook sécurisé pour gérer la géolocalisation avec protection contre les appels répétés
@@ -79,14 +80,14 @@ export const safeHistoryPush = (navigate, path, options = {}) => {
     
     // Utiliser navigate au lieu de history.push pour éviter les erreurs de sécurité
     if (!errorManager.canMakeApiCall('history')) {
-      console.warn('Navigation ignorée - trop d\'appels à l\'API History');
+      logger.warn('Navigation ignorée - trop d\'appels à l\'API History');
       return;
     }
     
     navigate(path, { replace: false, ...options });
   } catch (error) {
     errorManager.recordApiError('history', error);
-    console.warn('Erreur lors de la navigation:', error);
+    logger.warn('Erreur lors de la navigation:', error);
   }
 };
 

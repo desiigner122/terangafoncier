@@ -65,6 +65,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import NotaireTickets from '@/components/notaire/NotaireTickets';
 import NotaireSubscription from '@/components/notaire/NotaireSubscription';
+import { logger } from '@/lib/logger';
 
 // Clé de persistance locale des préférences (aucune table dédiée côté Supabase).
 const PREFS_STORAGE_KEY = (userId) => `notaire_settings_prefs_${userId}`;
@@ -143,7 +144,7 @@ const NotaireSettingsModernized = () => {
           .maybeSingle();
 
         if (profileError) {
-          console.error('Erreur lecture profil:', profileError);
+          logger.error('Erreur lecture profil:', profileError);
         }
 
         // 2) Préférences / sécurité / intégrations / notifications : aucune table
@@ -153,7 +154,7 @@ const NotaireSettingsModernized = () => {
           const raw = localStorage.getItem(PREFS_STORAGE_KEY(user.id));
           if (raw) localPrefs = JSON.parse(raw) || {};
         } catch (e) {
-          console.warn('Préférences locales illisibles, réinitialisation:', e);
+          logger.warn('Préférences locales illisibles, réinitialisation:', e);
         }
 
         const savedRaw = localStorage.getItem(LAST_SAVED_KEY(user.id));
@@ -174,7 +175,7 @@ const NotaireSettingsModernized = () => {
           notifications: { ...defaultSettings.notifications, ...(localPrefs.notifications || {}) }
         });
       } catch (error) {
-        console.error('Erreur chargement paramètres:', error);
+        logger.error('Erreur chargement paramètres:', error);
         setSettings(defaultSettings);
         window.safeGlobalToast?.({
           title: 'Chargement partiel',
@@ -215,7 +216,7 @@ const NotaireSettingsModernized = () => {
       localStorage.setItem(LAST_SAVED_KEY(user.id), stamp);
       setLastSaved(stamp);
     } catch (e) {
-      console.warn('Persistance locale des préférences impossible:', e);
+      logger.warn('Persistance locale des préférences impossible:', e);
     }
   };
 
@@ -246,7 +247,7 @@ const NotaireSettingsModernized = () => {
         variant: 'success'
       });
     } catch (error) {
-      console.error('Erreur sauvegarde paramètres:', error);
+      logger.error('Erreur sauvegarde paramètres:', error);
       window.safeGlobalToast?.({
         title: 'Sauvegarde échouée',
         description: "Nous n'avons pas pu mettre à jour votre profil.",

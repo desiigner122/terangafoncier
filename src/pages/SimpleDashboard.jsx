@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 export default function SimpleDashboard() {
   const [user, setUser] = useState(null);
@@ -12,7 +13,7 @@ export default function SimpleDashboard() {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Session error:', error);
+          logger.error('Session error:', error);
           setError('Erreur de session');
           return;
         }
@@ -25,7 +26,7 @@ export default function SimpleDashboard() {
           return;
         }
       } catch (err) {
-        console.error('Auth check error:', err);
+        logger.error('Auth check error:', err);
         setError('Erreur d\'authentification');
       } finally {
         setLoading(false);

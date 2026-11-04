@@ -19,6 +19,7 @@ import { useDropzone } from 'react-dropzone';
 import { Helmet } from 'react-helmet-async';
 import ModernSidebar from '@/components/layout/ModernSidebar';
 import { useUser } from '@/hooks/useUser';
+import { logger } from '@/lib/logger';
 
 const UploadsPage = () => {
   const { user, profile } = useUser();
@@ -257,7 +258,7 @@ const UploadsPage = () => {
 
   const downloadFile = (file) => {
     // Logique de téléchargement
-    console.log('Téléchargement:', file.name);
+    logger.debug('Téléchargement:', file.name);
     alert(`Téléchargement de ${file.name} en cours...`);
   };
 

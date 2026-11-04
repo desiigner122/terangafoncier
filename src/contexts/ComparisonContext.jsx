@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export const ComparisonContext = createContext();
 
@@ -8,7 +9,7 @@ export const ComparisonProvider = ({ children }) => {
       const localData = localStorage.getItem('comparisonList');
       return localData ? JSON.parse(localData) : [];
     } catch (error) {
-      console.warn('Failed to parse comparison list from localStorage:', error);
+      logger.warn('Failed to parse comparison list from localStorage:', error);
       return [];
     }
   });
@@ -17,7 +18,7 @@ export const ComparisonProvider = ({ children }) => {
     try {
       localStorage.setItem('comparisonList', JSON.stringify(comparisonList));
     } catch (error) {
-      console.warn('Failed to save comparison list to localStorage:', error);
+      logger.warn('Failed to save comparison list to localStorage:', error);
     }
   }, [comparisonList]);
 
@@ -27,7 +28,7 @@ export const ComparisonProvider = ({ children }) => {
       setComparisonList(prevList => [...prevList, parcelId]);
     } else if (comparisonList.length >= 4) {
        // Optionally show a toast message here
-       console.warn("Maximum comparison limit reached (4 items).");
+       logger.warn("Maximum comparison limit reached (4 items).");
     }
   };
 

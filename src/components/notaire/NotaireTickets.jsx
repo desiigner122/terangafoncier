@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * NotaireTickets - Système de tickets support pour notaires
@@ -58,13 +59,13 @@ export default function NotaireTickets() {
         .from('support_tickets')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
       setTickets(data || []);
       setFilteredTickets(data || []);
     } catch (error) {
-      console.error('Erreur chargement tickets:', error);
+      logger.error('Erreur chargement tickets:', error);
       window.safeGlobalToast?.({
         title: "Erreur",
         description: "Impossible de charger les tickets",
@@ -148,7 +149,7 @@ export default function NotaireTickets() {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur création ticket:', error);
+      logger.error('Erreur création ticket:', error);
       window.safeGlobalToast?.({
         title: "Erreur",
         description: "Impossible de créer le ticket",
@@ -189,7 +190,7 @@ export default function NotaireTickets() {
         variant: "success"
       });
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
     }
   };
 

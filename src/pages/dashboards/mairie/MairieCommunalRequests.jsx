@@ -58,6 +58,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Correspondance statut base -> libellé FR affiché
 const STATUS_LABELS = {
@@ -106,7 +107,7 @@ const MairieCommunalRequests = ({ dashboardStats, profile: profileProp }) => {
       let query = supabase
         .from('communal_requests')
         .select('id, applicant_id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at, updated_at')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Les mairies gèrent les demandes de leur commune si connue
       if (profile?.city) {
@@ -117,7 +118,7 @@ const MairieCommunalRequests = ({ dashboardStats, profile: profileProp }) => {
       if (error) throw error;
       setRequests(data || []);
     } catch (err) {
-      console.error('Erreur chargement communal_requests:', err);
+      logger.error('Erreur chargement communal_requests:', err);
       setErrorData(err.message || 'Erreur de chargement');
       setRequests([]);
     } finally {
@@ -153,7 +154,7 @@ const MairieCommunalRequests = ({ dashboardStats, profile: profileProp }) => {
         variant: labels.variant
       });
     } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
+      logger.error('Erreur mise à jour statut:', err);
       window.safeGlobalToast?.({
         title: 'Erreur',
         description: "La mise à jour du statut a échoué",

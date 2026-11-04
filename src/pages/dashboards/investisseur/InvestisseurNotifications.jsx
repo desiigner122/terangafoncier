@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Mapping type de notification -> icône + couleur (métadonnée d'affichage, pas de donnée fabriquée)
 const TYPE_META = {
@@ -55,12 +56,12 @@ const InvestisseurNotifications = () => {
           .from('notifications')
           .select('id, user_id, title, message, type, read, created_at')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setNotifications(data || []);
       } catch (err) {
-        console.error('Erreur chargement notifications:', err);
+        logger.error('Erreur chargement notifications:', err);
         setNotifications([]);
       } finally {
         setLoading(false);
@@ -128,7 +129,7 @@ const InvestisseurNotifications = () => {
     try {
       await supabase.from('notifications').update({ read: true }).eq('id', id);
     } catch (err) {
-      console.error('Erreur mise à jour notification:', err);
+      logger.error('Erreur mise à jour notification:', err);
     }
   };
 
@@ -144,7 +145,7 @@ const InvestisseurNotifications = () => {
         .eq('user_id', user.id)
         .eq('read', false);
     } catch (err) {
-      console.error('Erreur mise à jour notifications:', err);
+      logger.error('Erreur mise à jour notifications:', err);
     }
   };
 
@@ -153,7 +154,7 @@ const InvestisseurNotifications = () => {
     try {
       await supabase.from('notifications').delete().eq('id', id);
     } catch (err) {
-      console.error('Erreur suppression notification:', err);
+      logger.error('Erreur suppression notification:', err);
     }
   };
 

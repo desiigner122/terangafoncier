@@ -57,6 +57,7 @@ import {
 } from 'recharts';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 // ===== Helpers de classification de statut (aucune donnée fabriquée) =====
 const EN_COURS = ['pending', 'en_cours', 'en cours', 'en_attente', 'en attente', 'attente', 'submitted', 'in_progress', 'processing', 'nouveau', 'new', 'review', 'traitement'];
@@ -119,7 +120,7 @@ const ParticulierAnalytics = () => {
         const { data: msgData } = await supabase
           .from('messages')
           .select('created_at')
-          .eq('sender_id', user.id);
+          .eq('sender_id', user.id).limit(500);
         messages = msgData || [];
       } catch (e) {
         messages = [];
@@ -250,7 +251,7 @@ const ParticulierAnalytics = () => {
       });
 
     } catch (error) {
-      console.error('Erreur chargement analytics:', error);
+      logger.error('Erreur chargement analytics:', error);
       setAnalytics(EMPTY_ANALYTICS);
     } finally {
       setLoading(false);

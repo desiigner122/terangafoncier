@@ -43,6 +43,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { hybridDataService } from '@/services/HybridDataService';
+import { logger } from '@/lib/logger';
 
 const AdvancedSubscriptionManagementPage = () => {
   const [loading, setLoading] = useState(true);
@@ -98,7 +99,7 @@ const AdvancedSubscriptionManagementPage = () => {
       }
 
     } catch (error) {
-      console.error('Erreur chargement données abonnements:', error);
+      logger.error('Erreur chargement données abonnements:', error);
     } finally {
       setLoading(false);
     }
@@ -139,7 +140,7 @@ const AdvancedSubscriptionManagementPage = () => {
   const handleCreatePlan = async () => {
     try {
       // TODO: Implémenter la création de plan via API
-      console.log('Création plan:', newPlan);
+      logger.debug('Création plan:', newPlan);
       setIsCreatePlanOpen(false);
       setNewPlan({
         name: '',
@@ -157,7 +158,7 @@ const AdvancedSubscriptionManagementPage = () => {
       });
       await loadData();
     } catch (error) {
-      console.error('Erreur création plan:', error);
+      logger.error('Erreur création plan:', error);
     }
   };
 

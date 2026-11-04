@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // --- Helpers d'affichage (statuts réels de la table disputes / risk_assessments) ---
 const OPEN_DISPUTE = (status) =>
@@ -109,25 +110,25 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
         supabase
           .from('disputes')
           .select('id, title, property_id, status, parties, created_at')
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         // Évaluations de risque de la banque (filtré par bank_id dans le code)
         supabase
           .from('risk_assessments')
           .select('id, client_id, loan_id, risk_level, risk_score, factors, created_at')
           .eq('bank_id', user.id)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false }).limit(500),
         // Clients de la banque pour le score moyen réel
         supabase
           .from('bank_clients')
           .select('client_id, name, credit_score')
-          .eq('bank_id', user.id)
+          .eq('bank_id', user.id).limit(500)
       ]);
 
       setDisputes(disputesRes.data || []);
       setRiskAssessments(riskRes.data || []);
       setClients(clientsRes.data || []);
     } catch (err) {
-      console.error('Erreur chargement anti-fraude:', err);
+      logger.error('Erreur chargement anti-fraude:', err);
       setDisputes([]);
       setRiskAssessments([]);
       setClients([]);

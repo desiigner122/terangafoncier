@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const MairieGPSVerification = ({ dashboardStats }) => {
   const { profile } = useAuth();
@@ -88,7 +89,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
         const { data: photos } = await supabase
           .from('property_photos')
           .select('property_id, url, is_primary, gps_latitude, gps_longitude, quality_score, created_at')
-          .in('property_id', propIds);
+          .in('property_id', propIds).limit(500);
         (photos || []).forEach((ph) => {
           const cur = photosByProp[ph.property_id];
           // Privilégier la photo primaire ou celle qui porte des coordonnées GPS
@@ -104,7 +105,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
         const { data: disputes } = await supabase
           .from('disputes')
           .select('id, title, property_id, status, created_at')
-          .in('property_id', propIds);
+          .in('property_id', propIds).limit(500);
         (disputes || []).forEach((d) => {
           if (!disputesByProp[d.property_id]) disputesByProp[d.property_id] = [];
           disputesByProp[d.property_id].push(d);
@@ -126,7 +127,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
         const { data: owners } = await supabase
           .from('profiles')
           .select('id, full_name, first_name, last_name')
-          .in('id', ownerIds);
+          .in('id', ownerIds).limit(500);
         (owners || []).forEach((o) => {
           ownersById[o.id] =
             o.full_name ||
@@ -192,7 +193,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
         averageProcessingTime: null
       });
     } catch (err) {
-      console.error('Erreur chargement données GPS:', err);
+      logger.error('Erreur chargement données GPS:', err);
       setProperties([]);
     } finally {
       setLoading(false);
@@ -229,7 +230,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
           property.status === 'pending' ? Math.max(0, s.pendingVerifications - 1) : s.pendingVerifications
       }));
     } catch (err) {
-      console.error('Erreur vérification GPS:', err);
+      logger.error('Erreur vérification GPS:', err);
     } finally {
       setVerificationInProgress(false);
     }

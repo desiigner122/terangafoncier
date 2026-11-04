@@ -43,6 +43,7 @@ import {
 } from 'recharts';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 const TYPE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6', '#EC4899'];
@@ -78,7 +79,7 @@ const MairieAnalytics = ({ dashboardStats, profile: profileProp }) => {
       let reqQuery = supabase
         .from('communal_requests')
         .select('id, commune, zone, type, surface, status, created_at, updated_at')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       // Les mairies gèrent les demandes de leur commune si connue
       if (profile?.city) {
         reqQuery = reqQuery.eq('commune', profile.city);
@@ -89,7 +90,7 @@ const MairieAnalytics = ({ dashboardStats, profile: profileProp }) => {
         supabase
           .from('disputes')
           .select('id, title, status, created_at, updated_at')
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }).limit(500)
       ]);
 
       if (reqRes.error) throw reqRes.error;
@@ -97,7 +98,7 @@ const MairieAnalytics = ({ dashboardStats, profile: profileProp }) => {
       // disputes : pas de colonne commune, on affiche l'ensemble (RLS authentifié)
       if (!dispRes.error) setDisputes(dispRes.data || []);
     } catch (err) {
-      console.error('Erreur chargement analytics mairie:', err);
+      logger.error('Erreur chargement analytics mairie:', err);
       setError(err.message || 'Erreur de chargement');
       setRequests([]);
       setDisputes([]);

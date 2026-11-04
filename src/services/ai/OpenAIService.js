@@ -1,6 +1,7 @@
 // Service principal pour l'intégration OpenAI GPT-4
 import axios from 'axios';
 import { ENV_VARS, logEnvStatus } from '../../utils/env';
+import { logger } from '@/lib/logger';
 
 class OpenAIService {
   constructor() {
@@ -15,7 +16,7 @@ class OpenAIService {
     this.simulationMode = true;
     
     if (!this.baseURL) {
-      console.warn('⚠️ Proxy IA non configuré (VITE_AI_PROXY_URL). Utilisation du mode simulation.');
+      logger.warn('⚠️ Proxy IA non configuré (VITE_AI_PROXY_URL). Utilisation du mode simulation.');
     } else {
       this.simulationMode = false;
     }
@@ -29,7 +30,7 @@ class OpenAIService {
   // Méthode pour configurer la clé API dynamiquement depuis les paramètres
   setApiKey() {
     // Désactivé : une clé d'API ne doit jamais être manipulée côté client.
-    console.warn('setApiKey ignoré : configurez VITE_AI_PROXY_URL côté serveur.');
+    logger.warn('setApiKey ignoré : configurez VITE_AI_PROXY_URL côté serveur.');
   }
 
   async makeRequest(endpoint, data) {
@@ -45,7 +46,7 @@ class OpenAIService {
       });
       return response.data;
     } catch (error) {
-      console.error('Erreur OpenAI:', error);
+      logger.error('Erreur OpenAI:', error);
       return this.getSimulatedResponse(endpoint, data);
     }
   }

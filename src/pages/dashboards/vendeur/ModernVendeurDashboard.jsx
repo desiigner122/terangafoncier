@@ -75,6 +75,7 @@ import BlockchainStatusModal from '../../../components/dialogs/BlockchainStatusM
 import CreateNFTModal from '../../../components/dialogs/CreateNFTModal';
 import CompetitionAnalysisModal from '../../../components/dialogs/CompetitionAnalysisModal';
 import pdfGenerator from '../../../services/pdfGenerator';
+import { logger } from '@/lib/logger';
 
 const ModernVendeurDashboard = () => {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ const ModernVendeurDashboard = () => {
 
   // Fonctions de gestion IA avancées
   const handleAIPropertyAnalysis = async (property) => {
-    console.log('Analyse IA de la propriété:', property.title);
+    logger.debug('Analyse IA de la propriété:', property.title);
     try {
       const analysis = await OpenAIService.analyzeProperty({
         title: property.title,
@@ -109,12 +110,12 @@ const ModernVendeurDashboard = () => {
       });
       setAiInsights(prev => [...prev, analysis]);
     } catch (error) {
-      console.error('Erreur analyse IA:', error);
+      logger.error('Erreur analyse IA:', error);
     }
   };
 
   const handleAIPriceOptimization = async () => {
-    console.log('Optimisation prix IA');
+    logger.debug('Optimisation prix IA');
     try {
       const recommendations = await OpenAIService.optimizePricing({
         properties: dashboardData.properties,
@@ -123,12 +124,12 @@ const ModernVendeurDashboard = () => {
       });
       setAiPriceRecommendations(recommendations);
     } catch (error) {
-      console.error('Erreur optimisation prix IA:', error);
+      logger.error('Erreur optimisation prix IA:', error);
     }
   };
 
   const handleBlockchainVerification = (property) => {
-    console.log('Vérification blockchain propriété:', property.title);
+    logger.debug('Vérification blockchain propriété:', property.title);
     // Simulation vérification blockchain
     const transaction = {
       id: `TX${Date.now()}`,
@@ -143,7 +144,7 @@ const ModernVendeurDashboard = () => {
   };
 
   const handleSmartContractCreation = (property) => {
-    console.log('Création smart contract pour:', property.title);
+    logger.debug('Création smart contract pour:', property.title);
     // Simulation création smart contract
     const contract = {
       id: `SC${Date.now()}`,
@@ -160,7 +161,7 @@ const ModernVendeurDashboard = () => {
 
   // Fonctions de gestion classiques améliorées
   const handleAddProperty = () => {
-    console.log('Ajouter un bien avec IA');
+    logger.debug('Ajouter un bien avec IA');
     setActiveTab('ai-listing');
   };
 
@@ -241,7 +242,7 @@ const ModernVendeurDashboard = () => {
 
       setConfirmDelete({ open: false, property: null });
     } catch (error) {
-      console.error('Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de supprimer la propriété.",
@@ -388,7 +389,7 @@ const ModernVendeurDashboard = () => {
         description: "Votre rapport de performance a été téléchargé."
       });
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      logger.error('Erreur génération rapport:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de générer le rapport PDF.",
@@ -431,7 +432,7 @@ const ModernVendeurDashboard = () => {
         description: "Certificat blockchain téléchargé avec succès."
       });
     } catch (error) {
-      console.error('Erreur génération certificat:', error);
+      logger.error('Erreur génération certificat:', error);
       window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de générer le certificat.",
@@ -479,7 +480,7 @@ const ModernVendeurDashboard = () => {
         description: `${dashboardData.properties.length} propriétés exportées en CSV.`
       });
     } catch (error) {
-      console.error('Erreur export:', error);
+      logger.error('Erreur export:', error);
       window.safeGlobalToast({
         title: "Erreur export",
         description: "Impossible d'exporter les données.",
@@ -584,7 +585,7 @@ const ModernVendeurDashboard = () => {
       });
       setAiInsights(insights);
     } catch (error) {
-      console.error('Erreur génération insights IA:', error);
+      logger.error('Erreur génération insights IA:', error);
       // Fallback avec insights mockup
       setAiInsights([
         {

@@ -87,15 +87,15 @@ const GeometreAnalytics = () => {
         supabase
           .from('survey_missions')
           .select('id, client_id, client_name, title, mission_type, location, status, scheduled_date, price, progress, created_at, updated_at')
-          .eq('geometre_id', geometreId),
+          .eq('geometre_id', geometreId).limit(500),
         supabase
           .from('crm_contacts')
           .select('id, name, status, created_at')
-          .eq('owner_id', geometreId),
+          .eq('owner_id', geometreId).limit(500),
         supabase
           .from('field_measurements')
           .select('id, created_at')
-          .eq('geometre_id', geometreId)
+          .eq('geometre_id', geometreId).limit(500)
       ]);
       setMissions(missionsRes.data || []);
       setContacts(contactsRes.data || []);

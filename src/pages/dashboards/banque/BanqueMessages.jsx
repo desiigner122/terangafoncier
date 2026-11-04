@@ -70,6 +70,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Templates de messages bancaires : contenu éditorial statique et réutilisable
 // (aucune donnée chiffrée fabriquée ici), affiché tel quel et inséré dans la saisie.
@@ -183,7 +184,7 @@ const BanqueMessages = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
@@ -198,7 +199,7 @@ const BanqueMessages = () => {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (convError) throw convError;
 
       // 2) Interlocuteurs (autres participants) + propriétés liées + messages
@@ -211,20 +212,20 @@ const BanqueMessages = () => {
 
       const [profilesRes, propertiesRes, clientsRes, messagesRes] = await Promise.all([
         otherParticipantIds.length > 0
-          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, phone, avatar_url, role').in('id', otherParticipantIds)
+          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, phone, avatar_url, role').in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title, location').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title, location').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         // Enrichissement CRM réel via bank_clients (crédit, statut, type) filtré par bank_id
         otherParticipantIds.length > 0
-          ? supabase.from('bank_clients').select('client_id, client_type, status, credit_score, total_credits, created_at').eq('bank_id', user.id).in('client_id', otherParticipantIds)
+          ? supabase.from('bank_clients').select('client_id, client_type, status, credit_score, total_credits, created_at').eq('bank_id', user.id).in('client_id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -306,7 +307,7 @@ const BanqueMessages = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
+      logger.error('Erreur chargement conversations:', error);
       window.safeGlobalToast?.({
         title: 'Erreur',
         description: 'Impossible de charger les conversations',
@@ -322,7 +323,7 @@ const BanqueMessages = () => {
         .from('messages')
         .select('id, conversation_id, sender_id, content, read, created_at')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
 
       const formatted = (data || []).map(msg => ({
@@ -345,7 +346,7 @@ const BanqueMessages = () => {
 
       setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread: 0 } : c));
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
     }
   };
 
@@ -367,7 +368,7 @@ const BanqueMessages = () => {
       if (error) throw error;
       setClientActivities(data || []);
     } catch (error) {
-      console.error('Erreur chargement activités:', error);
+      logger.error('Erreur chargement activités:', error);
       setClientActivities([]);
     }
   };
@@ -412,7 +413,7 @@ const BanqueMessages = () => {
         variant: 'success'
       });
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
       window.safeGlobalToast?.({
         title: 'Erreur',
         description: "Impossible d'envoyer le message",

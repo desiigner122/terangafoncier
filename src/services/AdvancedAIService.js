@@ -1,7 +1,8 @@
+import { logger } from '@/lib/logger';
 // Clean Advanced AI Service for Teranga Foncier
 export class AdvancedAIService {
   constructor() {
-    console.log('AdvancedAIService initialized successfully');
+    logger.debug('AdvancedAIService initialized successfully');
     this.isInitialized = true;
     this.realtimeMetrics = {};
   }
@@ -20,7 +21,7 @@ export class AdvancedAIService {
         }
       ];
     } catch (error) {
-      console.error('Error generating notifications:', error);
+      logger.error('Error generating notifications:', error);
       return [];
     }
   }
@@ -68,7 +69,7 @@ export class AdvancedAIService {
   }
 
   startRealtimeMonitoring() {
-    console.log('Real-time monitoring started');
+    logger.debug('Real-time monitoring started');
     this.realtimeMetrics.aiMonitoring = 47;
   }
 
@@ -87,7 +88,7 @@ export class AdvancedAIService {
   }
 
   async broadcastMetricChanges(changes) {
-    console.log('Broadcasting metric changes:', changes);
+    logger.debug('Broadcasting metric changes:', changes);
   }
 
   isServiceReady() {

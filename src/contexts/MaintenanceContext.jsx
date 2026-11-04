@@ -7,6 +7,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import globalAdminService from '@/services/GlobalAdminService';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const MaintenanceContext = createContext();
 
@@ -44,13 +45,13 @@ export const MaintenanceProvider = ({ children }) => {
             .single();
           
           setUserProfile(profile);
-          console.log('✅ Profil utilisateur récupéré:', profile);
+          logger.debug('✅ Profil utilisateur récupéré:', profile);
         }
 
         // 2. Vérifier le mode maintenance
         await checkMaintenanceStatus();
       } catch (error) {
-        console.error('Erreur initialisation maintenance:', error);
+        logger.error('Erreur initialisation maintenance:', error);
       } finally {
         setLoading(false);
       }
@@ -83,10 +84,10 @@ export const MaintenanceProvider = ({ children }) => {
           }));
         }
       } catch (serverError) {
-        console.log('Vérification serveur maintenance échouée, utilisation cache local');
+        logger.debug('Vérification serveur maintenance échouée, utilisation cache local');
       }
     } catch (error) {
-      console.error('Erreur vérification maintenance:', error);
+      logger.error('Erreur vérification maintenance:', error);
     } finally {
       setLoading(false);
     }
@@ -119,7 +120,7 @@ export const MaintenanceProvider = ({ children }) => {
         }
       });
     } catch (error) {
-      console.error('Erreur activation maintenance serveur:', error);
+      logger.error('Erreur activation maintenance serveur:', error);
     }
   };
 
@@ -144,7 +145,7 @@ export const MaintenanceProvider = ({ children }) => {
         }
       });
     } catch (error) {
-      console.error('Erreur désactivation maintenance serveur:', error);
+      logger.error('Erreur désactivation maintenance serveur:', error);
     }
   };
 
@@ -153,17 +154,17 @@ export const MaintenanceProvider = ({ children }) => {
     
     // Les admins peuvent toujours accéder
     if (userProfile?.role === 'admin' || userProfile?.role === 'Admin') {
-      console.log('✅ Admin autorisé malgré maintenance');
+      logger.debug('✅ Admin autorisé malgré maintenance');
       return true;
     }
     
     // Vérifier la liste des utilisateurs autorisés
     if (userProfile?.email && maintenanceConfig.allowedUsers.includes(userProfile.email)) {
-      console.log('✅ Utilisateur autorisé malgré maintenance');
+      logger.debug('✅ Utilisateur autorisé malgré maintenance');
       return true;
     }
 
-    console.log('❌ Utilisateur non autorisé - mode maintenance actif');
+    logger.debug('❌ Utilisateur non autorisé - mode maintenance actif');
     return false;
   };
 

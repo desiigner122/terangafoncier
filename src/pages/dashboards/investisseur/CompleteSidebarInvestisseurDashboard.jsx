@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Lazy loading des composants
 const InvestisseurOverview = React.lazy(() => import('./InvestisseurOverview'));
@@ -86,7 +87,7 @@ const CompleteSidebarInvestisseurDashboard = () => {
       await signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
     }
   };
 
@@ -343,7 +344,7 @@ const CompleteSidebarInvestisseurDashboard = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => console.log('Recherche ouverte')}
+                onClick={() => logger.debug('Recherche ouverte')}
                 title="Rechercher"
               >
                 <Search className="h-4 w-4" />

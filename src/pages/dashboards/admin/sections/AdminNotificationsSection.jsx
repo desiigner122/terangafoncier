@@ -62,6 +62,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { logger } from '@/lib/logger';
 
 /** Section « Notifications » du tableau de bord administrateur. */
 const AdminNotificationsSection = ({ user }) => {
@@ -93,7 +94,7 @@ const AdminNotificationsSection = ({ user }) => {
       if (error) throw error;
       setNotifications(data || []);
     } catch (error) {
-      console.error('Erreur chargement notifications:', error);
+      logger.error('Erreur chargement notifications:', error);
       toast.error('Erreur chargement notifications');
     } finally {
       setLoadingNotifs(false);

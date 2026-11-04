@@ -37,6 +37,7 @@ import {
 	TableHeader,
 	TableRow
 } from '@/components/ui/table';
+import { logger } from '@/lib/logger';
 
 // Statuts RÉELS de notarial_acts : draft | in_progress | signed | completed | cancelled
 const statusStyles = {
@@ -120,7 +121,7 @@ const NotaireOverviewModernized = () => {
 					.from('notarial_acts')
 					.select('id, act_type, reference, client_id, client_name, status, notary_fees, amount, client_satisfaction, signed_at, created_at')
 					.eq('notaire_id', user.id)
-					.order('created_at', { ascending: false }),
+					.order('created_at', { ascending: false }).limit(500),
 				supabase
 					.from('document_authentication')
 					.select('id', { count: 'exact', head: true })
@@ -129,7 +130,7 @@ const NotaireOverviewModernized = () => {
 				supabase
 					.from('compliance_checks')
 					.select('compliance_score')
-					.eq('notaire_id', user.id),
+					.eq('notaire_id', user.id).limit(500),
 				supabase
 					.from('clients_notaire')
 					.select('id', { count: 'exact', head: true })
@@ -194,7 +195,7 @@ const NotaireOverviewModernized = () => {
 			// Répartition par type d'acte
 			setDistribution(buildDistribution(allActs));
 		} catch (error) {
-			console.error("Erreur chargement vue d'ensemble notaire:", error);
+			logger.error("Erreur chargement vue d'ensemble notaire:", error);
 			window.safeGlobalToast?.({
 				title: 'Erreur de chargement',
 				description: 'Impossible de récupérer les statistiques en temps réel.',

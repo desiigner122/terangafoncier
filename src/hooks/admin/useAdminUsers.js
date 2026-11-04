@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook personnalisé pour la gestion des utilisateurs
@@ -25,7 +26,7 @@ export const useAdminUsers = () => {
       let query = supabase
         .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Appliquer les filtres
       if (filters.role !== 'all') {
@@ -55,7 +56,7 @@ export const useAdminUsers = () => {
 
       setUsers(filteredData);
     } catch (err) {
-      console.error('Erreur lors de la récupération des utilisateurs:', err);
+      logger.error('Erreur lors de la récupération des utilisateurs:', err);
       setError(err.message);
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
@@ -91,7 +92,7 @@ export const useAdminUsers = () => {
       toast.success('Utilisateur suspendu avec succès');
       await fetchUsers(); // Rafraîchir la liste
     } catch (err) {
-      console.error('Erreur lors de la suspension:', err);
+      logger.error('Erreur lors de la suspension:', err);
       toast.error('Erreur lors de la suspension de l\'utilisateur');
     }
   };
@@ -123,7 +124,7 @@ export const useAdminUsers = () => {
       toast.success('Utilisateur réactivé avec succès');
       await fetchUsers();
     } catch (err) {
-      console.error('Erreur lors de la réactivation:', err);
+      logger.error('Erreur lors de la réactivation:', err);
       toast.error('Erreur lors de la réactivation de l\'utilisateur');
     }
   };
@@ -153,7 +154,7 @@ export const useAdminUsers = () => {
       toast.success(`Rôle changé en ${newRole} avec succès`);
       await fetchUsers();
     } catch (err) {
-      console.error('Erreur lors du changement de rôle:', err);
+      logger.error('Erreur lors du changement de rôle:', err);
       toast.error('Erreur lors du changement de rôle');
     }
   };
@@ -182,7 +183,7 @@ export const useAdminUsers = () => {
       toast.success('Utilisateur supprimé avec succès');
       await fetchUsers();
     } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
+      logger.error('Erreur lors de la suppression:', err);
       toast.error('Erreur lors de la suppression de l\'utilisateur');
     }
   };

@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class MarketingService {
   
@@ -19,7 +20,7 @@ class MarketingService {
    */
   async createLead(leadData) {
     try {
-      console.log('🔍 [MarketingService] createLead appelé avec:', leadData);
+      logger.debug('🔍 [MarketingService] createLead appelé avec:', leadData);
       
       const { data, error } = await supabase
         .from('marketing_leads')
@@ -46,14 +47,14 @@ class MarketingService {
         .select()
         .single();
 
-      console.log('📊 [MarketingService] Résultat Supabase:', { data, error });
+      logger.debug('📊 [MarketingService] Résultat Supabase:', { data, error });
 
       if (error) throw error;
 
-      console.log('✅ [MarketingService] Lead créé avec succès:', data);
+      logger.debug('✅ [MarketingService] Lead créé avec succès:', data);
       return { success: true, lead: data };
     } catch (error) {
-      console.error('❌ [MarketingService] Erreur createLead:', error);
+      logger.error('❌ [MarketingService] Erreur createLead:', error);
       return { success: false, error: error.message };
     }
   }
@@ -92,7 +93,7 @@ class MarketingService {
           updated_at,
           last_contacted_at
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Filtrer par status
       if (filters.status) {
@@ -125,7 +126,7 @@ class MarketingService {
 
       return { success: true, leads: data };
     } catch (error) {
-      console.error('Erreur getLeads:', error);
+      logger.error('Erreur getLeads:', error);
       return { success: false, error: error.message };
     }
   }
@@ -147,7 +148,7 @@ class MarketingService {
 
       return { success: true, lead: data };
     } catch (error) {
-      console.error('Erreur getLeadById:', error);
+      logger.error('Erreur getLeadById:', error);
       return { success: false, error: error.message };
     }
   }
@@ -178,7 +179,7 @@ class MarketingService {
 
       return { success: true, lead: data };
     } catch (error) {
-      console.error('Erreur updateLeadStatus:', error);
+      logger.error('Erreur updateLeadStatus:', error);
       return { success: false, error: error.message };
     }
   }
@@ -202,7 +203,7 @@ class MarketingService {
 
       return { success: true, lead: data };
     } catch (error) {
-      console.error('Erreur assignLead:', error);
+      logger.error('Erreur assignLead:', error);
       return { success: false, error: error.message };
     }
   }
@@ -226,7 +227,7 @@ class MarketingService {
 
       return { success: true, lead: data };
     } catch (error) {
-      console.error('Erreur addNotes:', error);
+      logger.error('Erreur addNotes:', error);
       return { success: false, error: error.message };
     }
   }
@@ -247,7 +248,7 @@ class MarketingService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deleteLead:', error);
+      logger.error('Erreur deleteLead:', error);
       return { success: false, error: error.message };
     }
   }
@@ -260,7 +261,7 @@ class MarketingService {
     try {
       const { data: allLeads, error } = await supabase
         .from('marketing_leads')
-        .select('status, source, created_at');
+        .select('status, source, created_at').limit(500);
 
       if (error) throw error;
 
@@ -285,7 +286,7 @@ class MarketingService {
 
       return { success: true, stats };
     } catch (error) {
-      console.error('Erreur getLeadsStats:', error);
+      logger.error('Erreur getLeadsStats:', error);
       return { success: false, error: error.message };
     }
   }
@@ -302,7 +303,7 @@ class MarketingService {
       let query = supabase
         .from('team_members')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('display_order', { ascending: true }).limit(500);
 
       // Filtrer par active
       if (filters.active !== undefined) {
@@ -315,7 +316,7 @@ class MarketingService {
 
       return { success: true, members: data };
     } catch (error) {
-      console.error('Erreur getTeamMembers:', error);
+      logger.error('Erreur getTeamMembers:', error);
       return { success: false, error: error.message };
     }
   }
@@ -337,7 +338,7 @@ class MarketingService {
 
       return { success: true, member: data };
     } catch (error) {
-      console.error('Erreur createTeamMember:', error);
+      logger.error('Erreur createTeamMember:', error);
       return { success: false, error: error.message };
     }
   }
@@ -361,7 +362,7 @@ class MarketingService {
 
       return { success: true, member: data };
     } catch (error) {
-      console.error('Erreur updateTeamMember:', error);
+      logger.error('Erreur updateTeamMember:', error);
       return { success: false, error: error.message };
     }
   }
@@ -382,7 +383,7 @@ class MarketingService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deleteTeamMember:', error);
+      logger.error('Erreur deleteTeamMember:', error);
       return { success: false, error: error.message };
     }
   }
@@ -421,7 +422,7 @@ class MarketingService {
 
       return { success: true, event: data };
     } catch (error) {
-      console.error('Erreur trackEvent:', error);
+      logger.error('Erreur trackEvent:', error);
       return { success: false, error: error.message };
     }
   }
@@ -436,7 +437,7 @@ class MarketingService {
       let query = supabase
         .from('page_events')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (filters.page) {
         query = query.eq('page', filters.page);
@@ -460,7 +461,7 @@ class MarketingService {
 
       return { success: true, events: data };
     } catch (error) {
-      console.error('Erreur getEvents:', error);
+      logger.error('Erreur getEvents:', error);
       return { success: false, error: error.message };
     }
   }

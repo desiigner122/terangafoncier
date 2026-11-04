@@ -22,6 +22,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const logoUrl = "/images/logo.png";
 
@@ -50,7 +51,7 @@ const ModernLoginPage = () => {
           className: "bg-green-500 text-white",
       });
     } catch (err) {
-      console.error("Login error:", err);
+      logger.error("Login error:", err);
       const errorMessage = err.message.includes('Invalid login credentials') 
         ? "Email ou mot de passe incorrect."
         : "Une erreur est survenue lors de la connexion.";

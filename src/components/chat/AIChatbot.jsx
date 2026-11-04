@@ -21,6 +21,7 @@ import {
 import { advancedAIService } from '@/services/AdvancedAIService';
 import { blockchainAIService } from '@/services/BlockchainAIService';
 import DOMPurify from 'dompurify';
+import { logger } from '@/lib/logger';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -91,7 +92,7 @@ const AIChatbot = () => {
       }, 1500); // Simule le temps de réflexion de l'IA
 
     } catch (error) {
-      console.error('Erreur génération réponse IA:', error);
+      logger.error('Erreur génération réponse IA:', error);
       setIsTyping(false);
     }
   };

@@ -37,6 +37,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const DashboardParticulierHome = () => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ const DashboardParticulierHome = () => {
         ParticulierSupabaseService.getSupportTickets(user.id),
         ParticulierSupabaseService.getCommunalRequests(user.id),
         ParticulierSupabaseService.getNotifications(user.id),
-        supabase.from('conversation_participants').select('conversation_id').eq('user_id', user.id)
+        supabase.from('conversation_participants').select('conversation_id').eq('user_id', user.id).limit(500)
       ]);
 
       const documents = documentsRes?.data || [];
@@ -152,7 +153,7 @@ const DashboardParticulierHome = () => {
         demandesActives: communalRequests.length > 0 ? Math.round((activeRequests.length / communalRequests.length) * 100) : 0
       });
     } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
+      logger.error('Erreur chargement dashboard:', error);
     } finally {
       setLoading(false);
     }

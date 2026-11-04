@@ -63,6 +63,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { exportToCSV, formatCurrency, logAdminAction } from './adminUtils';
+import { logger } from '@/lib/logger';
 
 /** Section « Commissions » du tableau de bord administrateur. */
 const AdminCommissionsSection = ({ dashboardData, user }) => {
@@ -81,7 +82,7 @@ const AdminCommissionsSection = ({ dashboardData, user }) => {
         .from('blockchain_transactions')
         .select('*')
         .eq('status', 'completed')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (filter === 'pending') {
         query = query.eq('commission_paid', false);
@@ -105,7 +106,7 @@ const AdminCommissionsSection = ({ dashboardData, user }) => {
 
       setCommissions(commissionsData);
     } catch (error) {
-      console.error('Erreur chargement commissions:', error);
+      logger.error('Erreur chargement commissions:', error);
       toast.error('Erreur chargement');
     } finally {
       setLoading(false);

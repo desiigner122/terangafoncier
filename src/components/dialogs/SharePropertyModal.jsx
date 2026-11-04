@@ -19,6 +19,7 @@ import {
   Check,
   MessageCircle
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 /**
  * Modal de partage social pour les propriétés
@@ -65,7 +66,7 @@ const SharePropertyModal = ({ open, onOpenChange, property, shareUrl }) => {
       // Reset après 2 secondes
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Erreur copie:', error);
+      logger.error('Erreur copie:', error);
       if (window.safeGlobalToast) {
         window.safeGlobalToast({
           title: "Erreur",

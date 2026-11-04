@@ -34,6 +34,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const ProfilePage = () => {
   const { user, profile, signOut } = useAuth();
@@ -85,17 +86,17 @@ const ProfilePage = () => {
       let avatarUrl = profile?.avatar_url || null;
 
       if (avatarFile) {
-        console.log('🔄 Upload avatar en cours...');
+        logger.debug('🔄 Upload avatar en cours...');
         const uploadResult = await avatarManager.uploadAvatar(avatarFile, user.id);
         if (uploadResult.success) {
           avatarUrl = uploadResult.avatarUrl;
-          console.log('✅ Avatar uploadé avec succès:', avatarUrl);
+          logger.debug('✅ Avatar uploadé avec succès:', avatarUrl);
           window.safeGlobalToast({
             title: 'Avatar mis à jour',
             description: 'Votre photo de profil a été changée avec succès.'
           });
         } else {
-          console.error('❌ Erreur upload avatar:', uploadResult.error);
+          logger.error('❌ Erreur upload avatar:', uploadResult.error);
           window.safeGlobalToast({
             variant: 'destructive',
             title: 'Erreur upload avatar',
@@ -113,7 +114,7 @@ const ProfilePage = () => {
 
       window.safeGlobalToast({ title: 'Profil mis à jour', description: 'Vos informations ont été sauvegardées.' });
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile:", error);
       window.safeGlobalToast({ variant: 'destructive', title: 'Erreur de mise à jour', description: error.message });
     } finally {
       setIsUpdatingProfile(false);
@@ -138,7 +139,7 @@ const ProfilePage = () => {
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (error) {
-      console.error("Error updating password:", error);
+      logger.error("Error updating password:", error);
       window.safeGlobalToast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
     } finally {
       setIsUpdatingPassword(false);

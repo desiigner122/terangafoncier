@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { aiService } from '@/services/AIService';
+import { logger } from '@/lib/logger';
 
 // Contexte IA global
 const AIContext = createContext();
@@ -27,7 +28,7 @@ export const AIProvider = ({ children }) => {
       const insights = await aiService.generateMarketReport();
       setMarketInsights(insights);
     } catch (error) {
-      console.error('Erreur refresh données marché:', error);
+      logger.error('Erreur refresh données marché:', error);
     }
   };
 
@@ -51,7 +52,7 @@ export const AIProvider = ({ children }) => {
       
       return analysis;
     } catch (error) {
-      console.error('Erreur analyse propriété:', error);
+      logger.error('Erreur analyse propriété:', error);
       return null;
     } finally {
       setIsAnalyzing(false);
@@ -65,7 +66,7 @@ export const AIProvider = ({ children }) => {
       const insights = await aiService.getMarketInsights(zone);
       return insights;
     } catch (error) {
-      console.error('Erreur insights marché:', error);
+      logger.error('Erreur insights marché:', error);
       return null;
     }
   };
@@ -80,7 +81,7 @@ export const AIProvider = ({ children }) => {
       );
       return recommendations;
     } catch (error) {
-      console.error('Erreur recommandations:', error);
+      logger.error('Erreur recommandations:', error);
       return [];
     }
   };

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 // Service IA Central pour Teranga Foncier
 class AIService {
   constructor() {
@@ -55,7 +56,7 @@ class AIService {
       
       return analysis;
     } catch (error) {
-      console.error('Erreur analyse prix:', error);
+      logger.error('Erreur analyse prix:', error);
       return this.getFallbackPriceAnalysis(propertyData);
     }
   }

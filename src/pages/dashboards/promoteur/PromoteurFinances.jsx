@@ -33,6 +33,7 @@ import {
   TrendingDown,
   Loader2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurFinances = () => {
   const { user } = useAuth();
@@ -81,16 +82,16 @@ const PromoteurFinances = () => {
             .from('developer_projects')
             .select('*')
             .eq('developer_id', user.id)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false }).limit(500),
           supabase
             .from('project_sales')
             .select('*')
-            .eq('promoteur_id', user.id),
+            .eq('promoteur_id', user.id).limit(500),
           supabase
             .from('financial_transactions')
             .select('*')
             .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }).limit(500)
         ]);
 
         const projectList = projects || [];
@@ -283,7 +284,7 @@ const PromoteurFinances = () => {
           .reduce((sum, s) => sum + (Number(s.price) || 0), 0);
         setReceivablesSummary({ upcoming, overdue: overdueTotal, collectedThisMonth });
       } catch (err) {
-        console.error('Erreur chargement finances promoteur:', err);
+        logger.error('Erreur chargement finances promoteur:', err);
       } finally {
         setLoading(false);
       }

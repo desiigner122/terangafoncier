@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import { logger } from '@/lib/logger';
 
 const ParticulierMesOffres = () => {
   const outletContext = useOutletContext();
@@ -49,7 +50,7 @@ const ParticulierMesOffres = () => {
 
       setOffers(result.data || []);
     } catch (error) {
-      console.error('Erreur chargement offres:', error);
+      logger.error('Erreur chargement offres:', error);
       window.safeGlobalToast?.({
         description: 'Erreur lors du chargement des offres',
         variant: 'destructive'

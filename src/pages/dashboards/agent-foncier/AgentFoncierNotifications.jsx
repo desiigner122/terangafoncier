@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Icône choisie d'après le type de notification (présentation, pas une donnée fabriquée)
 const ICON_BY_TYPE = {
@@ -71,10 +72,10 @@ const AgentFoncierNotifications = () => {
       .from('notifications')
       .select('id, user_id, title, message, type, read, created_at')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }).limit(500);
 
     if (error) {
-      console.error('Erreur chargement notifications:', error);
+      logger.error('Erreur chargement notifications:', error);
       setNotifications([]);
     } else {
       setNotifications(data || []);

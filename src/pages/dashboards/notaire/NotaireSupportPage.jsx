@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const NotaireSupportPage = () => {
   const { user } = useAuth();
@@ -46,7 +47,7 @@ const NotaireSupportPage = () => {
         .from('support_tickets')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       if (error) throw error;
 
       // Compteur de messages réel (support_ticket_messages)
@@ -56,7 +57,7 @@ const NotaireSupportPage = () => {
         const { data: msgs } = await supabase
           .from('support_ticket_messages')
           .select('ticket_id')
-          .in('ticket_id', ids);
+          .in('ticket_id', ids).limit(500);
         (msgs || []).forEach(m => {
           countsByTicket[m.ticket_id] = (countsByTicket[m.ticket_id] || 0) + 1;
         });
@@ -64,7 +65,7 @@ const NotaireSupportPage = () => {
 
       setTickets((ticketsData || []).map(t => ({ ...t, messages_count: countsByTicket[t.id] || 0 })));
     } catch (error) {
-      console.error('Erreur chargement tickets:', error);
+      logger.error('Erreur chargement tickets:', error);
       setTickets([]);
     } finally {
       setIsLoading(false);
@@ -78,11 +79,11 @@ const NotaireSupportPage = () => {
         .from('support_ticket_messages')
         .select('*')
         .eq('ticket_id', ticket.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
       setMessages(data || []);
     } catch (e) {
-      console.error('Erreur chargement messages:', e);
+      logger.error('Erreur chargement messages:', e);
       setMessages([]);
     }
   };
@@ -138,7 +139,7 @@ const NotaireSupportPage = () => {
       await loadMessages(selectedTicket);
       await loadTickets();
     } catch (e) {
-      console.error('Erreur envoi message:', e);
+      logger.error('Erreur envoi message:', e);
     }
   };
 
@@ -164,7 +165,7 @@ const NotaireSupportPage = () => {
       await loadTickets();
       if (data) setSelectedTicket({ ...data, messages_count: 0 });
     } catch (e) {
-      console.error('Erreur création ticket:', e);
+      logger.error('Erreur création ticket:', e);
     } finally {
       setIsCreating(false);
     }

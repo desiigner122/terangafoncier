@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { logger } from '@/lib/logger';
 
 const NotaireNotificationsPage = () => {
   const { user } = useAuth();
@@ -39,11 +40,11 @@ const NotaireNotificationsPage = () => {
       if (result.success) {
         setNotifications(result.data || []);
       } else {
-        console.error('Erreur lors du chargement:', result.error);
+        logger.error('Erreur lors du chargement:', result.error);
         setNotifications([]);
       }
     } catch (error) {
-      console.error('Erreur chargement notifications:', error);
+      logger.error('Erreur chargement notifications:', error);
       setNotifications([]);
     } finally {
       setIsLoading(false);
@@ -113,7 +114,7 @@ const NotaireNotificationsPage = () => {
       .from('notifications')
       .update({ read: true })
       .eq('id', id);
-    if (error) console.error('Erreur markAsRead:', error);
+    if (error) logger.error('Erreur markAsRead:', error);
   };
 
   const markAllAsRead = async () => {
@@ -125,7 +126,7 @@ const NotaireNotificationsPage = () => {
       .update({ read: true })
       .eq('user_id', user.id)
       .eq('read', false);
-    if (error) console.error('Erreur markAllAsRead:', error);
+    if (error) logger.error('Erreur markAllAsRead:', error);
   };
 
   // ✅ Suppression réelle de la ligne notifications
@@ -135,7 +136,7 @@ const NotaireNotificationsPage = () => {
       .from('notifications')
       .delete()
       .eq('id', id);
-    if (error) console.error('Erreur deleteNotification:', error);
+    if (error) logger.error('Erreur deleteNotification:', error);
   };
 
   const filteredNotifications = notifications.filter(n => {

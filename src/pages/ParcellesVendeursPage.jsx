@@ -31,6 +31,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase, fetchDirect } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
@@ -185,7 +186,7 @@ const ParcellesVendeursPage = () => {
 
         setParcelles(mappedData);
       } catch (err) {
-        console.error('Erreur chargement parcelles:', err);
+        logger.error('Erreur chargement parcelles:', err);
         setError(err.message);
       } finally {
         setLoading(false);

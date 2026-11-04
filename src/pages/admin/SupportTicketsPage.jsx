@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTicketAlt, FaReply, FaClock, FaCheckCircle, FaExclamationTriangle, FaUser, FaCalendarAlt } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const SupportTicketsPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -38,7 +39,7 @@ const SupportTicketsPage = () => {
             email
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Apply filters
       if (filters.status) {
@@ -60,10 +61,10 @@ const SupportTicketsPage = () => {
       setTickets(data || []);
       setTotalPages(Math.ceil((count || 0) / 20));
       
-      console.log('✅ Support tickets loaded from Supabase:', data?.length);
+      logger.debug('✅ Support tickets loaded from Supabase:', data?.length);
       
     } catch (error) {
-      console.error('❌ Error loading support tickets:', error);
+      logger.error('❌ Error loading support tickets:', error);
       toast.error('Erreur lors du chargement des tickets');
     } finally {
       setLoading(false);
@@ -98,7 +99,7 @@ const SupportTicketsPage = () => {
       setInternalNote('');
       fetchTickets(); // Recharger la liste
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de l\'envoi de la réponse');
     }
   };

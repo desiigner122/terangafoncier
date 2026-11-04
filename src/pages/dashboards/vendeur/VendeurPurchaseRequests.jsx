@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
+import { logger } from '@/lib/logger';
 
 const VendeurPurchaseRequests = ({ user: propsUser }) => {
   // FIX: Accepter user via props (passé par le sidebar) au lieu de outletContext
@@ -108,7 +109,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
             read: false
           });
         } catch (notifError) {
-          console.warn('⚠️ [ACCEPT] Notification non envoyée (non bloquant):', notifError);
+          logger.warn('⚠️ [ACCEPT] Notification non envoyée (non bloquant):', notifError);
         }
       }
 
@@ -122,7 +123,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       toast.success('✅ Offre acceptée avec succès');
       await loadRequests();
     } catch (error) {
-      console.error('❌ [ACCEPT] Erreur:', error);
+      logger.error('❌ [ACCEPT] Erreur:', error);
       toast.error('Erreur lors de l\'acceptation: ' + error.message);
     } finally {
       setActionLoading(null);
@@ -149,7 +150,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
             read: false
           });
         } catch (notifError) {
-          console.warn('⚠️ [REJECT] Notification non envoyée (non bloquant):', notifError);
+          logger.warn('⚠️ [REJECT] Notification non envoyée (non bloquant):', notifError);
         }
       }
 
@@ -162,7 +163,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       toast.success('Offre refusée avec succès');
       await loadRequests();
     } catch (error) {
-      console.error('❌ Erreur refus:', error);
+      logger.error('❌ Erreur refus:', error);
       toast.error('Erreur lors du refus de l\'offre: ' + error.message);
     } finally {
       setActionLoading(null);
@@ -170,7 +171,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   const handleNegotiate = (request) => {
-    console.log('💬 [NEGOTIATE] Ouverture modal de négociation pour:', request.id);
+    logger.debug('💬 [NEGOTIATE] Ouverture modal de négociation pour:', request.id);
     setSelectedRequest(request);
     setShowNegotiationModal(true);
   };
@@ -219,7 +220,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           read: false
         });
       } catch (notifError) {
-        console.warn('⚠️ [NEGOTIATE] Notification non envoyée (non bloquant):', notifError);
+        logger.warn('⚠️ [NEGOTIATE] Notification non envoyée (non bloquant):', notifError);
       }
 
       // 4. Fermer modal et recharger
@@ -230,7 +231,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       toast.success('💬 Contre-offre envoyée avec succès ! L\'acheteur sera notifié.');
 
     } catch (error) {
-      console.error('❌ [NEGOTIATE] Erreur:', error);
+      logger.error('❌ [NEGOTIATE] Erreur:', error);
       toast.error('Erreur lors de l\'envoi de la contre-offre: ' + error.message);
     } finally {
       setIsNegotiating(false);
@@ -238,7 +239,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   const handleViewDetails = (request) => {
-    console.log('👁️ [DETAILS] Ouverture modal détails pour:', request.id);
+    logger.debug('👁️ [DETAILS] Ouverture modal détails pour:', request.id);
     setSelectedRequest(request);
     setShowDetailsModal(true);
   };
@@ -277,7 +278,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         ? await supabase
             .from('properties')
             .select('id, title, name, price, location, surface, status')
-            .in('id', propertyIds)
+            .in('id', propertyIds).limit(500)
         : { data: [] };
       const propertyMap = Object.fromEntries((propertiesExtra || []).map(p => [p.id, p]));
 
@@ -287,7 +288,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         ? await supabase
             .from('profiles')
             .select('id, first_name, last_name, full_name, email, phone')
-            .in('id', buyerIds)
+            .in('id', buyerIds).limit(500)
         : { data: [] };
       const buyerMap = Object.fromEntries((buyerProfiles || []).map(b => [b.id, b]));
 
@@ -319,7 +320,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
       setRequests(enrichedRequests);
     } catch (error) {
-      console.error('❌ Erreur chargement demandes:', error);
+      logger.error('❌ Erreur chargement demandes:', error);
       toast.error('Erreur lors du chargement des demandes d\'achat');
     } finally {
       setLoading(false);

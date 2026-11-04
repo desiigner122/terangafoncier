@@ -30,6 +30,7 @@ import {
   PieChart,
   Loader2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const PromoteurOverview = () => {
   const { user } = useAuth();
@@ -65,14 +66,14 @@ const PromoteurOverview = () => {
           .from('developer_projects')
           .select('*')
           .eq('developer_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         // Ventes du promoteur
         const { data: sales } = await supabase
           .from('project_sales')
           .select('*')
           .eq('promoteur_id', user.id)
-          .order('sale_date', { ascending: false });
+          .order('sale_date', { ascending: false }).limit(500);
 
         // Clients / prospects
         const { count: clientsCount } = await supabase
@@ -154,7 +155,7 @@ const PromoteurOverview = () => {
 
         setRecentSales(salesList.slice(0, 5));
       } catch (e) {
-        console.error('Erreur chargement PromoteurOverview:', e);
+        logger.error('Erreur chargement PromoteurOverview:', e);
       } finally {
         setLoading(false);
       }

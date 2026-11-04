@@ -31,6 +31,7 @@ import {
   TreePine
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
+import { logger } from '@/lib/logger';
 
 const AIAssistedTerrainConfigPage = () => {
   const [step, setStep] = useState(1);
@@ -85,7 +86,7 @@ const AIAssistedTerrainConfigPage = () => {
       const analysis = await autonomousAI.generateAutonomousMarketInsights();
       setAiAnalysis(analysis);
     } catch (error) {
-      console.error('Erreur analyse IA:', error);
+      logger.error('Erreur analyse IA:', error);
     }
   };
 
@@ -112,7 +113,7 @@ const AIAssistedTerrainConfigPage = () => {
       // Configuration spéciale pour Liberté 6 si sélectionné
       if (configuration.zones.includes('Liberté 6')) {
         const liberte6Alert = await autonomousAI.createLiberte6AlertSystem(configuration);
-        console.log('Configuration Liberté 6:', liberte6Alert);
+        logger.debug('Configuration Liberté 6:', liberte6Alert);
       }
 
       setConfigComplete(true);

@@ -77,6 +77,7 @@ const MapLegend = () => (
 
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const MapPage = () => {
   const [parcels, setParcels] = useState([]);
@@ -102,7 +103,7 @@ const MapPage = () => {
       } catch (err) {
         setFetchError(err.message);
         setParcels([]);
-        console.error('Erreur lors du chargement des parcelles:', err);
+        logger.error('Erreur lors du chargement des parcelles:', err);
       } finally {
         setLoading(false);
       }
@@ -170,17 +171,17 @@ const MapPage = () => {
           event.preventDefault();
           const query = event.target.elements.locationSearch.value;
           if (!query) return;
-          console.log("Recherche pour :", query);
+          logger.debug("Recherche pour :", query);
           alert(`Recherche pour "${query}" - L'intégration de l'API de Géocodage est nécessaire pour cette fonctionnalité.`);
       }
 
       // Afficher les erreurs de géolocalisation de manière non-bloquante
       useEffect(() => {
         if (geoError) {
-          console.warn('Erreur de géolocalisation:', geoError);
+          logger.warn('Erreur de géolocalisation:', geoError);
         }
         if (userPosition) {
-          console.log('Position utilisateur obtenue:', userPosition);
+          logger.debug('Position utilisateur obtenue:', userPosition);
         }
       }, [geoError, userPosition]);
 

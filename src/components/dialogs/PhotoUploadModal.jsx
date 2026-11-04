@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import imageCompression from 'browser-image-compression';
+import { logger } from '@/lib/logger';
 
 /**
  * Modal d'upload photos avec analyse IA automatique
@@ -276,7 +277,7 @@ const PhotoUploadModal = ({
       onOpenChange(false);
       resetModal();
     } catch (error) {
-      console.error('Erreur upload photos:', error);
+      logger.error('Erreur upload photos:', error);
       if (window.safeGlobalToast) {
         window.safeGlobalToast({
           title: "Erreur d'upload",

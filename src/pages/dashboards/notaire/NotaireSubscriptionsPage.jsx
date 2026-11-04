@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // Libellé de période dérivé de la durée réelle (duration_months)
 const periodLabel = (months) => {
@@ -70,7 +71,7 @@ const NotaireSubscriptionsPage = () => {
         .from('user_subscriptions')
         .select('id, status, start_date, end_date, last_payment, amount_paid, created_at, plan:subscription_plans(name, duration_months)')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
       setPaymentHistory(history || []);
 
       // Activité notariale réelle (indicateurs d'usage)
@@ -93,7 +94,7 @@ const NotaireSubscriptionsPage = () => {
         clients: clientsRes.count || 0
       });
     } catch (error) {
-      console.error('Erreur chargement abonnements:', error);
+      logger.error('Erreur chargement abonnements:', error);
     } finally {
       setIsLoading(false);
     }

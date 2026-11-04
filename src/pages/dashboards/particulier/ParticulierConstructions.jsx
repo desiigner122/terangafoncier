@@ -35,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParticulierConstructions = () => {
   const outletContext = useOutletContext();
@@ -65,7 +66,7 @@ const ParticulierConstructions = () => {
 
   const loadConstructionRequests = async () => {
     if (!user?.id) {
-      console.log('❌ Utilisateur non disponible');
+      logger.debug('❌ Utilisateur non disponible');
       setLoading(false);
       return;
     }
@@ -90,7 +91,7 @@ const ParticulierConstructions = () => {
       setDemandesConstruction({ enCours, terminees, rejettees });
 
     } catch (error) {
-      console.error('Erreur chargement demandes:', error);
+      logger.error('Erreur chargement demandes:', error);
       toast.error('Erreur lors du chargement des demandes');
     } finally {
       setLoading(false);
@@ -130,7 +131,7 @@ const ParticulierConstructions = () => {
       loadConstructionRequests();
 
     } catch (error) {
-      console.error('Erreur création demande:', error);
+      logger.error('Erreur création demande:', error);
       toast.error('Erreur lors de la création de la demande');
     } finally {
       setLoading(false);

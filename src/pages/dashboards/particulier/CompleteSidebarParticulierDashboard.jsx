@@ -50,6 +50,7 @@ import { supabase } from '@/lib/supabaseClient';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'sonner';
 import TerangaLogo from '@/components/ui/TerangaLogo';
+import { logger } from '@/lib/logger';
 
 // Composants rendus via Outlet - pas besoin d'imports
 
@@ -123,7 +124,7 @@ const CompleteSidebarParticulierDashboard = () => {
         setUnreadMessagesCount(0);
       }
     } catch (error) {
-      console.error('Erreur chargement compteurs:', error);
+      logger.error('Erreur chargement compteurs:', error);
     }
   };
 
@@ -134,7 +135,7 @@ const CompleteSidebarParticulierDashboard = () => {
       toast.success('Déconnexion réussie');
       navigate('/');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      logger.error('Erreur lors de la déconnexion:', error);
       toast.error('Erreur lors de la déconnexion');
     }
   };

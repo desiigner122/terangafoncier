@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
 import { advancedAIService } from '@/services/AdvancedAIService';
+import { logger } from '@/lib/logger';
 
 const AIAnalyticsDashboard = () => {
   const [aiInsights, setAiInsights] = useState(null);
@@ -50,7 +51,7 @@ const AIAnalyticsDashboard = () => {
       setAiInsights(insights);
       setBlockchainMetrics(blockchain);
     } catch (error) {
-      console.error('Erreur chargement analytics:', error);
+      logger.error('Erreur chargement analytics:', error);
     } finally {
       setIsLoading(false);
     }

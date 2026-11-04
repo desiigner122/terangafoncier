@@ -33,6 +33,7 @@ import {
   Eye,
   Sparkles
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const logoUrl = "/images/logo.png";
 
@@ -54,7 +55,7 @@ const BlockchainFooter = () => {
           platform: platformRes?.stats || null
         });
       } catch (error) {
-        console.error('Erreur chargement stats footer:', error);
+        logger.error('Erreur chargement stats footer:', error);
         if (isMounted) setLiveStats({ blockchain: null, platform: null });
       }
     };

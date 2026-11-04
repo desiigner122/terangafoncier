@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Archive, FileText, Loader2, Search, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Archives Notariales (page routée) — reconnectée aux tables réelles :
@@ -66,12 +67,12 @@ const ArchivesPage = () => {
             .select('id, act_type, reference, client_name, status, signed_at, created_at')
             .eq('notaire_id', user.id)
             .in('status', ['completed', 'signed'])
-            .order('signed_at', { ascending: false, nullsFirst: false }),
+            .order('signed_at', { ascending: false, nullsFirst: false }).limit(500),
           supabase
             .from('documents')
             .select('id, name, type, url, status, created_at')
             .eq('owner_id', user.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }).limit(500)
         ]);
 
         if (actsRes.error) throw actsRes.error;
@@ -81,7 +82,7 @@ const ArchivesPage = () => {
           setDocuments(docsRes.data || []);
         }
       } catch (err) {
-        console.error('Erreur chargement archives notariales:', err);
+        logger.error('Erreur chargement archives notariales:', err);
         if (active) {
           setActs([]);
           setDocuments([]);

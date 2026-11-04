@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 class CMSService {
   
@@ -34,7 +35,7 @@ class CMSService {
           created_at,
           updated_at
         `)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
 
       // Filtrer par status
       if (filters.status) {
@@ -52,7 +53,7 @@ class CMSService {
 
       return { success: true, pages: data };
     } catch (error) {
-      console.error('Erreur getPages:', error);
+      logger.error('Erreur getPages:', error);
       return { success: false, error: error.message };
     }
   }
@@ -87,7 +88,7 @@ class CMSService {
 
       return { success: true, page: data };
     } catch (error) {
-      console.error('Erreur getPageBySlug:', error);
+      logger.error('Erreur getPageBySlug:', error);
       return { success: false, error: error.message };
     }
   }
@@ -124,7 +125,7 @@ class CMSService {
 
       return { success: true, page: data };
     } catch (error) {
-      console.error('Erreur createPage:', error);
+      logger.error('Erreur createPage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -148,7 +149,7 @@ class CMSService {
 
       return { success: true, page: data };
     } catch (error) {
-      console.error('Erreur updatePage:', error);
+      logger.error('Erreur updatePage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -174,7 +175,7 @@ class CMSService {
 
       return { success: true, page: data };
     } catch (error) {
-      console.error('Erreur publishPage:', error);
+      logger.error('Erreur publishPage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -195,7 +196,7 @@ class CMSService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deletePage:', error);
+      logger.error('Erreur deletePage:', error);
       return { success: false, error: error.message };
     }
   }
@@ -213,13 +214,13 @@ class CMSService {
         .from('cms_sections')
         .select('*')
         .eq('page_id', pageId)
-        .order('order_index', { ascending: true });
+        .order('order_index', { ascending: true }).limit(500);
 
       if (error) throw error;
 
       return { success: true, sections: data };
     } catch (error) {
-      console.error('Erreur getSections:', error);
+      logger.error('Erreur getSections:', error);
       return { success: false, error: error.message };
     }
   }
@@ -241,7 +242,7 @@ class CMSService {
 
       return { success: true, section: data };
     } catch (error) {
-      console.error('Erreur createSection:', error);
+      logger.error('Erreur createSection:', error);
       return { success: false, error: error.message };
     }
   }
@@ -265,7 +266,7 @@ class CMSService {
 
       return { success: true, section: data };
     } catch (error) {
-      console.error('Erreur updateSection:', error);
+      logger.error('Erreur updateSection:', error);
       return { success: false, error: error.message };
     }
   }
@@ -286,7 +287,7 @@ class CMSService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deleteSection:', error);
+      logger.error('Erreur deleteSection:', error);
       return { success: false, error: error.message };
     }
   }
@@ -303,7 +304,7 @@ class CMSService {
       let query = supabase
         .from('media_assets')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Filtrer par tags
       if (filters.tags && filters.tags.length > 0) {
@@ -321,7 +322,7 @@ class CMSService {
 
       return { success: true, assets: data };
     } catch (error) {
-      console.error('Erreur getMediaAssets:', error);
+      logger.error('Erreur getMediaAssets:', error);
       return { success: false, error: error.message };
     }
   }
@@ -368,7 +369,7 @@ class CMSService {
 
       return { success: true, asset: data };
     } catch (error) {
-      console.error('Erreur uploadMedia:', error);
+      logger.error('Erreur uploadMedia:', error);
       return { success: false, error: error.message };
     }
   }
@@ -392,7 +393,7 @@ class CMSService {
 
       return { success: true, asset: data };
     } catch (error) {
-      console.error('Erreur updateMediaAsset:', error);
+      logger.error('Erreur updateMediaAsset:', error);
       return { success: false, error: error.message };
     }
   }
@@ -421,7 +422,7 @@ class CMSService {
         .from('media')
         .remove([fileName]);
 
-      if (storageError) console.warn('Erreur suppression storage:', storageError);
+      if (storageError) logger.warn('Erreur suppression storage:', storageError);
 
       // Supprimer de la table
       const { error } = await supabase
@@ -433,7 +434,7 @@ class CMSService {
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur deleteMediaAsset:', error);
+      logger.error('Erreur deleteMediaAsset:', error);
       return { success: false, error: error.message };
     }
   }

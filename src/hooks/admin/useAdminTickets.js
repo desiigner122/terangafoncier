@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook personnalisé pour la gestion des tickets de support
@@ -25,7 +26,7 @@ export const useAdminTickets = () => {
       let query = supabase
         .from('support_tickets')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       // Filtres
       if (filters.status !== 'all') {
@@ -43,7 +44,7 @@ export const useAdminTickets = () => {
       // Fetch profiles for assigned_to lookup
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, nom, email, full_name');
+        .select('id, nom, email, full_name').limit(500);
 
       // Create lookup map
       const profilesMap = (profiles || []).reduce((map, p) => {
@@ -70,7 +71,7 @@ export const useAdminTickets = () => {
 
       setTickets(filteredData);
     } catch (err) {
-      console.error('Erreur tickets:', err);
+      logger.error('Erreur tickets:', err);
       setError(err.message);
       toast.error('Erreur lors du chargement des tickets');
     } finally {
@@ -105,7 +106,7 @@ export const useAdminTickets = () => {
       toast.success('Réponse envoyée');
       await fetchTickets();
     } catch (err) {
-      console.error('Erreur réponse:', err);
+      logger.error('Erreur réponse:', err);
       toast.error('Erreur lors de l\'envoi de la réponse');
     }
   };
@@ -132,7 +133,7 @@ export const useAdminTickets = () => {
       toast.success(`Statut changé: ${newStatus}`);
       await fetchTickets();
     } catch (err) {
-      console.error('Erreur statut:', err);
+      logger.error('Erreur statut:', err);
       toast.error('Erreur lors du changement de statut');
     }
   };
@@ -158,7 +159,7 @@ export const useAdminTickets = () => {
       toast.success('Ticket assigné');
       await fetchTickets();
     } catch (err) {
-      console.error('Erreur assignation:', err);
+      logger.error('Erreur assignation:', err);
       toast.error('Erreur lors de l\'assignation');
     }
   };

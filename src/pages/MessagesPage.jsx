@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Helmet } from 'react-helmet-async';
 import ModernSidebar from '@/components/layout/ModernSidebar';
 import { useUser } from '@/hooks/useUser';
+import { logger } from '@/lib/logger';
 
 const MessagesPage = () => {
   const { user, profile } = useUser();
@@ -100,7 +101,7 @@ const MessagesPage = () => {
     if (!messageText.trim() || !selectedConversation) return;
     
     // Logique d'envoi de message ici
-    console.log('Envoi message:', messageText);
+    logger.debug('Envoi message:', messageText);
     setMessageText('');
   };
 

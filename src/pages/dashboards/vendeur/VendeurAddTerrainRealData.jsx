@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import StatsService from '@/services/StatsService';
+import { logger } from '@/lib/logger';
 
 const VendeurAddTerrainRealData = () => {
   const { user } = useAuth();
@@ -578,7 +579,7 @@ const VendeurAddTerrainRealData = () => {
             if (docInsertError) throw docInsertError;
           }
         } catch (docError) {
-          console.warn('Documents non téléversés (non bloquant) :', docError);
+          logger.warn('Documents non téléversés (non bloquant) :', docError);
           toast.error("L'annonce a été publiée, mais certains documents n'ont pas pu être envoyés.");
         }
       }
@@ -651,7 +652,7 @@ const VendeurAddTerrainRealData = () => {
       setCurrentStep(1);
 
     } catch (error) {
-      console.error('Erreur ajout terrain:', error);
+      logger.error('Erreur ajout terrain:', error);
       toast.error('Erreur lors de l\'ajout du terrain: ' + error.message);
     } finally {
       setIsSubmitting(false);

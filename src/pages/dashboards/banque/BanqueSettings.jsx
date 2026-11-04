@@ -200,7 +200,7 @@ const BanqueSettings = ({ dashboardStats = {} }) => {
       const { data } = await supabase
         .from('loans')
         .select('id, amount, type, client_name, status, created_at')
-        .eq('bank_id', user.id);
+        .eq('bank_id', user.id).limit(500);
       setLoans(data || []);
     } catch {
       setLoans([]);

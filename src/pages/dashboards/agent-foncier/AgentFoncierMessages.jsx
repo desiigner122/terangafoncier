@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 // Initiales à partir d'un nom (ex: "Amadou Diallo" -> "AD")
 const getInitials = (name) => {
@@ -83,7 +84,7 @@ const AgentFoncierMessages = () => {
       const { data: participations, error: partError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id).limit(500);
       if (partError) throw partError;
 
       const conversationIds = [...new Set((participations || []).map(p => p.conversation_id).filter(Boolean))];
@@ -98,7 +99,7 @@ const AgentFoncierMessages = () => {
         .from('conversations')
         .select('*, participants:conversation_participants(user_id)')
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }).limit(500);
       if (convError) throw convError;
 
       // 3) Autres participants (les clients), biens liés et messages en une passe
@@ -113,16 +114,16 @@ const AgentFoncierMessages = () => {
 
       const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
         otherParticipantIds.length > 0
-          ? supabase.from('profiles').select('id, full_name, first_name, last_name, avatar_url, city, region').in('id', otherParticipantIds)
+          ? supabase.from('profiles').select('id, full_name, first_name, last_name, avatar_url, city, region').in('id', otherParticipantIds).limit(500)
           : Promise.resolve({ data: [] }),
         propertyIds.length > 0
-          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds)
+          ? supabase.from('properties').select('id, title, name, location').in('id', propertyIds).limit(500)
           : Promise.resolve({ data: [] }),
         supabase
           .from('messages')
           .select('id, conversation_id, sender_id, content, read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }).limit(500)
       ]);
 
       const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
@@ -172,7 +173,7 @@ const AgentFoncierMessages = () => {
       setConversations(formatted);
       setLoading(false);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
+      logger.error('Erreur chargement conversations:', error);
       setConversations([]);
       setLoading(false);
     }
@@ -184,7 +185,7 @@ const AgentFoncierMessages = () => {
         .from('messages')
         .select('id, conversation_id, sender_id, content, read, created_at')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (error) throw error;
 
       const formatted = (data || []).map(msg => ({
@@ -200,7 +201,7 @@ const AgentFoncierMessages = () => {
       setMessages(formatted);
       markConversationRead(conversationId);
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
+      logger.error('Erreur chargement messages:', error);
       setMessages([]);
     }
   };
@@ -219,7 +220,7 @@ const AgentFoncierMessages = () => {
         c.id === conversationId ? { ...c, unread: 0 } : c
       ));
     } catch (error) {
-      console.error('Erreur marquage lu:', error);
+      logger.error('Erreur marquage lu:', error);
     }
   };
 
@@ -263,7 +264,7 @@ const AgentFoncierMessages = () => {
           : c
       ));
     } catch (error) {
-      console.error('Erreur envoi message:', error);
+      logger.error('Erreur envoi message:', error);
     } finally {
       setSending(false);
     }

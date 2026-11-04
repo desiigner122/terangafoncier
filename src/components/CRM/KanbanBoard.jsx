@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GripVertical, Plus, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 const KanbanBoard = ({ deals = [], contacts = [], onMoveDeal, onEditDeal, onDeleteDeal, onAddDeal, isLoading = false }) => {
   const [draggedDeal, setDraggedDeal] = useState(null);
@@ -52,7 +53,7 @@ const KanbanBoard = ({ deals = [], contacts = [], onMoveDeal, onEditDeal, onDele
     try {
       await onMoveDeal(draggedDeal.id, targetStage);
     } catch (error) {
-      console.error('Failed to move deal:', error);
+      logger.error('Failed to move deal:', error);
     } finally {
       setDraggedDeal(null);
     }
@@ -67,7 +68,7 @@ const KanbanBoard = ({ deals = [], contacts = [], onMoveDeal, onEditDeal, onDele
     try {
       await onDeleteDeal(dealId);
     } catch (error) {
-      console.error('Failed to delete deal:', error);
+      logger.error('Failed to delete deal:', error);
     } finally {
       setDeletingId(null);
     }

@@ -20,6 +20,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const sampleTransactions = [
   { id: 'TRN-003-2025', date: '2025-08-15', description: 'Achat de la parcelle SLY-NGP-010 (2/4)', amount: 10312500, type: 'Achat de terrain' },
@@ -52,18 +53,18 @@ const PaymentPage = () => {
       setFetchError(null);
       try {
         // Récupérer les méthodes de paiement
-        const { data: methods, error: methodsError } = await supabase.from('payment_methods').select('*');
+        const { data: methods, error: methodsError } = await supabase.from('payment_methods').select('*').limit(500);
         if (methodsError) throw methodsError;
         setPaymentMethods(methods);
         // Récupérer les banques partenaires
-        const { data: banks, error: banksError } = await supabase.from('partner_banks').select('*');
+        const { data: banks, error: banksError } = await supabase.from('partner_banks').select('*').limit(500);
         if (banksError) throw banksError;
         setPartnerBanks(banks);
       } catch (err) {
         setFetchError(err.message);
         setPaymentMethods([]);
         setPartnerBanks([]);
-        console.error('Erreur lors du chargement des méthodes de paiement ou banques:', err);
+        logger.error('Erreur lors du chargement des méthodes de paiement ou banques:', err);
       } finally {
         setLoadingData(false);
       }

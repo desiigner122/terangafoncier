@@ -29,6 +29,7 @@ import {
   Loader2,
   Inbox
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const GeometreSettings = () => {
   const { user, profile } = useAuth();
@@ -94,7 +95,7 @@ const GeometreSettings = () => {
           avatar_url: data?.avatar_url || ''
         });
       } catch (err) {
-        console.error('Erreur chargement profil géomètre:', err);
+        logger.error('Erreur chargement profil géomètre:', err);
         if (active) {
           toast.error('Impossible de charger votre profil.');
         }
@@ -127,7 +128,7 @@ const GeometreSettings = () => {
       if (error) throw error;
       toast.success('Profil mis à jour.');
     } catch (err) {
-      console.error('Erreur sauvegarde profil géomètre:', err);
+      logger.error('Erreur sauvegarde profil géomètre:', err);
       toast.error('La sauvegarde a échoué.');
     } finally {
       setSaving(false);
@@ -148,7 +149,7 @@ const GeometreSettings = () => {
       if (error) throw error;
       toast.success(`Un email de réinitialisation a été envoyé à ${email}.`);
     } catch (err) {
-      console.error('Erreur réinitialisation mot de passe:', err);
+      logger.error('Erreur réinitialisation mot de passe:', err);
       toast.error("Impossible d'envoyer l'email de réinitialisation.");
     } finally {
       setSendingReset(false);

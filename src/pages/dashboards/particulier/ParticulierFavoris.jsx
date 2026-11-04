@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const ParticulierFavoris = () => {
   const outletContext = useOutletContext();
@@ -103,7 +104,7 @@ const ParticulierFavoris = () => {
       });
 
     } catch (error) {
-      console.error('Erreur chargement favoris:', error);
+      logger.error('Erreur chargement favoris:', error);
       toast.error('Erreur lors du chargement des favoris');
     } finally {
       setLoading(false);
@@ -118,7 +119,7 @@ const ParticulierFavoris = () => {
       toast.success('Retiré des favoris');
       loadFavorites(); // Recharger la liste
     } catch (error) {
-      console.error('Erreur suppression favori:', error);
+      logger.error('Erreur suppression favori:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

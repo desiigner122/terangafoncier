@@ -24,6 +24,7 @@ import {
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 import { Link, useNavigate } from 'react-router-dom';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
+import { logger } from '@/lib/logger';
 
 
 const AddParcelPageComponent = () => {
@@ -95,7 +96,7 @@ const AddParcelPageComponent = () => {
                             .getPublicUrl(fileName);
                         imageUrls.push(publicUrl);
                     } else {
-                        console.error('Erreur upload image:', uploadError);
+                        logger.error('Erreur upload image:', uploadError);
                     }
                 }
             }
@@ -115,7 +116,7 @@ const AddParcelPageComponent = () => {
                             .getPublicUrl(fileName);
                         documentUrls.push(publicUrl);
                     } else {
-                        console.error('Erreur upload document:', uploadError);
+                        logger.error('Erreur upload document:', uploadError);
                     }
                 }
             }
@@ -155,7 +156,7 @@ const AddParcelPageComponent = () => {
                 throw error;
             }
             
-            console.log('Terrain ajouté avec succès:', data);
+            logger.debug('Terrain ajouté avec succès:', data);
             
             window.safeGlobalToast({
                 title: "Terrain ajouté avec succès !",
@@ -170,7 +171,7 @@ const AddParcelPageComponent = () => {
             }, 2000);
             
         } catch (error) {
-            console.error("Erreur lors de l'ajout du terrain:", error);
+            logger.error("Erreur lors de l'ajout du terrain:", error);
             window.safeGlobalToast({
                 title: "Erreur",
                 description: error.message || "Impossible d'ajouter le terrain. Veuillez réessayer.",

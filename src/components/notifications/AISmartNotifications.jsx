@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 const AISmartNotifications = () => {
   const { user } = useAuth();
@@ -56,7 +57,7 @@ const AISmartNotifications = () => {
       setNotifications(smartNotifications);
       setUnreadCount(smartNotifications.filter(n => !n.read).length);
     } catch (error) {
-      console.error('Erreur chargement notifications IA:', error);
+      logger.error('Erreur chargement notifications IA:', error);
     } finally {
       setIsLoading(false);
     }

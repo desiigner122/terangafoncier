@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
 import supabase from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * NotaireCasesModernized.jsx
@@ -98,14 +99,14 @@ export default function NotaireCasesModernized() {
         .from('notarial_acts')
         .select('id, notaire_id, client_id, property_id, act_type, reference, client_name, status, notary_fees, amount, client_satisfaction, signed_at, created_at, updated_at')
         .eq('notaire_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
       setCases(data || []);
       setFilteredCases(data || []);
     } catch (error) {
-      console.error('Erreur chargement dossiers:', error);
+      logger.error('Erreur chargement dossiers:', error);
       window.safeGlobalToast?.({
         title: "Erreur de chargement",
         description: error.message || "Impossible de charger les dossiers",
@@ -223,7 +224,7 @@ export default function NotaireCasesModernized() {
       });
       loadCases();
     } catch (error) {
-      console.error('Erreur création dossier:', error);
+      logger.error('Erreur création dossier:', error);
       window.safeGlobalToast?.({
         title: "Erreur de création",
         description: error.message,
@@ -258,7 +259,7 @@ export default function NotaireCasesModernized() {
       setSelectedCase(null);
       loadCases();
     } catch (error) {
-      console.error('Erreur suppression dossier:', error);
+      logger.error('Erreur suppression dossier:', error);
       window.safeGlobalToast?.({
         title: "Erreur de suppression",
         description: error.message,
@@ -298,7 +299,7 @@ export default function NotaireCasesModernized() {
       });
       loadCases();
     } catch (error) {
-      console.error('Erreur mise à jour statut:', error);
+      logger.error('Erreur mise à jour statut:', error);
       window.safeGlobalToast?.({
         title: "Erreur",
         description: error.message,

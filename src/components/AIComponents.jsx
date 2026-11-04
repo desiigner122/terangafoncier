@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { terangaAI } from '../services/TerangaAIService.js';
+import { logger } from '@/lib/logger';
 
 export const AIEstimationWidget = ({ className = '' }) => {
   const [estimation, setEstimation] = useState(null);
@@ -32,7 +33,7 @@ export const AIEstimationWidget = ({ className = '' }) => {
       );
       setEstimation(result);
     } catch (error) {
-      console.error('Erreur estimation IA:', error);
+      logger.error('Erreur estimation IA:', error);
     }
     setLoading(false);
   };
@@ -156,7 +157,7 @@ export const AIMarketInsights = ({ region = 'Dakar', className = '' }) => {
         const result = await terangaAI.getMarketInsights(region);
         setInsights(result);
       } catch (error) {
-        console.error('Erreur insights IA:', error);
+        logger.error('Erreur insights IA:', error);
       }
       setLoading(false);
     };

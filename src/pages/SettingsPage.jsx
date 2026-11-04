@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
@@ -205,7 +206,7 @@ import React, { useState, useEffect } from 'react';
             e.preventDefault();
             setIsSaving(true);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log("Paramètres sauvegardés:", settings);
+            logger.debug("Paramètres sauvegardés:", settings);
             window.safeGlobalToast({ title: "Paramètres Sauvegardés", description: "Vos préférences ont été mises à jour.", className: "bg-green-500 text-white" });
             setIsSaving(false);
         };

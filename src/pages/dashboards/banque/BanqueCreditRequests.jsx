@@ -55,6 +55,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 // --- Correspondances statuts réels (loans.status) ---
 const STATUS_LABELS = {
@@ -166,7 +167,7 @@ const BanqueCreditRequests = () => {
         .from('loans')
         .select('*')
         .eq('bank_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       if (error) throw error;
 
@@ -183,7 +184,7 @@ const BanqueCreditRequests = () => {
         const { data: props } = await supabase
           .from('properties')
           .select('id, title, name, type, location, region, city, surface, estimated_value, market_value, blockchain_hash')
-          .in('id', propertyIds);
+          .in('id', propertyIds).limit(500);
         (props || []).forEach((p) => { propMap[p.id] = p; });
       }
 
@@ -192,7 +193,7 @@ const BanqueCreditRequests = () => {
           .from('bank_clients')
           .select('client_id, name, email, phone, credit_score')
           .eq('bank_id', user.id)
-          .in('client_id', clientIds);
+          .in('client_id', clientIds).limit(500);
         (clients || []).forEach((c) => { clientMap[c.client_id] = c; });
       }
 
@@ -234,7 +235,7 @@ const BanqueCreditRequests = () => {
 
       setCreditRequests(mapped);
     } catch (err) {
-      console.error('Erreur chargement demandes de crédit:', err);
+      logger.error('Erreur chargement demandes de crédit:', err);
       setCreditRequests([]);
     } finally {
       setLoading(false);
@@ -290,7 +291,7 @@ const BanqueCreditRequests = () => {
 
       window.safeGlobalToast?.({ title: successTitle, variant: 'success' });
     } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
+      logger.error('Erreur mise à jour statut:', err);
       window.safeGlobalToast?.({ title: 'Erreur', description: "Impossible de mettre à jour le dossier", variant: 'destructive' });
     } finally {
       setIsLoading(false);

@@ -19,6 +19,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 const PurchaseProcessPage = () => {
   const { propertyId } = useParams();
@@ -115,7 +116,7 @@ const PurchaseProcessPage = () => {
         state: { purchaseData, property }
       });
     } catch (error) {
-      console.error('Erreur lors de l\'achat:', error);
+      logger.error('Erreur lors de l\'achat:', error);
     } finally {
       setIsLoading(false);
     }

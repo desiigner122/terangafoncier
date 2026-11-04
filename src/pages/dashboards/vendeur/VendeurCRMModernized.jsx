@@ -36,6 +36,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const VendeurCRMModernized = () => {
   const { user } = useAuth();
@@ -81,12 +82,12 @@ const VendeurCRMModernized = () => {
         .from('crm_contacts')
         .select('*')
         .eq('user_id', user.id)
-        .order('score', { ascending: false });
+        .order('score', { ascending: false }).limit(500);
 
       if (contactsError) throw contactsError;
 
       setContacts(contactsData || []);
-      console.log('✅ Contacts chargés:', contactsData?.length);
+      logger.debug('✅ Contacts chargés:', contactsData?.length);
 
       // Charger les activités
       if (contactsData && contactsData.length > 0) {
@@ -95,7 +96,7 @@ const VendeurCRMModernized = () => {
           .from('crm_activities')
           .select('*')
           .in('contact_id', contactIds)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
 
         setInteractions(interactionsData || []);
       }
@@ -122,7 +123,7 @@ const VendeurCRMModernized = () => {
       });
 
     } catch (error) {
-      console.error('❌ Erreur CRM:', error);
+      logger.error('❌ Erreur CRM:', error);
       toast.error('Erreur lors du chargement du CRM');
     } finally {
       setLoading(false);
@@ -173,7 +174,7 @@ const VendeurCRMModernized = () => {
       loadCRMData();
       setShowAddDialog(false);
     } catch (error) {
-      console.error('Erreur ajout contact:', error);
+      logger.error('Erreur ajout contact:', error);
       toast.error('Erreur lors de l\'ajout');
     }
   };
@@ -193,7 +194,7 @@ const VendeurCRMModernized = () => {
       toast.success('Statut mis à jour');
       loadCRMData();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la mise à jour');
     }
   };
@@ -217,7 +218,7 @@ const VendeurCRMModernized = () => {
       loadCRMData();
       setShowInteractionDialog(false);
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de l\'enregistrement');
     }
   };

@@ -23,6 +23,7 @@ import {
   Globe,
   Building2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const FaqPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,9 +47,9 @@ const FaqPage = () => {
       const { data, error } = await supabase
         .from('faq_items')
         .select('id, question, answer, category')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
       if (!active || error) {
-        if (error) console.error('Erreur chargement FAQ:', error);
+        if (error) logger.error('Erreur chargement FAQ:', error);
         return;
       }
       setFaqData(data || []);

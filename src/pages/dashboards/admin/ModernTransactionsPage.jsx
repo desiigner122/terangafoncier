@@ -62,6 +62,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import globalAdminService from '@/services/GlobalAdminService';
+import { logger } from '@/lib/logger';
 
 const ModernTransactionsPage = () => {
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
@@ -91,7 +92,7 @@ const ModernTransactionsPage = () => {
     setError(null);
     
     try {
-      console.log('🔄 Chargement des transactions réelles...');
+      logger.debug('🔄 Chargement des transactions réelles...');
       
       // Charger transactions et statistiques en parallèle
       const [transactionsResult, statsResult] = await Promise.all([
@@ -102,14 +103,14 @@ const ModernTransactionsPage = () => {
       if (transactionsResult.success) {
         setTransactions(transactionsResult.data);
         setFilteredTransactions(transactionsResult.data);
-        console.log(`✅ ${transactionsResult.data.length} transactions réelles chargées`);
+        logger.debug(`✅ ${transactionsResult.data.length} transactions réelles chargées`);
       } else {
         throw new Error(transactionsResult.error);
       }
 
       if (statsResult.success) {
         setTransactionStats(statsResult.data);
-        console.log('✅ Statistiques transactions chargées');
+        logger.debug('✅ Statistiques transactions chargées');
       }
 
       // Charger l'analyse IA
@@ -119,7 +120,7 @@ const ModernTransactionsPage = () => {
       await loadBlockchainMetrics();
 
     } catch (error) {
-      console.error('❌ Erreur chargement transactions:', error);
+      logger.error('❌ Erreur chargement transactions:', error);
       setError(error.message);
       toast.error('Erreur lors du chargement des transactions');
     } finally {
@@ -156,7 +157,7 @@ const ModernTransactionsPage = () => {
       
       setAiAnalysis(analysis);
     } catch (error) {
-      console.error('Erreur analyse IA:', error);
+      logger.error('Erreur analyse IA:', error);
     }
   };
 
@@ -170,7 +171,7 @@ const ModernTransactionsPage = () => {
         smartContracts: 0 // À implémenter
       });
     } catch (error) {
-      console.error('Erreur métriques blockchain:', error);
+      logger.error('Erreur métriques blockchain:', error);
     }
   };
 

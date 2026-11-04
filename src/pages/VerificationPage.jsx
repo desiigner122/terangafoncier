@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const FileUploadField = ({ id, label, required, onFileChange, fileName, description }) => (
   <div className="space-y-2">
@@ -131,7 +132,7 @@ const VerificationPage = () => {
         navigate('/pending-verification');
 
     } catch (err) {
-        console.error("Verification submission error:", err);
+        logger.error("Verification submission error:", err);
         setError("Une erreur est survenue lors de l'envoi de vos FileTexts. Veuillez réessayer.");
     } finally {
         setIsLoading(false);

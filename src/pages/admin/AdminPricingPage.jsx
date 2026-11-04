@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 const AdminPricingPage = () => {
   const [loading, setLoading] = useState(true);
@@ -145,7 +146,7 @@ const AdminPricingPage = () => {
         const { data: feesData, error: feesError } = await supabase
           .from('remote_construction_fees')
           .select('*')
-          .eq('is_active', true);
+          .eq('is_active', true).limit(500);
 
         if (feesError && feesError.code === '42P01') {
           // Table n'existe pas encore, utiliser les données par défaut
@@ -157,7 +158,7 @@ const AdminPricingPage = () => {
         setSubscriptions(defaultSubscriptions);
 
       } catch (error) {
-        console.error('Erreur lors du chargement:', error);
+        logger.error('Erreur lors du chargement:', error);
         setFees(defaultFees);
         setSubscriptions(defaultSubscriptions);
       } finally {

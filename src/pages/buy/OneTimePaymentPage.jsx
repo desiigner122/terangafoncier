@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from '@/lib/supabaseClient';
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const OneTimePaymentPage = () => {
   const { state } = useLocation();
@@ -53,11 +54,11 @@ const OneTimePaymentPage = () => {
 
           if (error) throw error;
 
-          console.log('✅ Offre chargée:', data);
+          logger.debug('✅ Offre chargée:', data);
           setOffer(data);
           setNegotiatedPrice(data.offer_price?.toString() || '');
         } catch (error) {
-          console.error('❌ Erreur chargement offre:', error);
+          logger.error('❌ Erreur chargement offre:', error);
         }
       }
     };
@@ -560,7 +561,7 @@ const OneTimePaymentPage = () => {
                   e.stopPropagation();
                   
                   if (submitting) {
-                    console.log('⏳ Soumission déjà en cours, ignorer...');
+                    logger.debug('⏳ Soumission déjà en cours, ignorer...');
                     return;
                   }
                   
@@ -576,10 +577,10 @@ const OneTimePaymentPage = () => {
                     return;
                   }
 
-                  console.log('🚀 Début de la soumission...');
+                  logger.debug('🚀 Début de la soumission...');
                   setSubmitting(true);
                   try {
-                    console.log('🔍 Context reçu:', { 
+                    logger.debug('🔍 Context reçu:', { 
                       parcelleId: context.parcelleId, 
                       parcelle: context.parcelle,
                       hasContext 
@@ -594,7 +595,7 @@ const OneTimePaymentPage = () => {
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
-                      console.log('🏠 Vérification parcelle:', { 
+                      logger.debug('🏠 Vérification parcelle:', { 
                         searched: context.parcelleId, 
                         found: parcelExists,
                         error: parcelError 
@@ -603,10 +604,10 @@ const OneTimePaymentPage = () => {
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
+                        logger.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
                       }
                     } else {
-                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
+                      logger.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
@@ -665,7 +666,7 @@ const OneTimePaymentPage = () => {
                           }
                         }
                       } catch (e) {
-                        console.warn('Mint NFT request failed (ignored):', e.message);
+                        logger.warn('Mint NFT request failed (ignored):', e.message);
                       }
                     }
                     
@@ -705,16 +706,16 @@ const OneTimePaymentPage = () => {
                     
                     if (txError) throw txError;
                     
-                    console.log('✅ Request créée:', request);
-                    console.log('✅ Transaction créée avec succès');
-                    console.log('📊 Totals:', totals);
+                    logger.debug('✅ Request créée:', request);
+                    logger.debug('✅ Transaction créée avec succès');
+                    logger.debug('📊 Totals:', totals);
                     
                     const successTitle = context.parcelle?.title 
                       ? `Demande d'achat pour ${context.parcelle.title}` 
                       : 'Demande d\'achat comptant envoyée';
                     const successDescription = `Total: ${totals.finalTotal.toLocaleString()} FCFA (dont ${totals.totalFees.toLocaleString()} FCFA de frais). Économie vs financement: ${totals.savings.toLocaleString()} FCFA.`;
                     
-                    console.log('📢 Affichage toast:', successTitle, successDescription);
+                    logger.debug('📢 Affichage toast:', successTitle, successDescription);
                     
                     // Stocker l'ID de la request pour le dialog
                     setCreatedRequestId(request.id);
@@ -724,7 +725,7 @@ const OneTimePaymentPage = () => {
                     setSubmitting(false);
                     
                   } catch (err) {
-                    console.error('❌ Erreur lors de la soumission:', err);
+                    logger.error('❌ Erreur lors de la soumission:', err);
                     window.safeGlobalToast?.({ 
                       variant: 'destructive', 
                       title: 'Erreur', 

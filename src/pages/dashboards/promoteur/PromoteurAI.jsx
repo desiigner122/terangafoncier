@@ -64,7 +64,7 @@ const PromoteurAI = () => {
         .from('ai_analyses')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).limit(500);
 
       const analyses = (analysesData || []).map((a) => {
         const r = a.result || {};
@@ -86,7 +86,7 @@ const PromoteurAI = () => {
       const { data: propertiesData } = await supabase
         .from('properties')
         .select('ai_score')
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id).limit(500);
 
       const scored = (propertiesData || []).filter(
         (p) => typeof p.ai_score === 'number' && p.ai_score !== null
@@ -106,7 +106,7 @@ const PromoteurAI = () => {
         .from('ai_chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }).limit(500);
 
       const chat = (chatData || []).map((c) => ({
         id: c.id,

@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabaseClient';
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
+import { logger } from '@/lib/logger';
 
 const BankFinancingPage = () => {
   const { state } = useLocation();
@@ -60,11 +61,11 @@ const BankFinancingPage = () => {
 
           if (error) throw error;
 
-          console.log('✅ Offre chargée:', data);
+          logger.debug('✅ Offre chargée:', data);
           setOffer(data);
           setAmount(data.offer_price?.toString() || '');
         } catch (error) {
-          console.error('❌ Erreur chargement offre:', error);
+          logger.error('❌ Erreur chargement offre:', error);
         }
       }
     };
@@ -410,7 +411,7 @@ const BankFinancingPage = () => {
 
                   setSubmitting(true);
                   try {
-                    console.log('🔍 Context reçu:', { 
+                    logger.debug('🔍 Context reçu:', { 
                       parcelleId: context.parcelleId, 
                       parcelle: context.parcelle,
                       hasContext 
@@ -425,7 +426,7 @@ const BankFinancingPage = () => {
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
-                      console.log('🏠 Vérification parcelle:', { 
+                      logger.debug('🏠 Vérification parcelle:', { 
                         searched: context.parcelleId, 
                         found: parcelExists,
                         error: parcelError 
@@ -434,10 +435,10 @@ const BankFinancingPage = () => {
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
+                        logger.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
                       }
                     } else {
-                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
+                      logger.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
@@ -505,7 +506,7 @@ const BankFinancingPage = () => {
                           }
                         }
                       } catch (e) {
-                        console.warn('Mint NFT request failed (ignored):', e.message);
+                        logger.warn('Mint NFT request failed (ignored):', e.message);
                       }
                     }
                     

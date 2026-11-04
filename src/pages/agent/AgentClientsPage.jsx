@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { logger } from '@/lib/logger';
 
 const AgentClientsPage = () => {
   // toast remplacé par window.safeGlobalToast
@@ -50,7 +51,7 @@ const AgentClientsPage = () => {
           })));
         }
       } catch (err) {
-        console.error('Erreur chargement clients agent:', err.message);
+        logger.error('Erreur chargement clients agent:', err.message);
         if (!cancelled) setClients([]);
       } finally {
         if (!cancelled) setLoading(false);

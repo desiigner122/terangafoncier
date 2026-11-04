@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 // Libellés lisibles pour les types réels ('terrain'|'immobilier'|'projet')
@@ -70,22 +71,22 @@ const InvestisseurPortfolio = () => {
             property:properties!investments_property_id_fkey ( id, title, name, location, region, city )
           `)
           .eq('investor_id', user.id)
-          .order('invested_at', { ascending: false });
+          .order('invested_at', { ascending: false }).limit(500);
 
         if (error) throw error;
         setInvestments(data || []);
       } catch (err) {
-        console.error('Erreur chargement portefeuille:', err);
+        logger.error('Erreur chargement portefeuille:', err);
         // Repli sans jointure si la contrainte FK nommée diffère
         try {
           const { data } = await supabase
             .from('investments')
             .select('id, investor_id, property_id, title, type, amount, current_value, roi, status, invested_at, created_at')
             .eq('investor_id', user.id)
-            .order('invested_at', { ascending: false });
+            .order('invested_at', { ascending: false }).limit(500);
           setInvestments(data || []);
         } catch (e2) {
-          console.error('Erreur repli portefeuille:', e2);
+          logger.error('Erreur repli portefeuille:', e2);
           setInvestments([]);
         }
       } finally {

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurOverview = () => {
@@ -46,7 +47,7 @@ const InvestisseurOverview = () => {
             .from('investments')
             .select('id, property_id, title, type, amount, current_value, roi, status, invested_at, properties(location, city, region)')
             .eq('investor_id', user.id)
-            .order('invested_at', { ascending: false });
+            .order('invested_at', { ascending: false }).limit(500);
           if (!error && data) investmentsData = data;
         }
 
@@ -76,7 +77,7 @@ const InvestisseurOverview = () => {
           setActivities(activitiesData);
         }
       } catch (e) {
-        console.error('Erreur chargement overview investisseur:', e);
+        logger.error('Erreur chargement overview investisseur:', e);
       } finally {
         if (!cancelled) setLoading(false);
       }

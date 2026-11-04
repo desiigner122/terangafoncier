@@ -19,6 +19,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurOpportunites = () => {
@@ -42,11 +43,11 @@ const InvestisseurOpportunites = () => {
           .select(`id, property_id, title, location, region, type, expected_roi,
                    min_investment, total_amount, risk_level, status, description, created_at,
                    properties ( surface, city, region, ai_score, estimated_value )`)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }).limit(500);
         if (error) throw error;
         if (!cancelled) setOpportunities(data || []);
       } catch (e) {
-        console.error('Erreur chargement opportunités:', e);
+        logger.error('Erreur chargement opportunités:', e);
         if (!cancelled) setOpportunities([]);
       } finally {
         if (!cancelled) setLoading(false);

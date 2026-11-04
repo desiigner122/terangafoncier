@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const AdminSystemRequestsPage = () => {
     const [requests, setRequests] = useState([]);
@@ -29,10 +30,10 @@ const AdminSystemRequestsPage = () => {
             const { data, error } = await supabase
                 .from('requests')
                 .select('*')
-                .eq('request_type', 'parcel_listing');
+                .eq('request_type', 'parcel_listing').limit(500);
             
             if (error) {
-                console.error("Error fetching requests:", error);
+                logger.error("Error fetching requests:", error);
                 window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les requêtes.', variant: 'destructive' });
             } else {
                 setRequests(data.map(r => ({

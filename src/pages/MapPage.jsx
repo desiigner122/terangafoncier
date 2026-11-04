@@ -78,6 +78,7 @@ const MapLegend = () => (
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { logger } from '@/lib/logger';
+import { toast } from 'sonner';
 
 const MapPage = () => {
   const [parcels, setParcels] = useState([]);
@@ -124,12 +125,12 @@ const MapPage = () => {
   // Fonction sécurisée pour obtenir la position utilisateur
   const handleGetUserLocation = () => {
     if (!browserCapabilities.geolocation) {
-      alert('Votre navigateur ne supporte pas la géolocalisation.');
+      toast.error('Votre navigateur ne supporte pas la géolocalisation.');
       return;
     }
     
     if (!browserCapabilities.isSecureContext) {
-      alert('La géolocalisation nécessite une connexion sécurisée (HTTPS).');
+      toast.error('La géolocalisation nécessite une connexion sécurisée (HTTPS).');
       return;
     }
     
@@ -172,7 +173,7 @@ const MapPage = () => {
           const query = event.target.elements.locationSearch.value;
           if (!query) return;
           logger.debug("Recherche pour :", query);
-          alert(`Recherche pour "${query}" - L'intégration de l'API de Géocodage est nécessaire pour cette fonctionnalité.`);
+          toast.info(`Recherche d'adresse indisponible pour « ${query} » : le géocodage n'est pas encore activé.`);
       }
 
       // Afficher les erreurs de géolocalisation de manière non-bloquante
